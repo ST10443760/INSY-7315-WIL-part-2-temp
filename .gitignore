@@ -1,0 +1,76 @@
+## .NET / Visual Studio ##
+bin/
+obj/
+out/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+.vs/
+.vscode/*
+!.vscode/extensions.json
+
+## Build results ##
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## NuGet ##
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+## Rider ##
+.idea/
+
+## Publish / deployment ##
+**/Properties/PublishProfiles/*.pubxml
+**/Properties/PublishProfiles/*.pubxml.user
+*.publishsettings
+PublishScripts/
+
+## ASP.NET Core secrets & environment-specific config ##
+appsettings.Development.json
+appsettings.*.local.json
+appsettings.Local.json
+secrets.json
+*.pfx
+.env
+.env.*
+
+## EF Core ##
+Migrations/*.sql
+
+## OS files ##
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Test results ##
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+## Misc ##
+*.tmp
+*.bak
+*.swp
+*~
+
+## Local tooling / AI assistant config ##
+.claude/
+CLAUDE.md
