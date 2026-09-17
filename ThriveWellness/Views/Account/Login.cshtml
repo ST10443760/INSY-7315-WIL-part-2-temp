@@ -1,0 +1,26 @@
+@model ThriveWellness.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Admin Login";
+}
+
+<h1>Admin Login</h1>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All"></div>
+}
+
+<form asp-controller="Account" asp-action="Login" method="post">
+    @Html.AntiForgeryToken()
+
+    <div>
+        <label asp-for="Username"></label>
+        <input asp-for="Username" />
+    </div>
+    <div>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" />
+    </div>
+    <button type="submit">Login</button>
+</form>

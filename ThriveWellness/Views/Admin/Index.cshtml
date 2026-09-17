@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h1>Admin Dashboard</h1>
+
+<p>Placeholder dashboard. Logged in as an authenticated admin.</p>
+
+<form asp-controller="Account" asp-action="Logout" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit">Logout</button>
+</form>
