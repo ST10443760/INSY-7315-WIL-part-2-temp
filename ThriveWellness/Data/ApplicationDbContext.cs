@@ -83,6 +83,12 @@ namespace ThriveWellness.Data
             modelBuilder.Entity<Payment>()
                 .Property(p => p.Amount)
                 .HasColumnType("decimal(18,2)");
+
+            // Known studio locations, seeded via migration.
+            modelBuilder.Entity<Location>().HasData(
+                new Location { LocationId = 1, Name = "The Hub, Little Village", Address = "Kyalami" },
+                new Location { LocationId = 2, Name = "Katz World of Dance, Studio 2", Address = "Sunninghill" }
+            );
         }
     }
 }
