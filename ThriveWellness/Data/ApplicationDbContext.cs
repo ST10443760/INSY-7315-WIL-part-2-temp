@@ -18,6 +18,7 @@ namespace ThriveWellness.Data
         public DbSet<Waitlist> Waitlists => Set<Waitlist>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<IntakeForm> IntakeForms => Set<IntakeForm>();
+        public DbSet<Admin> Admins => Set<Admin>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
