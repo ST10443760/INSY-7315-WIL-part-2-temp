@@ -1,0 +1,59 @@
+@model IEnumerable<ThriveWellness.Models.SessionListItemViewModel>
+
+@{
+    ViewData["Title"] = "Sessions";
+}
+
+<h1>Sessions</h1>
+
+<p><a asp-action="Create">Create New Session</a></p>
+
+<table border="1" cellpadding="4">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Location</th>
+            <th>Capacity</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var session in Model)
+        {
+            <tr>
+                <td>@session.SessionType</td>
+                <td>@session.Date.ToString("yyyy-MM-dd")</td>
+                <td>@session.Time.ToString(@"hh\:mm")</td>
+                <td>@session.LocationName</td>
+                <td>@session.Capacity</td>
+                <td>@(session.IsOpen ? "Open" : "Full")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@session.SessionId">Edit</a>
+
+                    @if (session.IsOpen)
+                    {
+                        <form asp-action="MarkFull" asp-route-id="@session.SessionId" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit">Mark Full</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="MarkOpen" asp-route-id="@session.SessionId" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit">Mark Open</button>
+                        </form>
+                    }
+
+                    <form asp-action="Delete" asp-route-id="@session.SessionId" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" onclick="return confirm('Delete this session?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

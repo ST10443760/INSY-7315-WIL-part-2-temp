@@ -1,0 +1,59 @@
+@model ThriveWellness.Models.SessionFormViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Create Session";
+}
+
+<h1>Create Session</h1>
+
+<div asp-validation-summary="All"></div>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div>
+        <label asp-for="LocationId"></label>
+        <select asp-for="LocationId" asp-items="@(new SelectList(Model.Locations, "LocationId", "Name"))">
+            <option value="">-- Select Location --</option>
+        </select>
+        <span asp-validation-for="LocationId"></span>
+    </div>
+
+    <div>
+        <label asp-for="SessionType"></label>
+        <select asp-for="SessionType">
+            <option value="">-- Select Type --</option>
+            <option value="group">Group</option>
+            <option value="private">Private</option>
+        </select>
+        <span asp-validation-for="SessionType"></span>
+    </div>
+
+    <div>
+        <label asp-for="Date"></label>
+        <input asp-for="Date" />
+        <span asp-validation-for="Date"></span>
+    </div>
+
+    <div>
+        <label asp-for="Time"></label>
+        <input asp-for="Time" />
+        <span asp-validation-for="Time"></span>
+    </div>
+
+    <div>
+        <label asp-for="Capacity"></label>
+        <input asp-for="Capacity" />
+        <span asp-validation-for="Capacity"></span>
+    </div>
+
+    <div>
+        <label asp-for="IsOpen"></label>
+        <input asp-for="IsOpen" type="checkbox" />
+    </div>
+
+    <button type="submit">Create</button>
+</form>
+
+<a asp-action="Index">Back to list</a>
