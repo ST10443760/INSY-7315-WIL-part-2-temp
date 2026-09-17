@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ThriveWellness.Models;
 
 namespace ThriveWellness.Data
@@ -92,15 +93,32 @@ namespace ThriveWellness.Data
 
             // None of the DateTime columns in this schema carry real timezone
             // semantics (session date, booking date, etc. are naive/local),
-            // so map them all to "timestamp without time zone". Without this,
-            // Npgsql rejects any DateTime that isn't explicitly Kind=Utc.
+            // so map them all to "timestamp without time zone". Npgsql is
+            // strict about DateTime.Kind matching the column type — it
+            // rejects Kind=Utc here just as it would reject Kind=Unspecified
+            // against timestamptz — so every write is normalized to
+            // Unspecified regardless of how the value was constructed
+            // (DateTime.Now, DateTime.UtcNow, or model-bound form input).
+            var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+                v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified),
+                v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified));
+            var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Unspecified) : v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Unspecified) : v);
+
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 foreach (var property in entityType.GetProperties())
                 {
-                    if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                    if (property.ClrType == typeof(DateTime))
                     {
                         property.SetColumnType("timestamp without time zone");
+                        property.SetValueConverter(dateTimeConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetColumnType("timestamp without time zone");
+                        property.SetValueConverter(nullableDateTimeConverter);
                     }
                 }
             }

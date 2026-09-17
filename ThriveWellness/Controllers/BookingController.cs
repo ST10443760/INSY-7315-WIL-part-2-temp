@@ -43,7 +43,7 @@ public class BookingController : Controller
         return View(viewModel);
     }
 
-    [HttpGet]
+    [HttpGet("Booking/Book/{sessionId:int}")]
     public async Task<IActionResult> Book(int sessionId)
     {
         var session = await _sessionService.GetByIdAsync(sessionId);
@@ -164,7 +164,7 @@ public class BookingController : Controller
         return RedirectToAction(nameof(Confirmation), new { bookingId = result.BookingId });
     }
 
-    [HttpGet]
+    [HttpGet("Booking/Confirmation/{bookingId:int}")]
     public async Task<IActionResult> Confirmation(int bookingId)
     {
         var booking = await _bookingService.GetByIdAsync(bookingId);
@@ -192,7 +192,7 @@ public class BookingController : Controller
         return View(viewModel);
     }
 
-    [HttpGet]
+    [HttpGet("Booking/Cancel/{token}")]
     public async Task<IActionResult> Cancel(string token)
     {
         var result = await _bookingService.CancelBookingAsync(token);
