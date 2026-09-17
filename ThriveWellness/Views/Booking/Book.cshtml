@@ -1,0 +1,27 @@
+@model ThriveWellness.Models.BookingEmailStepViewModel
+
+@{
+    ViewData["Title"] = "Book a Session";
+}
+
+<h1>Book a Session</h1>
+
+<p>
+    @Model.SessionType at @Model.LocationName
+    on @Model.SessionDate.ToString("yyyy-MM-dd") at @Model.SessionTime.ToString(@"hh\:mm")
+</p>
+
+<div asp-validation-summary="All"></div>
+
+<form asp-controller="Booking" asp-action="CheckEmail" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="SessionId" />
+
+    <div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email" />
+        <span asp-validation-for="Email"></span>
+    </div>
+
+    <button type="submit">Continue</button>
+</form>

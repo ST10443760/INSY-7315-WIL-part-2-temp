@@ -1,0 +1,41 @@
+@model ThriveWellness.Models.BookingConfirmationViewModel
+
+@{
+    ViewData["Title"] = "Booking Confirmed";
+}
+
+<h1>Booking Confirmed</h1>
+
+<p>Thanks, @Model.ClientName — your booking is recorded.</p>
+
+<table border="1" cellpadding="4">
+    <tr>
+        <th>Booking Reference</th>
+        <td>@Model.BookingId</td>
+    </tr>
+    <tr>
+        <th>Session</th>
+        <td>@Model.SessionType</td>
+    </tr>
+    <tr>
+        <th>Date</th>
+        <td>@Model.SessionDate.ToString("yyyy-MM-dd")</td>
+    </tr>
+    <tr>
+        <th>Time</th>
+        <td>@Model.SessionTime.ToString(@"hh\:mm")</td>
+    </tr>
+    <tr>
+        <th>Location</th>
+        <td>@Model.LocationName</td>
+    </tr>
+    <tr>
+        <th>Status</th>
+        <td>@Model.Status</td>
+    </tr>
+</table>
+
+<p>
+    Need to cancel?
+    <a asp-controller="Booking" asp-action="Cancel" asp-route-token="@Model.CancellationToken">Cancel this booking</a>
+</p>

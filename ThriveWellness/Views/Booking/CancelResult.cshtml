@@ -1,0 +1,18 @@
+@model ThriveWellness.Models.CancelBookingResult
+
+@{
+    ViewData["Title"] = "Cancel Booking";
+}
+
+<h1>Cancel Booking</h1>
+
+@if (Model.Success)
+{
+    <p>Your booking has been cancelled.</p>
+}
+else
+{
+    <p>@Model.ErrorMessage</p>
+}
+
+<p><a asp-controller="Booking" asp-action="Schedule">Back to available sessions</a></p>

@@ -1,0 +1,87 @@
+@model ThriveWellness.Models.BookingSubmitViewModel
+
+@{
+    ViewData["Title"] = "Confirm Your Booking";
+}
+
+<h1>Confirm Your Booking</h1>
+
+<p>
+    @Model.SessionType at @Model.LocationName
+    on @Model.SessionDate.ToString("yyyy-MM-dd") at @Model.SessionTime.ToString(@"hh\:mm")
+</p>
+
+<div asp-validation-summary="All"></div>
+
+<form asp-controller="Booking" asp-action="Submit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="SessionId" />
+    <input type="hidden" asp-for="Email" />
+    <input type="hidden" asp-for="IsNewClient" />
+    <input type="hidden" asp-for="SessionType" />
+    <input type="hidden" asp-for="SessionDate" />
+    <input type="hidden" asp-for="SessionTime" />
+    <input type="hidden" asp-for="LocationName" />
+
+    <div>
+        <label>Email</label>
+        <span>@Model.Email</span>
+    </div>
+
+    @if (Model.IsNewClient)
+    {
+        <p>We don't have a record for this email yet — welcome! Please complete your details below.</p>
+
+        <div>
+            <label asp-for="FullName"></label>
+            <input asp-for="FullName" />
+            <span asp-validation-for="FullName"></span>
+        </div>
+
+        <div>
+            <label asp-for="PhoneNumber"></label>
+            <input asp-for="PhoneNumber" />
+            <span asp-validation-for="PhoneNumber"></span>
+        </div>
+
+        <div>
+            <label asp-for="PaymentType"></label>
+            <select asp-for="PaymentType">
+                <option value="">-- Select Payment Type --</option>
+                <option value="EFT">EFT</option>
+                <option value="cash">Cash</option>
+            </select>
+            <span asp-validation-for="PaymentType"></span>
+        </div>
+
+        <h2>Intake Form</h2>
+
+        <div>
+            <label asp-for="MedicalNotes"></label>
+            <textarea asp-for="MedicalNotes"></textarea>
+        </div>
+
+        <div>
+            <label asp-for="ConsentSigned"></label>
+            <input asp-for="ConsentSigned" type="checkbox" />
+            <span asp-validation-for="ConsentSigned"></span>
+            <p>I consent to Thrive Wellness holding this information for the purpose of my Pilates sessions.</p>
+        </div>
+    }
+    else
+    {
+        <p>Welcome back! We've pre-filled your details from your last booking.</p>
+
+        <div>
+            <label asp-for="FullName"></label>
+            <input asp-for="FullName" readonly />
+        </div>
+
+        <div>
+            <label asp-for="PhoneNumber"></label>
+            <input asp-for="PhoneNumber" readonly />
+        </div>
+    }
+
+    <button type="submit">Confirm Booking</button>
+</form>

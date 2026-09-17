@@ -1,0 +1,38 @@
+@model IEnumerable<ThriveWellness.Models.SessionListItemViewModel>
+
+@{
+    ViewData["Title"] = "Available Sessions";
+}
+
+<h1>Available Sessions</h1>
+
+@if (!Model.Any())
+{
+    <p>No sessions are currently available.</p>
+}
+else
+{
+    <table border="1" cellpadding="4">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Location</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var session in Model)
+            {
+                <tr>
+                    <td>@session.SessionType</td>
+                    <td>@session.Date.ToString("yyyy-MM-dd")</td>
+                    <td>@session.Time.ToString(@"hh\:mm")</td>
+                    <td>@session.LocationName</td>
+                    <td><a asp-action="Book" asp-route-sessionId="@session.SessionId">Book</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
