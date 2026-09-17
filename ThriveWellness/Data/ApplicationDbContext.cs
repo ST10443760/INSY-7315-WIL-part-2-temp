@@ -89,6 +89,21 @@ namespace ThriveWellness.Data
                 new Location { LocationId = 1, Name = "The Hub, Little Village", Address = "Kyalami" },
                 new Location { LocationId = 2, Name = "Katz World of Dance, Studio 2", Address = "Sunninghill" }
             );
+
+            // None of the DateTime columns in this schema carry real timezone
+            // semantics (session date, booking date, etc. are naive/local),
+            // so map them all to "timestamp without time zone". Without this,
+            // Npgsql rejects any DateTime that isn't explicitly Kind=Utc.
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetColumnType("timestamp without time zone");
+                    }
+                }
+            }
         }
     }
 }
