@@ -10,6 +10,7 @@ namespace ThriveWellness.Services.Interfaces
         Task SendReminderEmailAsync(Booking booking);
         Task SendLocationEmailAsync(Booking booking);
         Task SendWaitlistNotificationAsync(Booking booking);
+        Task SendCancellationEmailAsync(Booking booking);
 
         // Matches EventHandler<PaymentConfirmedEventArgs> so Program.cs can
         // wire it to IPaymentService.PaymentConfirmed without depending on

@@ -216,6 +216,35 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "WaitlistPromotion");
         }
 
+        public async Task SendCancellationEmailAsync(Booking booking)
+        {
+            var client = await _clientRepository.GetByIdAsync(booking.ClientId);
+            if (client == null)
+            {
+                _logger.LogWarning("SendCancellationEmailAsync: client {ClientId} not found for booking {BookingId}", booking.ClientId, booking.BookingId);
+                return;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+
+            var html = $"""
+                <p>Hi {client.FullName},</p>
+                <p>Your booking has been cancelled by Thrive Wellness:</p>
+                <ul>
+                    <li><strong>Class:</strong> {session?.SessionType}</li>
+                    <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
+                    <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
+                    <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
+                </ul>
+                <p>If you have any questions or would like to rebook, please get in touch or visit
+                our schedule page.</p>
+                """;
+
+            await _emailSender.SendEmailAsync(client.Email, "Your Thrive Wellness booking has been cancelled", html);
+            await WriteNotificationRecordAsync(booking.BookingId, "Cancellation");
+        }
+
         private async Task WriteNotificationRecordAsync(int bookingId, string type)
         {
             _context.Notifications.Add(new Notification
