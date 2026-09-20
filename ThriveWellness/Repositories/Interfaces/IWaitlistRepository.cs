@@ -6,5 +6,6 @@ namespace ThriveWellness.Repositories.Interfaces
     {
         Task AddAsync(Waitlist waitlist);
         Task<IEnumerable<Waitlist>> GetBySessionAsync(int sessionId);
+        Task<Waitlist?> GetNextInLineAsync(int sessionId);
     }
 }

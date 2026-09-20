@@ -27,5 +27,13 @@ namespace ThriveWellness.Repositories.Implementations
                 .OrderBy(w => w.Position)
                 .ToListAsync();
         }
+
+        public async Task<Waitlist?> GetNextInLineAsync(int sessionId)
+        {
+            return await _context.Waitlists
+                .Where(w => w.SessionId == sessionId)
+                .OrderBy(w => w.Position)
+                .FirstOrDefaultAsync();
+        }
     }
 }
