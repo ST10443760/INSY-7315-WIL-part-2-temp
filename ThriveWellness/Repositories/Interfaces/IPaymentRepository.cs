@@ -5,5 +5,6 @@ namespace ThriveWellness.Repositories.Interfaces
     public interface IPaymentRepository
     {
         Task CreateAsync(Payment payment);
+        Task<Payment?> GetByIdAsync(int id);
     }
 }

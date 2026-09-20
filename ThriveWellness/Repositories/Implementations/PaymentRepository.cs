@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
@@ -17,6 +18,11 @@ namespace ThriveWellness.Repositories.Implementations
         {
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Payment?> GetByIdAsync(int id)
+        {
+            return await _context.Payments.FirstOrDefaultAsync(p => p.PaymentId == id);
         }
     }
 }
