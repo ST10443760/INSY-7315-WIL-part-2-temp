@@ -19,10 +19,15 @@ namespace ThriveWellness.Models
         [Phone]
         public string PhoneNumber { get; set; } = string.Empty;
 
-        // Only required for a new client — an existing client's payment
-        // type on file is unaffected by this booking, so it's validated
-        // conditionally in the controller rather than with [Required] here.
+        // Billing plan for this booking's payment: "per-class" or "monthly"
+        // (drives the Payment amount, FR-06). Needed for every booking
+        // regardless of new/returning client, so it's validated in the
+        // controller rather than with [Required] here (keeps this model
+        // usable for both the new-client and returning-client form states).
         public string PaymentType { get; set; } = string.Empty;
+
+        // Payment method for this booking's payment: "EFT" or "cash".
+        public string Method { get; set; } = string.Empty;
 
         public bool IsNewClient { get; set; }
 
