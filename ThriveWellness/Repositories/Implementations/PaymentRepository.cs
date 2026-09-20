@@ -55,5 +55,15 @@ namespace ThriveWellness.Repositories.Implementations
 
             return await query.ToListAsync();
         }
+
+        public async Task UpdateStatusAsync(int paymentId, string status)
+        {
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+            if (payment != null)
+            {
+                payment.Status = status;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

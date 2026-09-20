@@ -8,5 +8,6 @@ namespace ThriveWellness.Repositories.Interfaces
         Task<Payment?> GetByIdAsync(int id);
         Task<Payment?> GetByBookingIdAsync(int bookingId);
         Task<IEnumerable<PendingPaymentViewModel>> GetPendingPaymentsAsync();
+        Task UpdateStatusAsync(int paymentId, string status);
     }
 }
