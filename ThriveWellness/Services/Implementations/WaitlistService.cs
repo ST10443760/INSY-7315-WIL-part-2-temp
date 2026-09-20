@@ -12,11 +12,16 @@ namespace ThriveWellness.Services.Implementations
         // BookingService depends on IWaitlistService (to promote on cancel),
         // so depending on IBookingService here would be circular.
         private readonly IBookingRepository _bookingRepository;
+        private readonly ISessionRepository _sessionRepository;
 
-        public WaitlistService(IWaitlistRepository waitlistRepository, IBookingRepository bookingRepository)
+        public WaitlistService(
+            IWaitlistRepository waitlistRepository,
+            IBookingRepository bookingRepository,
+            ISessionRepository sessionRepository)
         {
             _waitlistRepository = waitlistRepository;
             _bookingRepository = bookingRepository;
+            _sessionRepository = sessionRepository;
         }
 
         public async Task<Waitlist> JoinWaitlistAsync(int clientId, int sessionId)
@@ -41,6 +46,22 @@ namespace ThriveWellness.Services.Implementations
             var next = await _waitlistRepository.GetNextInLineAsync(sessionId);
             if (next == null)
             {
+                return;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(sessionId);
+            if (session == null || !session.IsOpen)
+            {
+                return;
+            }
+
+            var activeBookings = (await _bookingRepository.GetBookingsBySessionAsync(sessionId))
+                .Count(b => b.Status != "Cancelled");
+            if (activeBookings >= session.Capacity)
+            {
+                // No room yet - leave the queue as-is. Reached from
+                // MarkAsOpenAsync, which doesn't guarantee a freed spot the
+                // way a cancellation does.
                 return;
             }
 
