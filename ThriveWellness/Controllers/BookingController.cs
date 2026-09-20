@@ -11,17 +11,20 @@ public class BookingController : Controller
     private readonly ISessionService _sessionService;
     private readonly ILocationRepository _locationRepository;
     private readonly IClientRepository _clientRepository;
+    private readonly IWaitlistService _waitlistService;
 
     public BookingController(
         IBookingService bookingService,
         ISessionService sessionService,
         ILocationRepository locationRepository,
-        IClientRepository clientRepository)
+        IClientRepository clientRepository,
+        IWaitlistService waitlistService)
     {
         _bookingService = bookingService;
         _sessionService = sessionService;
         _locationRepository = locationRepository;
         _clientRepository = clientRepository;
+        _waitlistService = waitlistService;
     }
 
     public async Task<IActionResult> Schedule()
@@ -147,12 +150,24 @@ public class BookingController : Controller
 
         var result = await _bookingService.CreateBookingAsync(request);
 
+        if (result.RequiresWaitlist)
+        {
+            var waitlistEntry = await _waitlistService.JoinWaitlistAsync(result.ClientId!.Value, model.SessionId);
+
+            var waitlistViewModel = new WaitlistJoinedViewModel
+            {
+                SessionType = session.SessionType,
+                SessionDate = session.Date,
+                SessionTime = session.Time,
+                LocationName = location?.Name ?? "Unknown",
+                Position = waitlistEntry.Position
+            };
+            return View("WaitlistJoined", waitlistViewModel);
+        }
+
         if (!result.Success)
         {
-            var message = result.RequiresWaitlist
-                ? "This session is full. Waitlist sign-up is coming soon — please choose another session for now."
-                : result.ErrorMessage ?? "Unable to complete the booking.";
-            ModelState.AddModelError(string.Empty, message);
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Unable to complete the booking.");
 
             model.SessionType = session.SessionType;
             model.SessionDate = session.Date;
