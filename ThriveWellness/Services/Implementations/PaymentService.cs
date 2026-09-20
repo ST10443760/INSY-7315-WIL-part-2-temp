@@ -35,6 +35,13 @@ namespace ThriveWellness.Services.Implementations
             booking.Status = "Confirmed";
             await _bookingRepository.UpdateAsync(booking);
 
+            // TODO: this synchronously blocks ConfirmPaymentAsync (and the
+            // admin's request thread) until NotificationService.OnPaymentConfirmed
+            // returns - fine for the old Console.WriteLine stub, but
+            // OnPaymentConfirmed now makes a real SendGrid call with real
+            // network latency. Move this to a background/queued send (e.g.
+            // enqueue the notification and let a hosted service process it)
+            // so a slow SendGrid response doesn't hold up payment confirmation.
             PaymentConfirmed?.Invoke(this, new PaymentConfirmedEventArgs(booking.BookingId, booking.ClientId));
         }
     }
