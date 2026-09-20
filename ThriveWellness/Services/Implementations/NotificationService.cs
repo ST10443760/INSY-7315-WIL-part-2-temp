@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
@@ -12,8 +13,10 @@ namespace ThriveWellness.Services.Implementations
         private readonly IClientRepository _clientRepository;
         private readonly ISessionRepository _sessionRepository;
         private readonly ILocationRepository _locationRepository;
+        private readonly IPaymentRepository _paymentRepository;
         private readonly IEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
+        private readonly string _appBaseUrl;
         private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
@@ -21,16 +24,21 @@ namespace ThriveWellness.Services.Implementations
             IClientRepository clientRepository,
             ISessionRepository sessionRepository,
             ILocationRepository locationRepository,
+            IPaymentRepository paymentRepository,
             IEmailSender emailSender,
             ApplicationDbContext context,
+            IConfiguration configuration,
             ILogger<NotificationService> logger)
         {
             _bookingRepository = bookingRepository;
             _clientRepository = clientRepository;
             _sessionRepository = sessionRepository;
             _locationRepository = locationRepository;
+            _paymentRepository = paymentRepository;
             _emailSender = emailSender;
             _context = context;
+            _appBaseUrl = configuration["AppBaseUrl"]?.TrimEnd('/')
+                ?? throw new InvalidOperationException("AppBaseUrl is not configured.");
             _logger = logger;
         }
 
@@ -88,6 +96,40 @@ namespace ThriveWellness.Services.Implementations
 
             await _emailSender.SendEmailAsync(client.Email, "Welcome to Thrive Wellness", html);
             await WriteNotificationRecordAsync(booking.BookingId, "Welcome");
+        }
+
+        public async Task SendConfirmationEmailAsync(Booking booking)
+        {
+            var client = await _clientRepository.GetByIdAsync(booking.ClientId);
+            if (client == null)
+            {
+                _logger.LogWarning("SendConfirmationEmailAsync: client {ClientId} not found for booking {BookingId}", booking.ClientId, booking.BookingId);
+                return;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+            var payment = await _paymentRepository.GetByBookingIdAsync(booking.BookingId);
+            var cancelUrl = $"{_appBaseUrl}/Booking/Cancel/{booking.CancellationToken}";
+
+            var html = $"""
+                <p>Hi {client.FullName},</p>
+                <p>Your booking is in. Here are the details:</p>
+                <ul>
+                    <li><strong>Class:</strong> {session?.SessionType}</li>
+                    <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
+                    <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
+                    <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
+                    <li><strong>Amount due:</strong> R{payment?.Amount}</li>
+                </ul>
+                <p><strong>To pay by EFT:</strong> Thrive Wellness, Account 123456789, Branch code 000000.
+                Please use your name as the payment reference.</p>
+                <p><strong>Prefer cash?</strong> That's fine too - you can pay in person before your class.</p>
+                <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
+                """;
+
+            await _emailSender.SendEmailAsync(client.Email, "Your Thrive Wellness booking is confirmed", html);
+            await WriteNotificationRecordAsync(booking.BookingId, "Confirmation");
         }
 
         private async Task WriteNotificationRecordAsync(int bookingId, string type)
