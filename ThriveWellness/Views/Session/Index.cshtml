@@ -32,6 +32,7 @@
                 <td>@(session.IsOpen ? "Open" : "Full")</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@session.SessionId">Edit</a>
+                    <a asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
 
                     @if (session.IsOpen)
                     {
