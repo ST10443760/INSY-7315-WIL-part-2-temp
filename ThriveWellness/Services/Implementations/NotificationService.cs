@@ -29,10 +29,16 @@ namespace ThriveWellness.Services.Implementations
         // which is a circular dependency.
         public void OnPaymentConfirmed(object? sender, PaymentConfirmedEventArgs e)
         {
-            // Fire-and-forget: this stub is synchronous-fast (a log line), so
-            // discarding the task is fine here. A real SendGrid call should
-            // be queued rather than awaited from a void event handler.
-            _ = HandlePaymentConfirmedAsync(e);
+            // Block rather than fire-and-forget: the repositories here share
+            // the same Scoped DbContext as the rest of this request. A
+            // detached fire-and-forget task races the request's own
+            // completion (and the DbContext disposal that follows it),
+            // which produced real "another read operation is pending" /
+            // connection-aborted errors when this ran undetached. This
+            // stub is fast (a couple of reads + a log line), so blocking
+            // synchronously here is fine; a real SendGrid call should be
+            // queued onto its own scope instead of reusing this one.
+            HandlePaymentConfirmedAsync(e).GetAwaiter().GetResult();
         }
 
         private async Task HandlePaymentConfirmedAsync(PaymentConfirmedEventArgs e)
