@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
@@ -17,6 +18,14 @@ namespace ThriveWellness.Repositories.Implementations
         {
             _context.Waitlists.Add(waitlist);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Waitlist>> GetBySessionAsync(int sessionId)
+        {
+            return await _context.Waitlists
+                .Where(w => w.SessionId == sessionId)
+                .OrderBy(w => w.Position)
+                .ToListAsync();
         }
     }
 }
