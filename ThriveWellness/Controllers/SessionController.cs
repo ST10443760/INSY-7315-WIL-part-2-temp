@@ -11,11 +11,19 @@ public class SessionController : Controller
 {
     private readonly ISessionService _sessionService;
     private readonly ILocationRepository _locationRepository;
+    private readonly IWaitlistRepository _waitlistRepository;
+    private readonly IClientRepository _clientRepository;
 
-    public SessionController(ISessionService sessionService, ILocationRepository locationRepository)
+    public SessionController(
+        ISessionService sessionService,
+        ILocationRepository locationRepository,
+        IWaitlistRepository waitlistRepository,
+        IClientRepository clientRepository)
     {
         _sessionService = sessionService;
         _locationRepository = locationRepository;
+        _waitlistRepository = waitlistRepository;
+        _clientRepository = clientRepository;
     }
 
     public async Task<IActionResult> Index()
@@ -167,5 +175,36 @@ public class SessionController : Controller
     {
         await _sessionService.MarkAsOpenAsync(id);
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Waitlist(int id)
+    {
+        var session = await _sessionService.GetByIdAsync(id);
+        if (session == null)
+        {
+            return NotFound();
+        }
+
+        var entries = await _waitlistRepository.GetBySessionAsync(id);
+
+        var viewModel = new List<WaitlistEntryViewModel>();
+        foreach (var entry in entries)
+        {
+            var client = await _clientRepository.GetByIdAsync(entry.ClientId);
+            viewModel.Add(new WaitlistEntryViewModel
+            {
+                Position = entry.Position,
+                ClientName = client?.FullName ?? "Unknown",
+                ClientEmail = client?.Email ?? string.Empty,
+                DateAdded = entry.DateAdded
+            });
+        }
+
+        ViewData["SessionType"] = session.SessionType;
+        ViewData["SessionDate"] = session.Date;
+        ViewData["SessionTime"] = session.Time;
+
+        return View(viewModel);
     }
 }
