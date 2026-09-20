@@ -45,5 +45,11 @@ namespace ThriveWellness.Repositories.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task UpdateAsync(Waitlist waitlist)
+        {
+            _context.Waitlists.Update(waitlist);
+            await _context.SaveChangesAsync();
+        }
     }
 }
