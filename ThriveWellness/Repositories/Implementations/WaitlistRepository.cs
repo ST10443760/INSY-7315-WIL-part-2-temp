@@ -35,5 +35,15 @@ namespace ThriveWellness.Repositories.Implementations
                 .OrderBy(w => w.Position)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task RemoveAsync(int waitlistId)
+        {
+            var entry = await _context.Waitlists.FirstOrDefaultAsync(w => w.WaitlistId == waitlistId);
+            if (entry != null)
+            {
+                _context.Waitlists.Remove(entry);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
