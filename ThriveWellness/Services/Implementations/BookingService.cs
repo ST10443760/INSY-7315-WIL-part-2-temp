@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Interfaces;
+using ThriveWellness.Services;
 
 namespace ThriveWellness.Services.Implementations
 {
@@ -89,7 +89,7 @@ namespace ThriveWellness.Services.Implementations
                 return new BookingCreateResult { Success = false, RequiresWaitlist = true };
             }
 
-            var cancellationToken = GenerateCancellationToken();
+            var cancellationToken = CancellationTokenGenerator.Generate();
 
             var booking = new Booking
             {
@@ -144,14 +144,6 @@ namespace ThriveWellness.Services.Implementations
         public Task<Booking?> GetByIdAsync(int bookingId)
         {
             return _bookingRepository.GetByIdAsync(bookingId);
-        }
-
-        private static string GenerateCancellationToken()
-        {
-            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
-                .Replace('+', '-')
-                .Replace('/', '_')
-                .TrimEnd('=');
         }
     }
 }
