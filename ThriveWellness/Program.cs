@@ -26,18 +26,22 @@ builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 // PaymentService is the Observer-pattern subject (Task 1 doc, Section 9.3).
-// NotificationService subscribes to its PaymentConfirmed event in its own
-// constructor, but as a Scoped service it's never actually constructed
-// unless something resolves it - so PaymentController (which only knows
-// about IPaymentService) wouldn't otherwise trigger that subscription.
-// This factory resolves INotificationService alongside PaymentService so
-// the subscription is wired up within the same request scope, without
-// PaymentController ever needing to know NotificationService exists.
+// The subscription is wired here as a registration step, rather than in
+// NotificationService's constructor: NotificationService taking a hard
+// dependency on IPaymentService would make this factory circular (it
+// needs to resolve INotificationService while still constructing
+// IPaymentService). As a Scoped service, NotificationService is never
+// actually constructed unless something resolves it - so PaymentController
+// (which only knows about IPaymentService) wouldn't otherwise trigger the
+// subscription - hence resolving INotificationService here too, within the
+// same request scope, without PaymentController ever needing to know
+// NotificationService exists.
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<IPaymentService>(sp =>
 {
     var paymentService = sp.GetRequiredService<PaymentService>();
-    sp.GetRequiredService<INotificationService>();
+    var notificationService = sp.GetRequiredService<INotificationService>();
+    paymentService.PaymentConfirmed += notificationService.OnPaymentConfirmed;
     return paymentService;
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();

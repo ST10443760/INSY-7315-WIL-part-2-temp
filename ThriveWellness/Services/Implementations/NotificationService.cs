@@ -12,7 +12,6 @@ namespace ThriveWellness.Services.Implementations
         private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
-            IPaymentService paymentService,
             IBookingRepository bookingRepository,
             IClientRepository clientRepository,
             ILogger<NotificationService> logger)
@@ -20,13 +19,15 @@ namespace ThriveWellness.Services.Implementations
             _bookingRepository = bookingRepository;
             _clientRepository = clientRepository;
             _logger = logger;
-
-            // Observer: subscribe to the subject's event in the constructor,
-            // per Section 9.3 of the Task 1 doc.
-            paymentService.PaymentConfirmed += OnPaymentConfirmed;
         }
 
-        private void OnPaymentConfirmed(object? sender, PaymentConfirmedEventArgs e)
+        // Observer: this is wired up to IPaymentService.PaymentConfirmed as a
+        // registration step in Program.cs (the composition root), rather than
+        // in this constructor - subscribing here would mean NotificationService
+        // depends on IPaymentService, whose own DI registration needs to
+        // resolve INotificationService to force this subscription to exist,
+        // which is a circular dependency.
+        public void OnPaymentConfirmed(object? sender, PaymentConfirmedEventArgs e)
         {
             // Fire-and-forget: this stub is synchronous-fast (a log line), so
             // discarding the task is fine here. A real SendGrid call should
