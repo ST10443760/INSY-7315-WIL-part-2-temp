@@ -187,6 +187,35 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Location");
         }
 
+        public async Task SendWaitlistNotificationAsync(Booking booking)
+        {
+            var client = await _clientRepository.GetByIdAsync(booking.ClientId);
+            if (client == null)
+            {
+                _logger.LogWarning("SendWaitlistNotificationAsync: client {ClientId} not found for booking {BookingId}", booking.ClientId, booking.BookingId);
+                return;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+            var cancelUrl = $"{_appBaseUrl}/Booking/Cancel/{booking.CancellationToken}";
+
+            var html = $"""
+                <p>Hi {client.FullName},</p>
+                <p>Good news - a spot opened up and you've been moved off the waitlist into this class:</p>
+                <ul>
+                    <li><strong>Class:</strong> {session?.SessionType}</li>
+                    <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
+                    <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
+                    <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
+                </ul>
+                <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
+                """;
+
+            await _emailSender.SendEmailAsync(client.Email, "You're off the waitlist!", html);
+            await WriteNotificationRecordAsync(booking.BookingId, "WaitlistPromotion");
+        }
+
         private async Task WriteNotificationRecordAsync(int bookingId, string type)
         {
             _context.Notifications.Add(new Notification
