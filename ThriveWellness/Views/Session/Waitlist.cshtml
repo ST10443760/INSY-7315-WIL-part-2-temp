@@ -1,0 +1,45 @@
+@model IEnumerable<ThriveWellness.Models.WaitlistEntryViewModel>
+
+@{
+    ViewData["Title"] = "Waitlist";
+    var sessionType = ViewData["SessionType"];
+    var sessionDate = (DateTime)ViewData["SessionDate"]!;
+    var sessionTime = (TimeSpan)ViewData["SessionTime"]!;
+}
+
+<h1>Waitlist</h1>
+
+<p>
+    @sessionType on @sessionDate.ToString("yyyy-MM-dd") at @sessionTime.ToString(@"hh\:mm")
+</p>
+
+@if (!Model.Any())
+{
+    <p>No one is currently waiting for this session.</p>
+}
+else
+{
+    <table border="1" cellpadding="4">
+        <thead>
+            <tr>
+                <th>Position</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td>@entry.Position</td>
+                    <td>@entry.ClientName</td>
+                    <td>@entry.ClientEmail</td>
+                    <td>@entry.DateAdded.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<p><a asp-action="Index">Back to sessions</a></p>
