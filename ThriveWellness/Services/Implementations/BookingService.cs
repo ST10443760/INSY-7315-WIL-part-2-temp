@@ -11,17 +11,20 @@ namespace ThriveWellness.Services.Implementations
         private readonly IClientRepository _clientRepository;
         private readonly IBookingRepository _bookingRepository;
         private readonly ISessionRepository _sessionRepository;
+        private readonly IWaitlistService _waitlistService;
         private readonly ApplicationDbContext _context;
 
         public BookingService(
             IClientRepository clientRepository,
             IBookingRepository bookingRepository,
             ISessionRepository sessionRepository,
+            IWaitlistService waitlistService,
             ApplicationDbContext context)
         {
             _clientRepository = clientRepository;
             _bookingRepository = bookingRepository;
             _sessionRepository = sessionRepository;
+            _waitlistService = waitlistService;
             _context = context;
         }
 
@@ -137,6 +140,8 @@ namespace ThriveWellness.Services.Implementations
 
             booking.Status = "Cancelled";
             await _bookingRepository.UpdateAsync(booking);
+
+            await _waitlistService.PromoteNextInLineAsync(booking.SessionId);
 
             return new CancelBookingResult { Success = true };
         }
