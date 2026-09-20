@@ -88,8 +88,10 @@ namespace ThriveWellness.Services.Implementations
 
             if (!session.IsOpen || activeBookings >= session.Capacity)
             {
-                // TODO: wire this up to the waitlist feature once it exists.
-                return new BookingCreateResult { Success = false, RequiresWaitlist = true };
+                // The client (found or just created above) already exists at
+                // this point, so the caller can join them to the waitlist
+                // without repeating the lookup/creation logic.
+                return new BookingCreateResult { Success = false, RequiresWaitlist = true, ClientId = client.ClientId };
             }
 
             var cancellationToken = CancellationTokenGenerator.Generate();
@@ -121,6 +123,7 @@ namespace ThriveWellness.Services.Implementations
             {
                 Success = true,
                 BookingId = booking.BookingId,
+                ClientId = client.ClientId,
                 CancellationToken = cancellationToken
             };
         }
