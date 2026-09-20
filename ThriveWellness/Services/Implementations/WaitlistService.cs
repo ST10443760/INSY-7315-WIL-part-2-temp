@@ -13,15 +13,18 @@ namespace ThriveWellness.Services.Implementations
         // so depending on IBookingService here would be circular.
         private readonly IBookingRepository _bookingRepository;
         private readonly ISessionRepository _sessionRepository;
+        private readonly INotificationService _notificationService;
 
         public WaitlistService(
             IWaitlistRepository waitlistRepository,
             IBookingRepository bookingRepository,
-            ISessionRepository sessionRepository)
+            ISessionRepository sessionRepository,
+            INotificationService notificationService)
         {
             _waitlistRepository = waitlistRepository;
             _bookingRepository = bookingRepository;
             _sessionRepository = sessionRepository;
+            _notificationService = notificationService;
         }
 
         public async Task<Waitlist> JoinWaitlistAsync(int clientId, int sessionId)
@@ -84,6 +87,8 @@ namespace ThriveWellness.Services.Implementations
                 CancellationToken = CancellationTokenGenerator.Generate()
             };
             await _bookingRepository.CreateBookingAsync(booking);
+
+            await _notificationService.SendWaitlistNotificationAsync(booking);
         }
     }
 }
