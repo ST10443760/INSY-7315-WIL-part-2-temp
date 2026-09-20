@@ -46,6 +46,7 @@ builder.Services.AddScoped<IPaymentService>(sp =>
     return paymentService;
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IScheduledNotificationService, ScheduledNotificationService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
