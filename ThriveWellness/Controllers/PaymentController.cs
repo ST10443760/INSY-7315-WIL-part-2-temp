@@ -23,4 +23,12 @@ public class PaymentController : Controller
         var payments = await _paymentRepository.GetPendingPaymentsAsync();
         return View(payments);
     }
+
+    [HttpPost("Payment/Confirm/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirm(int id)
+    {
+        await _paymentService.ConfirmPaymentAsync(id);
+        return RedirectToAction(nameof(Pending));
+    }
 }
