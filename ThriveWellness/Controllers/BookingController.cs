@@ -123,9 +123,14 @@ public class BookingController : Controller
             ModelState.AddModelError(nameof(model.ConsentSigned), "Consent is required to complete your booking.");
         }
 
-        if (model.IsNewClient && string.IsNullOrWhiteSpace(model.PaymentType))
+        if (string.IsNullOrWhiteSpace(model.PaymentType))
         {
             ModelState.AddModelError(nameof(model.PaymentType), "Payment type is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(model.Method))
+        {
+            ModelState.AddModelError(nameof(model.Method), "Payment method is required.");
         }
 
         if (!ModelState.IsValid)
@@ -143,6 +148,7 @@ public class BookingController : Controller
             FullName = model.FullName,
             PhoneNumber = model.PhoneNumber,
             PaymentType = model.PaymentType,
+            Method = model.Method,
             SessionId = model.SessionId,
             MedicalNotes = model.MedicalNotes,
             ConsentSigned = model.ConsentSigned
