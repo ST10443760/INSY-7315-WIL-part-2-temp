@@ -24,5 +24,10 @@ namespace ThriveWellness.Repositories.Implementations
         {
             return await _context.Payments.FirstOrDefaultAsync(p => p.PaymentId == id);
         }
+
+        public async Task<Payment?> GetByBookingIdAsync(int bookingId)
+        {
+            return await _context.Payments.FirstOrDefaultAsync(p => p.BookingId == bookingId);
+        }
     }
 }

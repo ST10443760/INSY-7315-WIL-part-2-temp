@@ -6,5 +6,6 @@ namespace ThriveWellness.Repositories.Interfaces
     {
         Task CreateAsync(Payment payment);
         Task<Payment?> GetByIdAsync(int id);
+        Task<Payment?> GetByBookingIdAsync(int bookingId);
     }
 }
