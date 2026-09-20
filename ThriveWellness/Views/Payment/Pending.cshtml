@@ -1,0 +1,51 @@
+@model IEnumerable<ThriveWellness.Models.PendingPaymentViewModel>
+
+@{
+    ViewData["Title"] = "Pending Payments";
+}
+
+<h1>Pending Payments</h1>
+
+@if (!Model.Any())
+{
+    <p>No payments are currently pending.</p>
+}
+else
+{
+    <table border="1" cellpadding="4">
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Session</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Location</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Payment Type</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in Model)
+            {
+                <tr>
+                    <td>@payment.ClientName</td>
+                    <td>@payment.SessionType</td>
+                    <td>@payment.SessionDate.ToString("yyyy-MM-dd")</td>
+                    <td>@payment.SessionTime.ToString(@"hh\:mm")</td>
+                    <td>@payment.LocationName</td>
+                    <td>R@(payment.Amount)</td>
+                    <td>@payment.Method</td>
+                    <td>@payment.PaymentType</td>
+                    <td>
+                        <form asp-action="Confirm" asp-route-id="@payment.PaymentId" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit">Confirm</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
