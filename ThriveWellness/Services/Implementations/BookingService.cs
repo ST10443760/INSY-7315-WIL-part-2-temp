@@ -158,6 +158,26 @@ namespace ThriveWellness.Services.Implementations
                 return new CancelBookingResult { Success = false, ErrorMessage = "Invalid cancellation link." };
             }
 
+            // Client-initiated: no cancellation email needed, they already
+            // know (they just clicked the link).
+            return await CancelAsync(booking, notifyClient: false);
+        }
+
+        public async Task<CancelBookingResult> CancelByAdminAsync(int bookingId)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return new CancelBookingResult { Success = false, ErrorMessage = "Booking not found." };
+            }
+
+            // Admin-initiated (FR-12): the client didn't do this themselves,
+            // so they need to be told.
+            return await CancelAsync(booking, notifyClient: true);
+        }
+
+        private async Task<CancelBookingResult> CancelAsync(Booking booking, bool notifyClient)
+        {
             if (booking.Status == "Cancelled")
             {
                 return new CancelBookingResult { Success = false, ErrorMessage = "This booking has already been cancelled." };
@@ -167,6 +187,11 @@ namespace ThriveWellness.Services.Implementations
             await _bookingRepository.UpdateAsync(booking);
 
             await _waitlistService.PromoteNextInLineAsync(booking.SessionId);
+
+            if (notifyClient)
+            {
+                await _notificationService.SendCancellationEmailAsync(booking);
+            }
 
             return new CancelBookingResult { Success = true };
         }
