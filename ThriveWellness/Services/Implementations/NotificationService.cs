@@ -132,6 +132,34 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Confirmation");
         }
 
+        public async Task SendReminderEmailAsync(Booking booking)
+        {
+            var client = await _clientRepository.GetByIdAsync(booking.ClientId);
+            if (client == null)
+            {
+                _logger.LogWarning("SendReminderEmailAsync: client {ClientId} not found for booking {BookingId}", booking.ClientId, booking.BookingId);
+                return;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+
+            var html = $"""
+                <p>Hi {client.FullName},</p>
+                <p>Just a reminder that your class is tomorrow:</p>
+                <ul>
+                    <li><strong>Class:</strong> {session?.SessionType}</li>
+                    <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
+                    <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
+                    <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
+                </ul>
+                <p>See you then!</p>
+                """;
+
+            await _emailSender.SendEmailAsync(client.Email, "Reminder: your class is tomorrow", html);
+            await WriteNotificationRecordAsync(booking.BookingId, "Reminder");
+        }
+
         private async Task WriteNotificationRecordAsync(int bookingId, string type)
         {
             _context.Notifications.Add(new Notification
