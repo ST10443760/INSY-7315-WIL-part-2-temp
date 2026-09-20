@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
@@ -217,6 +218,19 @@ public class BookingController : Controller
     public async Task<IActionResult> Cancel(string token)
     {
         var result = await _bookingService.CancelBookingAsync(token);
+        return View("CancelResult", result);
+    }
+
+    // Minimal admin-initiated cancel/reschedule stub (FR-12): just enough to
+    // trigger SendCancellationEmailAsync. There's no admin bookings list to
+    // link this from yet - that's a separate feature - so for now this is
+    // reached directly with a known booking id.
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminCancel(int bookingId)
+    {
+        var result = await _bookingService.CancelByAdminAsync(bookingId);
         return View("CancelResult", result);
     }
 }
