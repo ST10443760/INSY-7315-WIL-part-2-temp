@@ -17,6 +17,7 @@ namespace ThriveWellness.Services.Implementations
         private readonly ISessionRepository _sessionRepository;
         private readonly IWaitlistService _waitlistService;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly INotificationService _notificationService;
         private readonly ApplicationDbContext _context;
 
         public BookingService(
@@ -25,6 +26,7 @@ namespace ThriveWellness.Services.Implementations
             ISessionRepository sessionRepository,
             IWaitlistService waitlistService,
             IPaymentRepository paymentRepository,
+            INotificationService notificationService,
             ApplicationDbContext context)
         {
             _clientRepository = clientRepository;
@@ -32,6 +34,7 @@ namespace ThriveWellness.Services.Implementations
             _sessionRepository = sessionRepository;
             _waitlistService = waitlistService;
             _paymentRepository = paymentRepository;
+            _notificationService = notificationService;
             _context = context;
         }
 
@@ -135,6 +138,8 @@ namespace ThriveWellness.Services.Implementations
                 _context.IntakeForms.Add(intakeForm);
                 await _context.SaveChangesAsync();
             }
+
+            await _notificationService.SendConfirmationEmailAsync(booking);
 
             return new BookingCreateResult
             {
