@@ -7,10 +7,12 @@ namespace ThriveWellness.Services.Implementations
     public class SessionService : ISessionService
     {
         private readonly ISessionRepository _sessionRepository;
+        private readonly IWaitlistService _waitlistService;
 
-        public SessionService(ISessionRepository sessionRepository)
+        public SessionService(ISessionRepository sessionRepository, IWaitlistService waitlistService)
         {
             _sessionRepository = sessionRepository;
+            _waitlistService = waitlistService;
         }
 
         public Task<IEnumerable<Session>> GetAllAsync()
@@ -57,9 +59,10 @@ namespace ThriveWellness.Services.Implementations
             return _sessionRepository.MarkAsFullAsync(id);
         }
 
-        public Task MarkAsOpenAsync(int id)
+        public async Task MarkAsOpenAsync(int id)
         {
-            return _sessionRepository.MarkAsOpenAsync(id);
+            await _sessionRepository.MarkAsOpenAsync(id);
+            await _waitlistService.PromoteNextInLineAsync(id);
         }
 
         private static void Validate(Session session)
