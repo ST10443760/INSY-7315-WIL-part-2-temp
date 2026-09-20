@@ -1,0 +1,17 @@
+@model ThriveWellness.Models.WaitlistJoinedViewModel
+
+@{
+    ViewData["Title"] = "Waitlist";
+}
+
+<h1>You're on the Waitlist</h1>
+
+<p>
+    @Model.SessionType at @Model.LocationName
+    on @Model.SessionDate.ToString("yyyy-MM-dd") at @Model.SessionTime.ToString(@"hh\:mm")
+    is currently full.
+</p>
+
+<p>You are number <strong>@Model.Position</strong> in line. We'll contact you if a spot opens up.</p>
+
+<p><a asp-controller="Booking" asp-action="Schedule">Back to available sessions</a></p>
