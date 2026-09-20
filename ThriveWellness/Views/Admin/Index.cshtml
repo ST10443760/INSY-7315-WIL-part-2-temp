@@ -6,6 +6,8 @@
 
 <p>Placeholder dashboard. Logged in as an authenticated admin.</p>
 
+<p><a asp-controller="Payment" asp-action="Pending">Pending Payments</a></p>
+
 <form asp-controller="Account" asp-action="Logout" method="post">
     @Html.AntiForgeryToken()
     <button type="submit">Logout</button>
