@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Interfaces;
@@ -9,15 +10,27 @@ namespace ThriveWellness.Services.Implementations
     {
         private readonly IBookingRepository _bookingRepository;
         private readonly IClientRepository _clientRepository;
+        private readonly ISessionRepository _sessionRepository;
+        private readonly ILocationRepository _locationRepository;
+        private readonly IEmailSender _emailSender;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
             IBookingRepository bookingRepository,
             IClientRepository clientRepository,
+            ISessionRepository sessionRepository,
+            ILocationRepository locationRepository,
+            IEmailSender emailSender,
+            ApplicationDbContext context,
             ILogger<NotificationService> logger)
         {
             _bookingRepository = bookingRepository;
             _clientRepository = clientRepository;
+            _sessionRepository = sessionRepository;
+            _locationRepository = locationRepository;
+            _emailSender = emailSender;
+            _context = context;
             _logger = logger;
         }
 
@@ -34,10 +47,7 @@ namespace ThriveWellness.Services.Implementations
             // detached fire-and-forget task races the request's own
             // completion (and the DbContext disposal that follows it),
             // which produced real "another read operation is pending" /
-            // connection-aborted errors when this ran undetached. This
-            // stub is fast (a couple of reads + a log line), so blocking
-            // synchronously here is fine; a real SendGrid call should be
-            // queued onto its own scope instead of reusing this one.
+            // connection-aborted errors when this ran undetached.
             HandlePaymentConfirmedAsync(e).GetAwaiter().GetResult();
         }
 
@@ -53,10 +63,42 @@ namespace ThriveWellness.Services.Implementations
         public async Task SendWelcomeEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
+            if (client == null)
+            {
+                _logger.LogWarning("SendWelcomeEmailAsync: client {ClientId} not found for booking {BookingId}", booking.ClientId, booking.BookingId);
+                return;
+            }
 
-            // TODO: replace this stub with a real SendGrid call once the
-            // email integration feature lands.
-            _logger.LogInformation("Would send welcome email to {Email}", client?.Email);
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+
+            var html = $"""
+                <p>Hi {client.FullName},</p>
+                <p>Welcome to Thrive Wellness! Here are the details for your first class:</p>
+                <ul>
+                    <li><strong>Class:</strong> {session?.SessionType}</li>
+                    <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
+                    <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
+                    <li><strong>Location:</strong> {location?.Name} - {location?.Address}</li>
+                </ul>
+                <p><strong>Before you arrive:</strong> please arrive 10 minutes early, wear comfortable
+                workout clothing, and bring a mat and water bottle if you have them.</p>
+                <p>See you soon!</p>
+                """;
+
+            await _emailSender.SendEmailAsync(client.Email, "Welcome to Thrive Wellness", html);
+            await WriteNotificationRecordAsync(booking.BookingId, "Welcome");
+        }
+
+        private async Task WriteNotificationRecordAsync(int bookingId, string type)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                BookingId = bookingId,
+                Type = type,
+                SentAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
         }
     }
 }
