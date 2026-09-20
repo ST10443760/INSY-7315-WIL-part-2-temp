@@ -44,16 +44,6 @@
             <span asp-validation-for="PhoneNumber"></span>
         </div>
 
-        <div>
-            <label asp-for="PaymentType"></label>
-            <select asp-for="PaymentType">
-                <option value="">-- Select Payment Type --</option>
-                <option value="EFT">EFT</option>
-                <option value="cash">Cash</option>
-            </select>
-            <span asp-validation-for="PaymentType"></span>
-        </div>
-
         <h2>Intake Form</h2>
 
         <div>
@@ -82,6 +72,28 @@
             <input asp-for="PhoneNumber" readonly />
         </div>
     }
+
+    <h2>Payment</h2>
+
+    <div>
+        <label asp-for="PaymentType"></label>
+        <select asp-for="PaymentType">
+            <option value="">-- Select Payment Type --</option>
+            <option value="per-class">Per-class (R120)</option>
+            <option value="monthly">Monthly (R450)</option>
+        </select>
+        <span asp-validation-for="PaymentType"></span>
+    </div>
+
+    <div>
+        <label asp-for="Method"></label>
+        <select asp-for="Method">
+            <option value="">-- Select Payment Method --</option>
+            <option value="EFT">EFT</option>
+            <option value="cash">Cash</option>
+        </select>
+        <span asp-validation-for="Method"></span>
+    </div>
 
     <button type="submit">Confirm Booking</button>
 </form>
