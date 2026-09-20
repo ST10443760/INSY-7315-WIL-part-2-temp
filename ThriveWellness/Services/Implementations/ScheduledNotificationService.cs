@@ -33,9 +33,23 @@ namespace ThriveWellness.Services.Implementations
             }
         }
 
-        public Task SendDueLocationEmailsAsync()
+        public async Task SendDueLocationEmailsAsync()
         {
-            throw new NotImplementedException();
+            var today = DateTime.UtcNow.Date;
+
+            var dueBookings = await (
+                from booking in _context.Bookings
+                join session in _context.Sessions on booking.SessionId equals session.SessionId
+                join client in _context.Clients on booking.ClientId equals client.ClientId
+                where booking.Status == "Confirmed" && session.Date.Date == today && client.IsNew
+                where !_context.Notifications.Any(n => n.BookingId == booking.BookingId && n.Type == "Location")
+                select booking
+            ).ToListAsync();
+
+            foreach (var booking in dueBookings)
+            {
+                await _notificationService.SendLocationEmailAsync(booking);
+            }
         }
     }
 }
