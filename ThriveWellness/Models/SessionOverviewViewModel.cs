@@ -10,5 +10,8 @@ namespace ThriveWellness.Models
         public int BookedCount { get; set; }
         public int Capacity { get; set; }
         public bool IsOpen { get; set; }
+
+        // Full if an admin closed it (FR-17) or bookings have reached capacity.
+        public bool IsFull => !IsOpen || BookedCount >= Capacity;
     }
 }

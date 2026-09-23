@@ -65,7 +65,7 @@ else
                     <td>@session.SessionType</td>
                     <td>@session.LocationName</td>
                     <td>@session.BookedCount / @session.Capacity</td>
-                    <td>@(session.IsOpen ? "Open" : "Full")</td>
+                    <td>@(session.IsFull ? "Full" : "Open")</td>
                     <td><a asp-controller="Session" asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a></td>
                 </tr>
             }
