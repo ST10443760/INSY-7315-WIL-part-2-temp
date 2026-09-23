@@ -29,6 +29,10 @@
                 </div>
             </div>
         </nav>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <partial name="_AdminNav" />
+        }
     </header>
     <div class="container">
         <main role="main" class="pb-3">
