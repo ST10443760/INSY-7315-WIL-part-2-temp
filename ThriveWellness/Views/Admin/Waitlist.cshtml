@@ -1,0 +1,44 @@
+@model IReadOnlyList<ThriveWellness.Models.WaitlistOverviewRowViewModel>
+
+@{
+    ViewData["Title"] = "Waitlists";
+}
+
+<h1>Waitlists</h1>
+
+@if (!Model.Any())
+{
+    <p>No one is currently on a waitlist.</p>
+}
+else
+{
+    <table class="table table-bordered table-sm">
+        <thead>
+            <tr>
+                <th>Session</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Location</th>
+                <th>Position</th>
+                <th>Client</th>
+                <th>Email</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td><a asp-controller="Session" asp-action="Waitlist" asp-route-id="@entry.SessionId">@entry.SessionType</a></td>
+                    <td>@entry.SessionDate.ToString("yyyy-MM-dd")</td>
+                    <td>@entry.SessionTime.ToString(@"hh\:mm")</td>
+                    <td>@entry.LocationName</td>
+                    <td>@entry.Position</td>
+                    <td>@entry.ClientName</td>
+                    <td>@entry.ClientEmail</td>
+                    <td>@entry.DateAdded.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
