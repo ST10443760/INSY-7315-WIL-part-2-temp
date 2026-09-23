@@ -24,24 +24,10 @@ namespace ThriveWellness.Services.Implementations
             var today = DateTime.Today;
             var windowEnd = today.AddDays(UpcomingWindowDays);
 
-            // Cancelled bookings don't count against capacity, matching the
-            // capacity checks in BookingService and WaitlistService.
-            var upcomingSessions = await (
-                from session in _context.Sessions
-                join location in _context.Locations on session.LocationId equals location.LocationId
-                where session.Date >= today && session.Date < windowEnd
-                orderby session.Date, session.Time
-                select new SessionOverviewViewModel
-                {
-                    SessionId = session.SessionId,
-                    SessionType = session.SessionType,
-                    Date = session.Date,
-                    Time = session.Time,
-                    LocationName = location.Name,
-                    Capacity = session.Capacity,
-                    IsOpen = session.IsOpen,
-                    BookedCount = _context.Bookings.Count(b => b.SessionId == session.SessionId && b.Status != "Cancelled")
-                }).ToListAsync();
+            var upcomingSessions = await SessionOverviews()
+                .Where(s => s.Date >= today && s.Date < windowEnd)
+                .OrderBy(s => s.Date).ThenBy(s => s.Time)
+                .ToListAsync();
 
             var recentBookings = await (
                 from booking in _context.Bookings
@@ -69,6 +55,38 @@ namespace ThriveWellness.Services.Implementations
                 UpcomingSessions = upcomingSessions,
                 RecentBookings = recentBookings
             };
+        }
+
+        public async Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync()
+        {
+            var sessions = await SessionOverviews()
+                .OrderBy(s => s.Date).ThenBy(s => s.Time)
+                .ToListAsync();
+
+            return sessions
+                .GroupBy(s => s.Date.Date)
+                .Select(g => new CalendarDayViewModel { Date = g.Key, Sessions = g.ToList() })
+                .ToList();
+        }
+
+        // Cancelled bookings don't count against capacity, matching the
+        // capacity checks in BookingService and WaitlistService.
+        private IQueryable<SessionOverviewViewModel> SessionOverviews()
+        {
+            return
+                from session in _context.Sessions
+                join location in _context.Locations on session.LocationId equals location.LocationId
+                select new SessionOverviewViewModel
+                {
+                    SessionId = session.SessionId,
+                    SessionType = session.SessionType,
+                    Date = session.Date,
+                    Time = session.Time,
+                    LocationName = location.Name,
+                    Capacity = session.Capacity,
+                    IsOpen = session.IsOpen,
+                    BookedCount = _context.Bookings.Count(b => b.SessionId == session.SessionId && b.Status != "Cancelled")
+                };
         }
     }
 }

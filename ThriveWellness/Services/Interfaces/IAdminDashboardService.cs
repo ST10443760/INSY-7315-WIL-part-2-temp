@@ -5,5 +5,6 @@ namespace ThriveWellness.Services.Interfaces
     public interface IAdminDashboardService
     {
         Task<AdminDashboardViewModel> GetDashboardAsync();
+        Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync();
     }
 }
