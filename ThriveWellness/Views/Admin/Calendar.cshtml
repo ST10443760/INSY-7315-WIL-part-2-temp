@@ -1,0 +1,47 @@
+@model IReadOnlyList<ThriveWellness.Models.CalendarDayViewModel>
+
+@{
+    ViewData["Title"] = "Session Calendar";
+}
+
+<h1>Session Calendar</h1>
+
+@if (!Model.Any())
+{
+    <p>No sessions scheduled.</p>
+}
+else
+{
+    @foreach (var day in Model)
+    {
+        <h2 class="h5 mt-4">@day.Date.ToString("dddd, d MMMM yyyy")</h2>
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Booked</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var session in day.Sessions)
+                {
+                    <tr>
+                        <td>@session.Time.ToString(@"hh\:mm")</td>
+                        <td>@session.SessionType</td>
+                        <td>@session.LocationName</td>
+                        <td>@session.BookedCount / @session.Capacity</td>
+                        <td>@(session.IsOpen ? "Open" : "Full")</td>
+                        <td>
+                            <a asp-controller="Session" asp-action="Edit" asp-route-id="@session.SessionId">Edit</a>
+                            <a asp-controller="Session" asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
