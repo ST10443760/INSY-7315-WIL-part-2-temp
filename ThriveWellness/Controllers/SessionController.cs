@@ -13,36 +13,28 @@ public class SessionController : Controller
     private readonly ILocationRepository _locationRepository;
     private readonly IWaitlistRepository _waitlistRepository;
     private readonly IClientRepository _clientRepository;
+    private readonly IAdminDashboardService _dashboardService;
 
     public SessionController(
         ISessionService sessionService,
         ILocationRepository locationRepository,
         IWaitlistRepository waitlistRepository,
-        IClientRepository clientRepository)
+        IClientRepository clientRepository,
+        IAdminDashboardService dashboardService)
     {
         _sessionService = sessionService;
         _locationRepository = locationRepository;
         _waitlistRepository = waitlistRepository;
         _clientRepository = clientRepository;
+        _dashboardService = dashboardService;
     }
 
     public async Task<IActionResult> Index()
     {
-        var sessions = await _sessionService.GetAllAsync();
-        var locations = (await _locationRepository.GetAllAsync()).ToDictionary(l => l.LocationId, l => l.Name);
-
-        var viewModel = sessions.Select(s => new SessionListItemViewModel
-        {
-            SessionId = s.SessionId,
-            LocationName = locations.TryGetValue(s.LocationId, out var name) ? name : "Unknown",
-            SessionType = s.SessionType,
-            Date = s.Date,
-            Time = s.Time,
-            Capacity = s.Capacity,
-            IsOpen = s.IsOpen
-        }).OrderBy(s => s.Date).ThenBy(s => s.Time);
-
-        return View(viewModel);
+        // Same overview data as the dashboard/calendar, so "Full" means the
+        // same thing everywhere (closed by an admin OR booked >= capacity).
+        var sessions = await _dashboardService.GetSessionOverviewsAsync();
+        return View(sessions);
     }
 
     [HttpGet]

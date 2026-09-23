@@ -1,4 +1,4 @@
-@model IEnumerable<ThriveWellness.Models.SessionListItemViewModel>
+@model IEnumerable<ThriveWellness.Models.SessionOverviewViewModel>
 
 @{
     ViewData["Title"] = "Sessions";
@@ -29,7 +29,7 @@
                 <td>@session.Time.ToString(@"hh\:mm")</td>
                 <td>@session.LocationName</td>
                 <td>@session.Capacity</td>
-                <td>@(session.IsOpen ? "Open" : "Full")</td>
+                <td>@(session.IsFull ? "Full" : "Open")</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@session.SessionId">Edit</a>
                     <a asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
