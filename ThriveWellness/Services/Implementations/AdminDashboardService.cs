@@ -69,6 +69,28 @@ namespace ThriveWellness.Services.Implementations
                 .ToList();
         }
 
+        public async Task<IReadOnlyList<WaitlistOverviewRowViewModel>> GetWaitlistOverviewAsync()
+        {
+            return await (
+                from entry in _context.Waitlists
+                join client in _context.Clients on entry.ClientId equals client.ClientId
+                join session in _context.Sessions on entry.SessionId equals session.SessionId
+                join location in _context.Locations on session.LocationId equals location.LocationId
+                orderby session.Date, session.Time, session.SessionId, entry.Position
+                select new WaitlistOverviewRowViewModel
+                {
+                    SessionId = session.SessionId,
+                    SessionType = session.SessionType,
+                    SessionDate = session.Date,
+                    SessionTime = session.Time,
+                    LocationName = location.Name,
+                    Position = entry.Position,
+                    ClientName = client.FullName,
+                    ClientEmail = client.Email,
+                    DateAdded = entry.DateAdded
+                }).ToListAsync();
+        }
+
         // Cancelled bookings don't count against capacity, matching the
         // capacity checks in BookingService and WaitlistService.
         private IQueryable<SessionOverviewViewModel> SessionOverviews()

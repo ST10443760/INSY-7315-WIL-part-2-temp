@@ -6,5 +6,6 @@ namespace ThriveWellness.Services.Interfaces
     {
         Task<AdminDashboardViewModel> GetDashboardAsync();
         Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync();
+        Task<IReadOnlyList<WaitlistOverviewRowViewModel>> GetWaitlistOverviewAsync();
     }
 }
