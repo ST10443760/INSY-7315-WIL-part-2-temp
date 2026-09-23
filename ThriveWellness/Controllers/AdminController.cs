@@ -8,15 +8,20 @@ namespace ThriveWellness.Controllers;
 public class AdminController : Controller
 {
     private readonly IScheduledNotificationService _scheduledNotificationService;
+    private readonly IAdminDashboardService _dashboardService;
 
-    public AdminController(IScheduledNotificationService scheduledNotificationService)
+    public AdminController(
+        IScheduledNotificationService scheduledNotificationService,
+        IAdminDashboardService dashboardService)
     {
         _scheduledNotificationService = scheduledNotificationService;
+        _dashboardService = dashboardService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var dashboard = await _dashboardService.GetDashboardAsync();
+        return View(dashboard);
     }
 
     // TEMP — remove before final submission.
