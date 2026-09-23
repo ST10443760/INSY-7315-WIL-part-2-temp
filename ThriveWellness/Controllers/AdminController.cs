@@ -24,6 +24,12 @@ public class AdminController : Controller
         return View(dashboard);
     }
 
+    public async Task<IActionResult> Calendar()
+    {
+        var days = await _dashboardService.GetCalendarAsync();
+        return View(days);
+    }
+
     // TEMP — remove before final submission.
     // Manually runs a scheduled notification job on demand (the real ones only
     // run on the hourly background timer). jobName is "reminders" or "location".
