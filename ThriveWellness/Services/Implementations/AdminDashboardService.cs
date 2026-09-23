@@ -57,11 +57,16 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
-        public async Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync()
+        public async Task<IReadOnlyList<SessionOverviewViewModel>> GetSessionOverviewsAsync()
         {
-            var sessions = await SessionOverviews()
+            return await SessionOverviews()
                 .OrderBy(s => s.Date).ThenBy(s => s.Time)
                 .ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync()
+        {
+            var sessions = await GetSessionOverviewsAsync();
 
             return sessions
                 .GroupBy(s => s.Date.Date)
