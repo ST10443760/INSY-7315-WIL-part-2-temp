@@ -1,0 +1,15 @@
+<nav class="navbar navbar-expand navbar-dark bg-dark mb-3">
+    <div class="container-fluid">
+        <span class="navbar-text me-3">Admin</span>
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Session" asp-action="Index">Sessions</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Payment" asp-action="Pending">Pending Payments</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Waitlist">Waitlist</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Calendar">Calendar</a></li>
+        </ul>
+        <form asp-controller="Account" asp-action="Logout" method="post" class="d-flex">
+            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+        </form>
+    </div>
+</nav>
