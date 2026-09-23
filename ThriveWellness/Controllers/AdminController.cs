@@ -30,6 +30,12 @@ public class AdminController : Controller
         return View(days);
     }
 
+    public async Task<IActionResult> Waitlist()
+    {
+        var entries = await _dashboardService.GetWaitlistOverviewAsync();
+        return View(entries);
+    }
+
     // TEMP — remove before final submission.
     // Manually runs a scheduled notification job on demand (the real ones only
     // run on the hourly background timer). jobName is "reminders" or "location".
