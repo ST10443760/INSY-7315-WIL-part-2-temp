@@ -21,7 +21,7 @@ namespace ThriveWellness.Services.Implementations
         public async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
         {
             var client = new SendGridClient(_apiKey);
-            var from = new EmailAddress(_fromEmail, "Thrive Wellness");
+            var from = new EmailAddress(_fromEmail, "Thrive Wellness Pilates");
             var to = new EmailAddress(toEmail);
             var message = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent: string.Empty, htmlContent: htmlBody);
 
