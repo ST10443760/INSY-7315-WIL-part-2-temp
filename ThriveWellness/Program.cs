@@ -47,6 +47,7 @@ builder.Services.AddScoped<IPaymentService>(sp =>
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IScheduledNotificationService, ScheduledNotificationService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddHostedService<ScheduledNotificationHostedService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
