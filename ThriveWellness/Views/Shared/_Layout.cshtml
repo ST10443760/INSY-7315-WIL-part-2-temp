@@ -1,53 +1,92 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var controllerName = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var actionName = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var isHome = controllerName == "Home" && actionName == "Index";
+    var isAbout = controllerName == "Home" && actionName == "About";
+    var isSchedule = controllerName == "Booking";
+    var bodyClass = "thrive-body" + (ViewData["ThriveBodyBeige"] as bool? == true ? " thrive-body--beige" : "");
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ThriveWellness</title>
+    <title>@ViewData["Title"] - Thrive Pilates</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/thrive.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ThriveWellness.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ThriveWellness</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+<body class="@bodyClass">
+    <a class="thrive-skip-link" href="#main-content">Skip to content</a>
+
+    <header class="thrive-header">
+        <div class="thrive-container thrive-header__bar">
+            <partial name="_Logo" />
+
+            <button type="button" class="thrive-nav-toggle" aria-expanded="false" aria-controls="thrive-nav-list" aria-label="Toggle menu">
+                <svg class="thrive-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+
+            <nav aria-label="Main">
+                <ul class="thrive-nav__list" id="thrive-nav-list">
+                    <li><a class="thrive-nav__link @(isHome ? "thrive-nav__link--active" : "")" asp-controller="Home" asp-action="Index">HOME</a></li>
+                    <li><a class="thrive-nav__link @(isSchedule ? "thrive-nav__link--active" : "")" asp-controller="Booking" asp-action="Schedule">SCHEDULE</a></li>
+                    <li><a class="thrive-nav__link @(isAbout ? "thrive-nav__link--active" : "")" asp-controller="Home" asp-action="About">ABOUT</a></li>
+                    <li><a class="thrive-nav__link thrive-nav__link--muted" asp-controller="Admin" asp-action="Index">ADMIN</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <partial name="_AdminNav" />
+    }
+
+    <main id="main-content" role="main" class="thrive-main">
+        @RenderBody()
+    </main>
+
+    <footer class="thrive-footer">
+        <div class="thrive-container">
+            <partial name="_Logo" />
+            <p class="thrive-footer__tagline">Boutique Pilates studio offering bespoke instruction designed to cultivate strength, precision, and mindful movement.</p>
+
+            <div class="thrive-footer__grid">
+                <div></div>
+                <div class="thrive-footer__studio">
+                    <h3>Sunninghill Studio</h3>
+                    <p>Katz World of Dance, Studio 2</p>
+                    <p>Sunninghill</p>
+                </div>
+                <div class="thrive-footer__studio">
+                    <h3>Kyalami Studio</h3>
+                    <p>The Hub, Little Village</p>
+                    <p>Kyalami</p>
                 </div>
             </div>
-        </nav>
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <partial name="_AdminNav" />
-        }
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - ThriveWellness - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="thrive-footer__bottom">
+                <span>&copy; 2026 Thrive Pilates. All rights reserved.</span>
+                <span>
+                    <a asp-controller="Home" asp-action="Policy">Class Policy</a>
+                    &middot;
+                    <span>@@thrive_wellness_pilates</span>
+                </span>
+            </div>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/thrive.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
