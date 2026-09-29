@@ -14,6 +14,13 @@
   --color-maroon-dark: #6b2c3e;
   --color-dusty-rose: #c4788a;
   --color-dusty-rose-dark: #ad647a;
+  /* Same hue/saturation as --color-dusty-rose, darkened until white text on
+     it clears WCAG AA (4.5:1) - the plain dusty-rose is decorative-only
+     (icons, borders) from here on; anywhere rose carries actual text (the
+     rose button, the "session full" pill, the italic subtitle copy) uses
+     this instead. */
+  --color-rose-accessible: #a0465b;
+  --color-rose-accessible-dark: #8a3a4c;
   --color-mauve: #9b5a8a;
   --color-mauve-dark: #874d78;
   --color-pale-rose: #f4e2e6;
@@ -21,7 +28,9 @@
   --color-input-bg: #f7f0ea;
   --color-border: #e7dcd2;
   --color-text: #33262a;
-  --color-text-muted: #7a6b6a;
+  /* Darkened from the original #7a6b6a so muted text also clears AA against
+     --color-border (the .thrive-btn--muted background), not just cream/white. */
+  --color-text-muted: #6a5d5c;
   --color-white: #ffffff;
   --color-success-bg: #eaf5ec;
   --color-success-text: #2f6b3b;
@@ -123,7 +132,7 @@ h3 {
 .thrive-subtitle-italic {
   font-family: var(--font-serif);
   font-style: italic;
-  color: var(--color-dusty-rose-dark);
+  color: var(--color-rose-accessible);
   font-size: 1.1rem;
 }
 
@@ -273,12 +282,12 @@ h3 {
 }
 
 .thrive-btn--rose {
-  background: var(--color-dusty-rose);
+  background: var(--color-rose-accessible);
   color: var(--color-white);
 }
 
 .thrive-btn--rose:hover:not(:disabled) {
-  background: var(--color-dusty-rose-dark);
+  background: var(--color-rose-accessible-dark);
   color: var(--color-white);
 }
 
@@ -434,7 +443,7 @@ h3 {
 
 .thrive-pill--warning {
   color: var(--color-white);
-  background: var(--color-dusty-rose);
+  background: var(--color-rose-accessible);
 }
 
 .thrive-chip {
@@ -1062,4 +1071,57 @@ h3 {
   text-align: center;
   color: var(--color-text-muted);
   padding: var(--space-6) var(--space-4);
+}
+
+/* ==========================================================================
+   Small-screen refinements (down to 360px)
+   Everything above already reflows at 768/600px; these are the spots that
+   still needed a narrower pass of their own.
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .thrive-booking-card {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  /* Label/value side-by-side is fine at tablet width but a long date like
+     "Saturday, 31 May 2025 | 08:00 AM" collides with its label in a 360px
+     card - stack them instead. */
+  .thrive-detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .thrive-detail-row__value {
+    text-align: left;
+  }
+
+  .thrive-schedule-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .thrive-date-filter {
+    flex-wrap: wrap;
+  }
+
+  .thrive-date-filter .thrive-input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .thrive-session-card__header {
+    flex-wrap: wrap;
+  }
+
+  .thrive-chip-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  .thrive-tile-row {
+    grid-template-columns: 1fr;
+  }
 }

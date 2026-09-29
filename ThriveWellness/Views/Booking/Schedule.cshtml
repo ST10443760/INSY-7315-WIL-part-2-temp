@@ -12,12 +12,14 @@
         <ul class="thrive-tabs">
             <li>
                 <a class="thrive-tabs__link @(string.IsNullOrEmpty(Model.SelectedLocation) ? "thrive-tabs__link--active" : "")"
+                   aria-current="@(string.IsNullOrEmpty(Model.SelectedLocation) ? "true" : null)"
                    asp-action="Schedule" asp-route-location="" asp-route-date="@dateValue">All Locations</a>
             </li>
             @foreach (var location in Model.Locations)
             {
                 <li>
                     <a class="thrive-tabs__link @(Model.SelectedLocation == location.Address ? "thrive-tabs__link--active" : "")"
+                       aria-current="@(Model.SelectedLocation == location.Address ? "true" : null)"
                        asp-action="Schedule" asp-route-location="@location.Address" asp-route-date="@dateValue">@location.Address</a>
                 </li>
             }

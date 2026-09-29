@@ -37,8 +37,11 @@
             <input type="hidden" asp-for="LocationName" />
 
             <div class="thrive-field">
-                <label class="thrive-label" asp-for="Email"></label>
-                <input class="thrive-input" value="@Model.Email" readonly />
+                @* Plain label/id here, not asp-for: the hidden asp-for="Email"
+                   input above already owns id="Email" and carries the real
+                   submitted value - this input is just a read-only display. *@
+                <label class="thrive-label" for="EmailDisplay">Email</label>
+                <input id="EmailDisplay" class="thrive-input" value="@Model.Email" readonly />
             </div>
 
             @if (Model.IsNewClient)
