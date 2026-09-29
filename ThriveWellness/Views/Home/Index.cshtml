@@ -1,8 +1,42 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
+@{
+    ViewData["Title"] = "Home";
+    var hasHeroImage = System.IO.File.Exists(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "images", "hero.jpg"));
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="thrive-container thrive-hero">
+    <div class="thrive-hero__copy">
+        <span class="thrive-pill thrive-pill--outline">BOUTIQUE STUDIO JOHANNESBURG</span>
+        <h1 class="thrive-h1">Move. Strengthen. Thrive.</h1>
+        <p>Boutique Pilates classes in Sunninghill and Kyalami, Johannesburg.</p>
+        <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View Class Schedule</a>
+    </div>
+    @if (hasHeroImage)
+    {
+        <div class="thrive-hero__image">
+            <img src="~/images/hero.jpg" alt="A Pilates reformer and a small vase of eucalyptus in the Thrive studio" />
+        </div>
+    }
+    else
+    {
+        <div class="thrive-hero__image thrive-hero__image--gradient" role="img" aria-label="Warm studio-toned gradient"></div>
+    }
+</section>
+
+<section class="thrive-container thrive-features">
+    <div class="thrive-feature-card">
+        <div class="thrive-feature-card__icon"><partial name="_Icon" model="@("people")" /></div>
+        <h2 class="thrive-h3-serif-italic">Group Classes</h2>
+        <p>Tuesdays, Wednesdays and Saturdays</p>
+    </div>
+    <div class="thrive-feature-card">
+        <div class="thrive-feature-card__icon"><partial name="_Icon" model="@("target")" /></div>
+        <h2 class="thrive-h3-serif-italic">Private Sessions</h2>
+        <p>One-on-one with Saudah</p>
+    </div>
+    <div class="thrive-feature-card">
+        <div class="thrive-feature-card__icon"><partial name="_Icon" model="@("pin")" /></div>
+        <h2 class="thrive-h3-serif-italic">Two Locations</h2>
+        <p>Sunninghill and Kyalami</p>
+    </div>
+</section>
