@@ -2,40 +2,48 @@
 
 @{
     ViewData["Title"] = "Booking Confirmed";
+    ViewData["ThriveBodyBeige"] = true;
 }
 
-<h1>Booking Confirmed</h1>
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            <div class="thrive-result-icon"><partial name="_Icon" model="@("check-circle")" /></div>
+            <h1 class="thrive-h2-heading">Booking Confirmed!</h1>
+            <span class="thrive-subtitle-italic">Thank you for booking with Thrive Wellness Pilates.</span>
+        </div>
 
-<p>Thanks, @Model.ClientName — your booking is recorded.</p>
+        <div class="thrive-detail-card">
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("people")" />Session Type</span>
+                <span class="thrive-detail-row__value">@Model.SessionType.ToDisplayLabel()</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("calendar")" />Date &amp; Time</span>
+                <span class="thrive-detail-row__value">@Model.SessionDate.ToString("dddd, d MMMM yyyy") | @Model.SessionTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("pin")" />Location</span>
+                <span class="thrive-detail-row__value">@Model.LocationAddress Studio</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Method))
+            {
+                <div class="thrive-detail-row">
+                    <span class="thrive-detail-row__label"><partial name="_Icon" model="@("card")" />Payment Method</span>
+                    <span class="thrive-detail-row__value">@Model.Method</span>
+                </div>
+            }
+        </div>
 
-<table border="1" cellpadding="4">
-    <tr>
-        <th>Booking Reference</th>
-        <td>@Model.BookingId</td>
-    </tr>
-    <tr>
-        <th>Session</th>
-        <td>@Model.SessionType</td>
-    </tr>
-    <tr>
-        <th>Date</th>
-        <td>@Model.SessionDate.ToString("yyyy-MM-dd")</td>
-    </tr>
-    <tr>
-        <th>Time</th>
-        <td>@Model.SessionTime.ToString(@"hh\:mm")</td>
-    </tr>
-    <tr>
-        <th>Location</th>
-        <td>@Model.LocationName</td>
-    </tr>
-    <tr>
-        <th>Status</th>
-        <td>@Model.Status</td>
-    </tr>
-</table>
+        <p class="thrive-booking-caption">
+            A confirmation email has been sent to your email address with payment details and a cancellation link.
+        </p>
 
-<p>
-    Need to cancel?
-    <a asp-controller="Booking" asp-action="Cancel" asp-route-token="@Model.CancellationToken">Cancel this booking</a>
-</p>
+        <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
+
+        <p class="thrive-booking-caption">
+            Need to cancel?
+            <a asp-controller="Booking" asp-action="Cancel" asp-route-token="@Model.CancellationToken">Cancel this booking</a>
+        </p>
+    </div>
+</section>

@@ -38,3 +38,19 @@
         });
     });
 })();
+
+// Auto-submits a filter form (e.g. the schedule's date picker) as soon as
+// its value changes, so most people never need the fallback submit button.
+// The button stays in the markup for no-JS and keyboard users who just
+// press Enter instead.
+(function () {
+    "use strict";
+
+    document.querySelectorAll("form[data-auto-submit]").forEach(function (form) {
+        form.querySelectorAll("input, select").forEach(function (field) {
+            field.addEventListener("change", function () {
+                form.submit();
+            });
+        });
+    });
+})();

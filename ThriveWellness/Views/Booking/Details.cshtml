@@ -2,98 +2,111 @@
 
 @{
     ViewData["Title"] = "Confirm Your Booking";
+    ViewData["ThriveBodyBeige"] = true;
 }
 
-<h1>Confirm Your Booking</h1>
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            @if (Model.IsNewClient)
+            {
+                <h1 class="thrive-h2-serif-italic">Welcome to Thrive Pilates</h1>
+                <span class="thrive-subtitle-italic">Before your first class, please complete the form below.</span>
+            }
+            else
+            {
+                <h1 class="thrive-h2-serif-italic">Welcome back</h1>
+                <span class="thrive-subtitle-italic">We've pre-filled your details from your last booking.</span>
+            }
+        </div>
 
-<p>
-    @Model.SessionType at @Model.LocationName
-    on @Model.SessionDate.ToString("yyyy-MM-dd") at @Model.SessionTime.ToString(@"hh\:mm")
-</p>
+        <p class="thrive-text-muted">
+            @Model.SessionType.ToDisplayLabel() at @Model.LocationName on @Model.SessionDate.ToString("dddd d MMMM yyyy") at @Model.SessionTime.ToString(@"hh\:mm")
+        </p>
 
-<div asp-validation-summary="All"></div>
+        <div asp-validation-summary="All" class="thrive-validation-summary"></div>
 
-<form asp-controller="Booking" asp-action="Submit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="SessionId" />
-    <input type="hidden" asp-for="Email" />
-    <input type="hidden" asp-for="IsNewClient" />
-    <input type="hidden" asp-for="SessionType" />
-    <input type="hidden" asp-for="SessionDate" />
-    <input type="hidden" asp-for="SessionTime" />
-    <input type="hidden" asp-for="LocationName" />
+        <form asp-controller="Booking" asp-action="Submit" method="post" data-busy-text="Confirming…">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="SessionId" />
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="IsNewClient" />
+            <input type="hidden" asp-for="SessionType" />
+            <input type="hidden" asp-for="SessionDate" />
+            <input type="hidden" asp-for="SessionTime" />
+            <input type="hidden" asp-for="LocationName" />
 
-    <div>
-        <label>Email</label>
-        <span>@Model.Email</span>
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="Email"></label>
+                <input class="thrive-input" value="@Model.Email" readonly />
+            </div>
+
+            @if (Model.IsNewClient)
+            {
+                <div class="thrive-field">
+                    <label class="thrive-label" asp-for="FullName"></label>
+                    <input asp-for="FullName" class="thrive-input" placeholder="e.g. Jessica Miller" />
+                    <span asp-validation-for="FullName" class="thrive-field-error"></span>
+                </div>
+
+                <div class="thrive-field">
+                    <label class="thrive-label" asp-for="PhoneNumber"></label>
+                    <input asp-for="PhoneNumber" class="thrive-input" placeholder="e.g. +27 92 359 2376" />
+                    <span asp-validation-for="PhoneNumber" class="thrive-field-error"></span>
+                </div>
+
+                <div class="thrive-field">
+                    <label class="thrive-label" asp-for="MedicalNotes">Medical Conditions or Injuries</label>
+                    <textarea asp-for="MedicalNotes" class="thrive-textarea" placeholder="Please state any previous injuries, pregnancies or clinical conditions so your instructor can prepare modifications…"></textarea>
+                </div>
+            }
+            else
+            {
+                <div class="thrive-field">
+                    <label class="thrive-label" asp-for="FullName"></label>
+                    <input asp-for="FullName" class="thrive-input" readonly />
+                </div>
+
+                <div class="thrive-field">
+                    <label class="thrive-label" asp-for="PhoneNumber"></label>
+                    <input asp-for="PhoneNumber" class="thrive-input" readonly />
+                </div>
+            }
+
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="PaymentType">Payment Plan</label>
+                <select asp-for="PaymentType" class="thrive-select">
+                    <option value="">-- Select Payment Plan --</option>
+                    <option value="per-class">Per-class (R120)</option>
+                    <option value="monthly">Monthly (R450)</option>
+                </select>
+                <span asp-validation-for="PaymentType" class="thrive-field-error"></span>
+            </div>
+
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="Method">Payment Method</label>
+                <select asp-for="Method" class="thrive-select">
+                    <option value="">-- Select Payment Method --</option>
+                    <option value="EFT">EFT</option>
+                    <option value="cash">Cash</option>
+                </select>
+                <span asp-validation-for="Method" class="thrive-field-error"></span>
+            </div>
+
+            @if (Model.IsNewClient)
+            {
+                <div class="thrive-checkbox-row thrive-field">
+                    <input asp-for="ConsentSigned" type="checkbox" id="consentSigned" />
+                    <label for="consentSigned">
+                        I confirm that I have read and agree to the indemnity terms and class policies.
+                        <br />
+                        <a asp-controller="Home" asp-action="Policy">View full policy</a>
+                    </label>
+                </div>
+                <span asp-validation-for="ConsentSigned" class="thrive-field-error"></span>
+            }
+
+            <button type="submit" class="thrive-btn thrive-btn--rose thrive-btn--block">Continue to Booking</button>
+        </form>
     </div>
-
-    @if (Model.IsNewClient)
-    {
-        <p>We don't have a record for this email yet — welcome! Please complete your details below.</p>
-
-        <div>
-            <label asp-for="FullName"></label>
-            <input asp-for="FullName" />
-            <span asp-validation-for="FullName"></span>
-        </div>
-
-        <div>
-            <label asp-for="PhoneNumber"></label>
-            <input asp-for="PhoneNumber" />
-            <span asp-validation-for="PhoneNumber"></span>
-        </div>
-
-        <h2>Intake Form</h2>
-
-        <div>
-            <label asp-for="MedicalNotes"></label>
-            <textarea asp-for="MedicalNotes"></textarea>
-        </div>
-
-        <div>
-            <label asp-for="ConsentSigned"></label>
-            <input asp-for="ConsentSigned" type="checkbox" />
-            <span asp-validation-for="ConsentSigned"></span>
-            <p>I consent to Thrive Wellness holding this information for the purpose of my Pilates sessions.</p>
-        </div>
-    }
-    else
-    {
-        <p>Welcome back! We've pre-filled your details from your last booking.</p>
-
-        <div>
-            <label asp-for="FullName"></label>
-            <input asp-for="FullName" readonly />
-        </div>
-
-        <div>
-            <label asp-for="PhoneNumber"></label>
-            <input asp-for="PhoneNumber" readonly />
-        </div>
-    }
-
-    <h2>Payment</h2>
-
-    <div>
-        <label asp-for="PaymentType"></label>
-        <select asp-for="PaymentType">
-            <option value="">-- Select Payment Type --</option>
-            <option value="per-class">Per-class (R120)</option>
-            <option value="monthly">Monthly (R450)</option>
-        </select>
-        <span asp-validation-for="PaymentType"></span>
-    </div>
-
-    <div>
-        <label asp-for="Method"></label>
-        <select asp-for="Method">
-            <option value="">-- Select Payment Method --</option>
-            <option value="EFT">EFT</option>
-            <option value="cash">Cash</option>
-        </select>
-        <span asp-validation-for="Method"></span>
-    </div>
-
-    <button type="submit">Confirm Booking</button>
-</form>
+</section>

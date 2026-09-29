@@ -2,17 +2,26 @@
 
 @{
     ViewData["Title"] = "Cancel Booking";
+    ViewData["ThriveBodyBeige"] = true;
 }
 
-<h1>Cancel Booking</h1>
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            @if (Model.Success)
+            {
+                <div class="thrive-result-icon"><partial name="_Icon" model="@("check-circle")" /></div>
+                <h1 class="thrive-h2-heading">Booking Cancelled</h1>
+                <span class="thrive-subtitle-italic">Your booking has been cancelled. We hope to see you again soon.</span>
+            }
+            else
+            {
+                <div class="thrive-result-icon thrive-result-icon--error"><partial name="_Icon" model="@("x")" /></div>
+                <h1 class="thrive-h2-heading">We couldn't cancel that booking</h1>
+                <span class="thrive-subtitle-italic">@Model.ErrorMessage</span>
+            }
+        </div>
 
-@if (Model.Success)
-{
-    <p>Your booking has been cancelled.</p>
-}
-else
-{
-    <p>@Model.ErrorMessage</p>
-}
-
-<p><a asp-controller="Booking" asp-action="Schedule">Back to available sessions</a></p>
+        <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
+    </div>
+</section>

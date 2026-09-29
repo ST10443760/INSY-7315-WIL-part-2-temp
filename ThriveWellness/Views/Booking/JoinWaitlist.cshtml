@@ -1,0 +1,61 @@
+@model ThriveWellness.Models.WaitlistJoinViewModel
+
+@{
+    ViewData["Title"] = "Join the Waitlist";
+    ViewData["ThriveBodyBeige"] = true;
+}
+
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            <span class="thrive-pill thrive-pill--warning">SESSION FULL</span>
+            <h1 class="thrive-h2-heading">This class is currently full.</h1>
+            <span class="thrive-subtitle-italic">Join the waitlist and we will notify you if a spot becomes available.</span>
+        </div>
+
+        <div class="thrive-tile-row">
+            <div class="thrive-tile">
+                <partial name="_Icon" model="@("people")" />
+                <span class="thrive-tile__label">Type</span>
+                <span class="thrive-tile__value">@Model.SessionType.ToDisplayLabel()</span>
+            </div>
+            <div class="thrive-tile">
+                <partial name="_Icon" model="@("calendar")" />
+                <span class="thrive-tile__label">Date</span>
+                <span class="thrive-tile__value">@Model.SessionDate.ToString("dddd, d MMMM")</span>
+            </div>
+            <div class="thrive-tile">
+                <partial name="_Icon" model="@("clock")" />
+                <span class="thrive-tile__label">Time</span>
+                <span class="thrive-tile__value">@Model.SessionTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="thrive-tile">
+                <partial name="_Icon" model="@("pin")" />
+                <span class="thrive-tile__label">Location</span>
+                <span class="thrive-tile__value">@Model.LocationAddress Studio</span>
+            </div>
+        </div>
+
+        <div asp-validation-summary="All" class="thrive-validation-summary"></div>
+
+        <form asp-controller="Booking" asp-action="JoinWaitlistSubmit" method="post" data-busy-text="Joining…">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="SessionId" />
+
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="thrive-input" placeholder="Enter your full name" />
+                <span asp-validation-for="FullName" class="thrive-field-error"></span>
+            </div>
+
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="Email">Email Address</label>
+                <input asp-for="Email" class="thrive-input" placeholder="Enter your email address" />
+                <span asp-validation-for="Email" class="thrive-field-error"></span>
+            </div>
+
+            <button type="submit" class="thrive-btn thrive-btn--mauve thrive-btn--block">Join Waitlist</button>
+            <p class="thrive-booking-caption">You will only be charged if you confirm your spot when notified.</p>
+        </form>
+    </div>
+</section>

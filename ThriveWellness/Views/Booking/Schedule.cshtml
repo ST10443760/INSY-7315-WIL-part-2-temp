@@ -1,38 +1,80 @@
-@model IEnumerable<ThriveWellness.Models.SessionListItemViewModel>
+@model ThriveWellness.Models.ScheduleViewModel
 
 @{
-    ViewData["Title"] = "Available Sessions";
+    ViewData["Title"] = "Weekly Class Schedule";
+    var dateValue = Model.SelectedDate?.ToString("yyyy-MM-dd");
 }
 
-<h1>Available Sessions</h1>
+<section class="thrive-container">
+    <h1 class="thrive-h2-serif-italic">Weekly Class Schedule</h1>
 
-@if (!Model.Any())
-{
-    <p>No sessions are currently available.</p>
-}
-else
-{
-    <table border="1" cellpadding="4">
-        <thead>
-            <tr>
-                <th>Type</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Location</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var session in Model)
+    <div class="thrive-schedule-toolbar">
+        <ul class="thrive-tabs">
+            <li>
+                <a class="thrive-tabs__link @(string.IsNullOrEmpty(Model.SelectedLocation) ? "thrive-tabs__link--active" : "")"
+                   asp-action="Schedule" asp-route-location="" asp-route-date="@dateValue">All Locations</a>
+            </li>
+            @foreach (var location in Model.Locations)
             {
-                <tr>
-                    <td>@session.SessionType</td>
-                    <td>@session.Date.ToString("yyyy-MM-dd")</td>
-                    <td>@session.Time.ToString(@"hh\:mm")</td>
-                    <td>@session.LocationName</td>
-                    <td><a asp-action="Book" asp-route-sessionId="@session.SessionId">Book</a></td>
-                </tr>
+                <li>
+                    <a class="thrive-tabs__link @(Model.SelectedLocation == location.Address ? "thrive-tabs__link--active" : "")"
+                       asp-action="Schedule" asp-route-location="@location.Address" asp-route-date="@dateValue">@location.Address</a>
+                </li>
             }
-        </tbody>
-    </table>
-}
+        </ul>
+
+        <form method="get" asp-action="Schedule" class="thrive-date-filter" data-auto-submit="true">
+            <input type="hidden" name="location" value="@Model.SelectedLocation" />
+            <label class="thrive-visually-hidden" for="scheduleDate">Filter by date</label>
+            <partial name="_Icon" model="@("calendar")" />
+            <input type="date" id="scheduleDate" name="date" class="thrive-input" value="@dateValue" />
+            <button type="submit" class="thrive-btn thrive-btn--outline">Filter</button>
+            @if (Model.SelectedDate.HasValue)
+            {
+                <a class="thrive-date-filter__clear" asp-action="Schedule" asp-route-location="@Model.SelectedLocation">Clear date</a>
+            }
+        </form>
+    </div>
+
+    @if (!Model.Sessions.Any())
+    {
+        <div class="thrive-empty-state">
+            <p class="thrive-h3-serif-italic">No sessions found</p>
+            <p>Try a different location or date, or check back soon for new classes.</p>
+        </div>
+    }
+    else
+    {
+        <div class="thrive-schedule-grid">
+            @foreach (var session in Model.Sessions)
+            {
+                <div class="thrive-session-card">
+                    <div class="thrive-session-card__header">
+                        <span class="thrive-pill thrive-pill--outline">@session.SessionType.ToUpperInvariant()</span>
+                        <span class="thrive-pill">@session.LocationAddress</span>
+                    </div>
+
+                    <h2 class="thrive-session-card__date">@session.Date.ToString("dddd &bull; d MMMM yyyy")</h2>
+                    <p class="thrive-session-card__time">at @session.Time.ToString(@"hh\:mm")</p>
+
+                    @if (session.IsFull)
+                    {
+                        <p class="thrive-session-card__full">
+                            <partial name="_Icon" model="@("x")" />
+                            Fully Booked
+                        </p>
+                        <a class="thrive-btn thrive-btn--muted thrive-btn--block" asp-action="JoinWaitlist" asp-route-sessionId="@session.SessionId">Join Waitlist</a>
+                    }
+                    else
+                    {
+                        <p class="thrive-session-card__spots">
+                            <partial name="_Icon" model="@("people")" />
+                            @(session.Capacity - session.BookedCount) of @session.Capacity spots available
+                        </p>
+                        <a class="thrive-btn thrive-btn--maroon thrive-btn--block" asp-action="Book" asp-route-sessionId="@session.SessionId">Book Now</a>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>

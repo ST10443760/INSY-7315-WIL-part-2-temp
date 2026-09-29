@@ -1,17 +1,39 @@
 @model ThriveWellness.Models.WaitlistJoinedViewModel
 
 @{
-    ViewData["Title"] = "Waitlist";
+    ViewData["Title"] = "You're on the Waitlist";
+    ViewData["ThriveBodyBeige"] = true;
 }
 
-<h1>You're on the Waitlist</h1>
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            <div class="thrive-result-icon"><partial name="_Icon" model="@("check-circle")" /></div>
+            <h1 class="thrive-h2-heading">You're on the Waitlist!</h1>
+            <span class="thrive-subtitle-italic">We'll notify you if a spot opens up for this class.</span>
+        </div>
 
-<p>
-    @Model.SessionType at @Model.LocationName
-    on @Model.SessionDate.ToString("yyyy-MM-dd") at @Model.SessionTime.ToString(@"hh\:mm")
-    is currently full.
-</p>
+        <div class="thrive-detail-card">
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("people")" />Session Type</span>
+                <span class="thrive-detail-row__value">@Model.SessionType.ToDisplayLabel()</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("calendar")" />Date &amp; Time</span>
+                <span class="thrive-detail-row__value">@Model.SessionDate.ToString("dddd, d MMMM yyyy") | @Model.SessionTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("pin")" />Location</span>
+                <span class="thrive-detail-row__value">@Model.LocationAddress Studio</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("clock")" />Queue Position</span>
+                <span class="thrive-detail-row__value">#@Model.Position</span>
+            </div>
+        </div>
 
-<p>You are number <strong>@Model.Position</strong> in line. We'll contact you if a spot opens up.</p>
+        <p class="thrive-booking-caption">We'll email you as soon as a spot becomes available.</p>
 
-<p><a asp-controller="Booking" asp-action="Schedule">Back to available sessions</a></p>
+        <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
+    </div>
+</section>

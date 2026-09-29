@@ -2,26 +2,41 @@
 
 @{
     ViewData["Title"] = "Book a Session";
+    ViewData["ThriveBodyBeige"] = true;
 }
 
-<h1>Book a Session</h1>
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-chip-row">
+            <span class="thrive-chip"><partial name="_Icon" model="@("people")" />@Model.SessionType.ToDisplayLabel().ToUpperInvariant()</span>
+            <span class="thrive-chip"><partial name="_Icon" model="@("calendar")" />@Model.SessionDate.ToString("dddd d MMMM yyyy").ToUpperInvariant()</span>
+            <span class="thrive-chip"><partial name="_Icon" model="@("clock")" />@Model.SessionTime.ToString(@"hh\:mm")</span>
+            <span class="thrive-chip"><partial name="_Icon" model="@("pin")" />@Model.LocationAddress.ToUpperInvariant()</span>
+        </div>
 
-<p>
-    @Model.SessionType at @Model.LocationName
-    on @Model.SessionDate.ToString("yyyy-MM-dd") at @Model.SessionTime.ToString(@"hh\:mm")
-</p>
+        <div class="thrive-booking-card__header">
+            <h1 class="thrive-h2-serif">Enter your email to continue</h1>
+        </div>
 
-<div asp-validation-summary="All"></div>
+        <div asp-validation-summary="All" class="thrive-validation-summary"></div>
 
-<form asp-controller="Booking" asp-action="CheckEmail" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="SessionId" />
+        <form asp-controller="Booking" asp-action="CheckEmail" method="post" data-busy-text="Checking…">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="SessionId" />
 
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" />
-        <span asp-validation-for="Email"></span>
+            <div class="thrive-field thrive-input-icon-wrap">
+                <label class="thrive-visually-hidden" asp-for="Email"></label>
+                <partial name="_Icon" model="@("envelope")" />
+                <input asp-for="Email" class="thrive-input" placeholder="your@email.com" />
+                <span asp-validation-for="Email" class="thrive-field-error"></span>
+            </div>
+
+            <button type="submit" class="thrive-btn thrive-btn--rose thrive-btn--block">Continue</button>
+        </form>
+
+        <p class="thrive-booking-caption thrive-booking-caption--lock">
+            <partial name="_Icon" model="@("lock")" />
+            Returning clients will have their details filled in automatically.
+        </p>
     </div>
-
-    <button type="submit">Continue</button>
-</form>
+</section>
