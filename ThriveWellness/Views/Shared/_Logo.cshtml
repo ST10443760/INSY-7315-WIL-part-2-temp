@@ -1,0 +1,19 @@
+@* Single logo mark used everywhere: circle outline + asterisk, "THRIVE" in
+   serif, "PILATES" in small spaced caps. Colour comes from the surrounding
+   element's CSS `color` (SVG uses currentColor), so the same partial reads
+   correctly on both the cream header and the maroon footer - no variant
+   parameter needed. *@
+<a class="thrive-logo" asp-controller="Home" asp-action="Index" aria-label="Thrive Pilates - home">
+    <svg class="thrive-logo__mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+        <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.4" />
+        <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+            <line x1="20" y1="10" x2="20" y2="30" transform="rotate(0 20 20)" />
+            <line x1="20" y1="10" x2="20" y2="30" transform="rotate(60 20 20)" />
+            <line x1="20" y1="10" x2="20" y2="30" transform="rotate(120 20 20)" />
+        </g>
+    </svg>
+    <span class="thrive-logo__text">
+        <span class="thrive-logo__thrive">THRIVE</span>
+        <span class="thrive-logo__pilates">PILATES</span>
+    </span>
+</a>
