@@ -6,7 +6,8 @@ namespace ThriveWellness.Services.Interfaces
     {
         Task<IEnumerable<Session>> GetAllAsync();
         Task<Session?> GetByIdAsync(int id);
-        Task<IEnumerable<Session>> GetAvailableSessionsAsync();
+        Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date);
+        Task<int> GetBookedCountAsync(int sessionId);
         Task CreateAsync(Session session);
         Task UpdateAsync(Session session);
         Task DeleteAsync(int id);

@@ -13,36 +13,40 @@ public class BookingController : Controller
     private readonly ILocationRepository _locationRepository;
     private readonly IClientRepository _clientRepository;
     private readonly IWaitlistService _waitlistService;
+    private readonly IPaymentRepository _paymentRepository;
 
     public BookingController(
         IBookingService bookingService,
         ISessionService sessionService,
         ILocationRepository locationRepository,
         IClientRepository clientRepository,
-        IWaitlistService waitlistService)
+        IWaitlistService waitlistService,
+        IPaymentRepository paymentRepository)
     {
         _bookingService = bookingService;
         _sessionService = sessionService;
         _locationRepository = locationRepository;
         _clientRepository = clientRepository;
         _waitlistService = waitlistService;
+        _paymentRepository = paymentRepository;
     }
 
-    public async Task<IActionResult> Schedule()
+    // Lists every session - open, full and closed - so a full class still
+    // shows up with a "Join Waitlist" card instead of just disappearing.
+    // location/date are optional server-side filters from the schedule's
+    // tabs and date picker.
+    public async Task<IActionResult> Schedule(string? location, DateTime? date)
     {
-        var sessions = await _sessionService.GetAvailableSessionsAsync();
-        var locations = (await _locationRepository.GetAllAsync()).ToDictionary(l => l.LocationId, l => l.Name);
+        var sessions = await _sessionService.GetScheduleAsync(location, date);
+        var locations = await _locationRepository.GetAllAsync();
 
-        var viewModel = sessions.Select(s => new SessionListItemViewModel
+        var viewModel = new ScheduleViewModel
         {
-            SessionId = s.SessionId,
-            LocationName = locations.TryGetValue(s.LocationId, out var name) ? name : "Unknown",
-            SessionType = s.SessionType,
-            Date = s.Date,
-            Time = s.Time,
-            Capacity = s.Capacity,
-            IsOpen = s.IsOpen
-        }).OrderBy(s => s.Date).ThenBy(s => s.Time);
+            Sessions = sessions,
+            Locations = locations,
+            SelectedLocation = location,
+            SelectedDate = date
+        };
 
         return View(viewModel);
     }
@@ -56,6 +60,15 @@ public class BookingController : Controller
             return NotFound();
         }
 
+        // Still blocked server-side: a full/closed session can't be booked
+        // even if this URL is reached directly (bookmark, back button,
+        // someone else grabbing the last spot in the meantime).
+        var bookedCount = await _sessionService.GetBookedCountAsync(sessionId);
+        if (!session.IsOpen || bookedCount >= session.Capacity)
+        {
+            return RedirectToAction(nameof(JoinWaitlist), new { sessionId });
+        }
+
         var location = await _locationRepository.GetByIdAsync(session.LocationId);
 
         var viewModel = new BookingEmailStepViewModel
@@ -64,7 +77,8 @@ public class BookingController : Controller
             SessionType = session.SessionType,
             SessionDate = session.Date,
             SessionTime = session.Time,
-            LocationName = location?.Name ?? "Unknown"
+            LocationName = location?.Name ?? "Unknown",
+            LocationAddress = location?.Address ?? string.Empty
         };
 
         return View(viewModel);
@@ -87,6 +101,7 @@ public class BookingController : Controller
             model.SessionDate = session.Date;
             model.SessionTime = session.Time;
             model.LocationName = location?.Name ?? "Unknown";
+            model.LocationAddress = location?.Address ?? string.Empty;
             return View("Book", model);
         }
 
@@ -167,6 +182,7 @@ public class BookingController : Controller
                 SessionDate = session.Date,
                 SessionTime = session.Time,
                 LocationName = location?.Name ?? "Unknown",
+                LocationAddress = location?.Address ?? string.Empty,
                 Position = waitlistEntry.Position
             };
             return View("WaitlistJoined", waitlistViewModel);
@@ -198,6 +214,7 @@ public class BookingController : Controller
         var client = await _clientRepository.GetByIdAsync(booking.ClientId);
         var session = await _sessionService.GetByIdAsync(booking.SessionId);
         var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+        var payment = await _paymentRepository.GetByBookingIdAsync(booking.BookingId);
 
         var viewModel = new BookingConfirmationViewModel
         {
@@ -207,11 +224,97 @@ public class BookingController : Controller
             SessionDate = session?.Date ?? default,
             SessionTime = session?.Time ?? default,
             LocationName = location?.Name ?? "Unknown",
+            LocationAddress = location?.Address ?? string.Empty,
             Status = booking.Status,
+            Method = payment?.Method ?? string.Empty,
             CancellationToken = booking.CancellationToken
         };
 
         return View(viewModel);
+    }
+
+    // The direct "join the waitlist without booking" entry point (FR-13-ish),
+    // reached from a "Fully Booked" schedule card. Booking.Book redirects
+    // here too if it's reached for a session that's since filled up.
+    [HttpGet("Booking/JoinWaitlist/{sessionId:int}")]
+    public async Task<IActionResult> JoinWaitlist(int sessionId)
+    {
+        var session = await _sessionService.GetByIdAsync(sessionId);
+        if (session == null)
+        {
+            return NotFound();
+        }
+
+        var bookedCount = await _sessionService.GetBookedCountAsync(sessionId);
+        var isFull = !session.IsOpen || bookedCount >= session.Capacity;
+        if (!isFull)
+        {
+            // Not actually full - send them through the normal booking flow.
+            return RedirectToAction(nameof(Book), new { sessionId });
+        }
+
+        var location = await _locationRepository.GetByIdAsync(session.LocationId);
+
+        var viewModel = new WaitlistJoinViewModel
+        {
+            SessionId = session.SessionId,
+            SessionType = session.SessionType,
+            SessionDate = session.Date,
+            SessionTime = session.Time,
+            LocationName = location?.Name ?? "Unknown",
+            LocationAddress = location?.Address ?? string.Empty
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> JoinWaitlistSubmit(WaitlistJoinViewModel model)
+    {
+        var session = await _sessionService.GetByIdAsync(model.SessionId);
+        if (session == null)
+        {
+            return NotFound();
+        }
+        var location = await _locationRepository.GetByIdAsync(session.LocationId);
+
+        if (!ModelState.IsValid)
+        {
+            model.SessionType = session.SessionType;
+            model.SessionDate = session.Date;
+            model.SessionTime = session.Time;
+            model.LocationName = location?.Name ?? "Unknown";
+            model.LocationAddress = location?.Address ?? string.Empty;
+            return View("JoinWaitlist", model);
+        }
+
+        var client = await _clientRepository.GetByEmailAsync(model.Email);
+        if (client == null)
+        {
+            client = new Client
+            {
+                FullName = model.FullName,
+                Email = model.Email,
+                PhoneNumber = string.Empty,
+                IsNew = true
+            };
+            await _clientRepository.AddAsync(client);
+        }
+
+        var entry = await _waitlistService.JoinWaitlistAsync(client.ClientId, model.SessionId);
+
+        var waitlistViewModel = new WaitlistJoinedViewModel
+        {
+            SessionType = session.SessionType,
+            SessionDate = session.Date,
+            SessionTime = session.Time,
+            LocationName = location?.Name ?? "Unknown",
+            LocationAddress = location?.Address ?? string.Empty,
+            Position = entry.Position
+        };
+
+        return View("WaitlistJoined", waitlistViewModel);
     }
 
     [HttpGet("Booking/Cancel/{token}")]

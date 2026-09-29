@@ -8,7 +8,9 @@ namespace ThriveWellness.Models
         public DateTime SessionDate { get; set; }
         public TimeSpan SessionTime { get; set; }
         public string LocationName { get; set; } = string.Empty;
+        public string LocationAddress { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public string Method { get; set; } = string.Empty;
         public string CancellationToken { get; set; } = string.Empty;
     }
 }

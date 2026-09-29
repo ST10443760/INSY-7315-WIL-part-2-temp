@@ -24,12 +24,45 @@ namespace ThriveWellness.Repositories.Implementations
             return await _context.Sessions.FirstOrDefaultAsync(s => s.SessionId == id);
         }
 
-        public async Task<IEnumerable<Session>> GetAvailableSessionsAsync()
+        public async Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date)
         {
-            return await _context.Sessions
-                .Where(s => s.IsOpen &&
-                    _context.Bookings.Count(b => b.SessionId == s.SessionId && b.Status != "cancelled") < s.Capacity)
-                .ToListAsync();
+            var query =
+                from session in _context.Sessions
+                join location in _context.Locations on session.LocationId equals location.LocationId
+                select new { session, location };
+
+            if (!string.IsNullOrWhiteSpace(locationAddress))
+            {
+                query = query.Where(x => x.location.Address == locationAddress);
+            }
+
+            if (date.HasValue)
+            {
+                var day = date.Value.Date;
+                query = query.Where(x => x.session.Date.Date == day);
+            }
+
+            var ordered = query.OrderBy(x => x.session.Date).ThenBy(x => x.session.Time);
+
+            // Cancelled bookings don't count against capacity, matching the
+            // capacity checks in BookingService and WaitlistService.
+            return await ordered.Select(x => new SessionListItemViewModel
+            {
+                SessionId = x.session.SessionId,
+                LocationName = x.location.Name,
+                LocationAddress = x.location.Address,
+                SessionType = x.session.SessionType,
+                Date = x.session.Date,
+                Time = x.session.Time,
+                Capacity = x.session.Capacity,
+                IsOpen = x.session.IsOpen,
+                BookedCount = _context.Bookings.Count(b => b.SessionId == x.session.SessionId && b.Status != "Cancelled")
+            }).ToListAsync();
+        }
+
+        public Task<int> GetBookedCountAsync(int sessionId)
+        {
+            return _context.Bookings.CountAsync(b => b.SessionId == sessionId && b.Status != "Cancelled");
         }
 
         public async Task AddAsync(Session session)
