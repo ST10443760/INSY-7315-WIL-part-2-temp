@@ -464,6 +464,12 @@ h3 {
   color: var(--color-error-text);
 }
 
+.thrive-banner--notice {
+  background: var(--color-pale-rose);
+  color: var(--color-pale-rose-text);
+  font-weight: 500;
+}
+
 .thrive-pill--outline {
   background: transparent;
   border: 1px solid var(--color-maroon);
@@ -494,6 +500,14 @@ h3 {
   color: var(--color-text-muted);
   font-size: 1.05rem;
   max-width: 44ch;
+}
+
+.thrive-hero__copy--about {
+  max-width: 720px;
+}
+
+.thrive-hero__copy--about p {
+  max-width: none;
 }
 
 .thrive-hero__image {
