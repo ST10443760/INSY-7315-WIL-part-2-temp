@@ -56,7 +56,7 @@
                         <span class="thrive-pill">@session.LocationAddress</span>
                     </div>
 
-                    <h2 class="thrive-session-card__date">@session.Date.ToString("dddd &bull; d MMMM yyyy")</h2>
+                    <h2 class="thrive-session-card__date">@session.Date.ToString("dddd • d MMMM yyyy")</h2>
                     <p class="thrive-session-card__time">at @session.Time.ToString(@"hh\:mm")</p>
 
                     @if (session.IsFull)
