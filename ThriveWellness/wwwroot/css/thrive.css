@@ -322,6 +322,31 @@ h3 {
   width: 100%;
 }
 
+.thrive-btn--danger-outline {
+  background: transparent;
+  color: var(--color-error-text);
+  border-color: var(--color-error-text);
+}
+
+.thrive-btn--danger-outline:hover:not(:disabled) {
+  background: var(--color-error-text);
+  color: var(--color-white);
+}
+
+/* Compact variant for dense table-row actions - the 44px touch-target
+   floor is a floor for primary actions, not every icon+label button
+   packed into a table cell. */
+.thrive-btn--sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  min-height: 0;
+}
+
+.thrive-btn--sm .thrive-icon {
+  width: 1em;
+  height: 1em;
+}
+
 /* ==========================================================================
    Inputs
    ========================================================================== */

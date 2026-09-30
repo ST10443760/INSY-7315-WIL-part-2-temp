@@ -3,44 +3,49 @@
 @{
     ViewData["Title"] = "Waitlist";
     Layout = "_AdminLayout";
-    var sessionType = ViewData["SessionType"];
+    var sessionType = (string)ViewData["SessionType"]!;
     var sessionDate = (DateTime)ViewData["SessionDate"]!;
     var sessionTime = (TimeSpan)ViewData["SessionTime"]!;
 }
 
-<h1>Waitlist</h1>
+<div class="thrive-admin-page-header">
+    <h1>Waitlist</h1>
+    <span class="thrive-admin-page-header__subtitle">
+        @sessionType.ToDisplayLabel() on @sessionDate.ToString("d MMM yyyy") at @sessionTime.ToString(@"hh\:mm")
+    </span>
+</div>
 
-<p>
-    @sessionType on @sessionDate.ToString("yyyy-MM-dd") at @sessionTime.ToString(@"hh\:mm")
-</p>
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">No one is currently waiting for this session.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model)
+                    {
+                        <tr>
+                            <td>#@entry.Position</td>
+                            <td>@entry.ClientName</td>
+                            <td>@entry.ClientEmail</td>
+                            <td>@entry.DateAdded.ToString("d MMM yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 
-@if (!Model.Any())
-{
-    <p>No one is currently waiting for this session.</p>
-}
-else
-{
-    <table border="1" cellpadding="4">
-        <thead>
-            <tr>
-                <th>Position</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Joined</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var entry in Model)
-            {
-                <tr>
-                    <td>@entry.Position</td>
-                    <td>@entry.ClientName</td>
-                    <td>@entry.ClientEmail</td>
-                    <td>@entry.DateAdded.ToString("yyyy-MM-dd HH:mm")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
-<p><a asp-action="Index">Back to sessions</a></p>
+<p class="thrive-admin-back-link"><a class="thrive-btn thrive-btn--outline" asp-action="Index">&larr; Back to sessions</a></p>

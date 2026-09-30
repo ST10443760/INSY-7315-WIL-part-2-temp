@@ -5,57 +5,83 @@
     Layout = "_AdminLayout";
 }
 
-<h1>Sessions</h1>
+<div class="thrive-admin-page-header thrive-admin-page-header--row">
+    <div>
+        <h1>Sessions</h1>
+        <span class="thrive-admin-page-header__subtitle">Manage your class schedule.</span>
+    </div>
+    <a class="thrive-btn thrive-btn--mauve" asp-action="Create">
+        <partial name="_Icon" model="@("plus")" />
+        Create Session
+    </a>
+</div>
 
-<p><a asp-action="Create">Create New Session</a></p>
-
-<table border="1" cellpadding="4">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Location</th>
-            <th>Capacity</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var session in Model)
-        {
-            <tr>
-                <td>@session.SessionType</td>
-                <td>@session.Date.ToString("yyyy-MM-dd")</td>
-                <td>@session.Time.ToString(@"hh\:mm")</td>
-                <td>@session.LocationName</td>
-                <td>@session.Capacity</td>
-                <td>@(session.IsFull ? "Full" : "Open")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@session.SessionId">Edit</a>
-                    <a asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
-
-                    @if (session.IsOpen)
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">No sessions yet. Create the first one to get started.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Capacity</th>
+                        <th>Bookings</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in Model)
                     {
-                        <form asp-action="MarkFull" asp-route-id="@session.SessionId" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit">Mark Full</button>
-                        </form>
+                        <tr>
+                            <td>@session.Date.ToString("ddd d MMM yyyy")</td>
+                            <td>@session.Time.ToString(@"hh\:mm")</td>
+                            <td>
+                                <span class="thrive-pill @(session.SessionType == "private" ? "thrive-pill--private" : "")">@session.SessionType.ToDisplayLabel()</span>
+                            </td>
+                            <td>@session.LocationName</td>
+                            <td>@session.Capacity</td>
+                            <td class="@(session.IsFull ? "thrive-admin-table__amount" : "")">@session.BookedCount/@session.Capacity</td>
+                            <td>
+                                <div class="thrive-admin-actions">
+                                    <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Edit" asp-route-id="@session.SessionId">
+                                        <partial name="_Icon" model="@("edit")" />
+                                        Edit
+                                    </a>
+                                    @if (session.IsOpen)
+                                    {
+                                        <form asp-action="MarkFull" asp-route-id="@session.SessionId" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="thrive-btn thrive-btn--outline thrive-btn--sm">Mark Full</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="MarkOpen" asp-route-id="@session.SessionId" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="thrive-btn thrive-btn--outline thrive-btn--sm">Mark Open</button>
+                                        </form>
+                                    }
+                                    <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
+                                    <form asp-action="Delete" asp-route-id="@session.SessionId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="thrive-btn thrive-btn--danger-outline thrive-btn--sm" onclick="return confirm('Delete this session?');">
+                                            <partial name="_Icon" model="@("trash")" />
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                        <form asp-action="MarkOpen" asp-route-id="@session.SessionId" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit">Mark Open</button>
-                        </form>
-                    }
-
-                    <form asp-action="Delete" asp-route-id="@session.SessionId" method="post" style="display:inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" onclick="return confirm('Delete this session?');">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
