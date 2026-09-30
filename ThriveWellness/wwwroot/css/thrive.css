@@ -529,6 +529,7 @@ h3 {
 .thrive-hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
   gap: var(--space-6);
   /* Was center - the image now aligns with the row's top (see
      .thrive-hero__copy's own padding-top below) so it can sit flush
@@ -537,6 +538,13 @@ h3 {
   /* Top padding moved onto .thrive-hero__copy: the image bleeds through
      where the section's own top padding used to be. */
   padding: 0 0 var(--space-6);
+  /* Fixed, mockup-proportioned height (measured off desktop-home.png:
+     ~538px once scaled to this site's actual header height) instead of
+     letting the row grow with the image's own aspect ratio - that let a
+     wide, bled image inflate to near-viewport height and crop into an
+     awkward close-up. 600px minus this section's own bottom padding
+     lands the image right in the mockup's ~500-600px range. */
+  height: 600px;
 }
 
 /* Grid items default to min-width: auto, which can let a child's intrinsic
@@ -575,7 +583,10 @@ h3 {
      edge instead of the container's. */
   margin-right: calc(-1 * (var(--space-4) + max(0px, (100vw - 1400px) / 2)));
   overflow: hidden;
-  aspect-ratio: 4 / 5;
+  /* Fills the fixed-height row (was aspect-ratio: 4/5, which - combined
+     with the bleed making this element wider - inflated the height to
+     near-viewport and forced an awkward, zoomed-in crop). */
+  height: 100%;
   box-shadow: var(--shadow-card);
 }
 
@@ -583,7 +594,16 @@ h3 {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Explicit, not relying on the cover/center default: keeps the full
+     composition - wall, window light, plant, mat - centred in frame
+     rather than cropped toward one edge. */
+  object-position: center center;
   display: block;
+  /* Soft horizontal fade into the page background on the left edge,
+     where the image still borders open cream space (top and right are
+     flush, see .thrive-hero__image above, so they don't need one). */
+  mask-image: linear-gradient(to right, transparent 0%, black 18%, black 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 100%);
 }
 
 .thrive-hero__image--gradient {
@@ -593,6 +613,11 @@ h3 {
 @media (max-width: 768px) {
   .thrive-hero {
     grid-template-columns: 1fr;
+    /* The fixed desktop height (and the single-row track that fills it)
+       only makes sense for the two-column layout - stacked, image and
+       text both need their own natural height instead. */
+    grid-template-rows: auto;
+    height: auto;
     padding-top: var(--space-6);
   }
 
@@ -602,9 +627,16 @@ h3 {
 
   .thrive-hero__image {
     aspect-ratio: 16 / 10;
+    height: auto;
     border-radius: var(--radius-card);
     margin-right: 0;
     order: -1;
+  }
+
+  .thrive-hero__image img {
+    /* No bleed at this width, so no fade needed either. */
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 }
 
