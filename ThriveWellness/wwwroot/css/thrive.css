@@ -527,10 +527,14 @@ h3 {
   overflow: hidden;
   /* Shows through wherever .thrive-hero__img's mask goes transparent. */
   background: var(--color-cream);
-  /* Fixed, shorter band instead of letting the image's own aspect ratio
-     (or the viewport) drive the height - that read as stretched/zoomed
-     in. Roughly matches desktop-home.png's own proportions. */
-  height: 520px;
+  /* Fixed height, not driven by the viewport or the image's own aspect
+     ratio (both caused problems earlier: a runaway-tall stretch, then -
+     at 520px - a crop so tight it read as compact/cut-off-at-the-top
+     with leftover cream visible below the fold). 720px is a generous,
+     typical landing-page-hero height: tall enough that cover-fitting a
+     wide viewport into it doesn't need to crop away the top of the
+     photo's own composition. */
+  height: 720px;
 }
 
 .thrive-hero__media {
@@ -542,11 +546,10 @@ h3 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* This photo's visual interest (mat, vase, reformer) sits in the
-     lower half, with a lot of plain wall above it - bias the crop down
-     so cropping to this band's height keeps that lower portion rather
-     than centring on mostly-empty wall. */
-  object-position: center 68%;
+  /* Slight downward bias (this photo's visual interest - mat, vase,
+     reformer - sits in the lower half), much lighter than before now
+     that the taller section needs far less cropping either way. */
+  object-position: center 58%;
   display: block;
   /* Soft horizontal fade into the page background under the text, on
      the left - opaque well past where the text column ends so the
