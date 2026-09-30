@@ -539,7 +539,7 @@ h3 {
 }
 
 .thrive-hero__image {
-  border-radius: 200px 200px var(--radius-card) var(--radius-card);
+  border-radius: var(--radius-card);
   overflow: hidden;
   aspect-ratio: 4 / 5;
   box-shadow: var(--shadow-card);
