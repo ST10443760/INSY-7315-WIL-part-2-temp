@@ -297,7 +297,8 @@ public class BookingController : Controller
                 FullName = model.FullName,
                 Email = model.Email,
                 PhoneNumber = string.Empty,
-                IsNew = true
+                IsNew = true,
+                CreatedAt = DateTime.UtcNow
             };
             await _clientRepository.AddAsync(client);
         }

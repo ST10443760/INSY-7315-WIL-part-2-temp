@@ -8,5 +8,6 @@ namespace ThriveWellness.Models
         public string PhoneNumber { get; set; } = string.Empty;
         public bool IsNew { get; set; }
         public string PaymentType { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 }

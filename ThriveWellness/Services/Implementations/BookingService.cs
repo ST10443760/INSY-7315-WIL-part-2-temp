@@ -77,7 +77,8 @@ namespace ThriveWellness.Services.Implementations
                     Email = request.Email,
                     PhoneNumber = request.PhoneNumber,
                     IsNew = true,
-                    PaymentType = request.PaymentType
+                    PaymentType = request.PaymentType,
+                    CreatedAt = DateTime.UtcNow
                 };
                 await _clientRepository.AddAsync(client);
             }
