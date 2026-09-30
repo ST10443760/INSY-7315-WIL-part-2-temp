@@ -216,6 +216,35 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "WaitlistPromotion");
         }
 
+        public async Task SendWaitlistCourtesyEmailAsync(Waitlist entry)
+        {
+            var client = await _clientRepository.GetByIdAsync(entry.ClientId);
+            if (client == null)
+            {
+                _logger.LogWarning("SendWaitlistCourtesyEmailAsync: client {ClientId} not found for waitlist entry {WaitlistId}", entry.ClientId, entry.WaitlistId);
+                return;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(entry.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+
+            var html = $"""
+                <p>Hi {client.FullName},</p>
+                <p>You're number {entry.Position} on the waitlist for this class, and a spot may be opening up soon:</p>
+                <ul>
+                    <li><strong>Class:</strong> {session?.SessionType}</li>
+                    <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
+                    <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
+                    <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
+                </ul>
+                <p>We'll email you again if a spot is confirmed for you.</p>
+                """;
+
+            // No WriteNotificationRecordAsync here - that helper keys its
+            // record off a BookingId, and this entry doesn't have one yet.
+            await _emailSender.SendEmailAsync(client.Email, "You're on the waitlist - a spot may be opening up", html);
+        }
+
         public async Task SendCancellationEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);

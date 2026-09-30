@@ -10,13 +10,16 @@ public class AdminController : Controller
 {
     private readonly IScheduledNotificationService _scheduledNotificationService;
     private readonly IAdminDashboardService _dashboardService;
+    private readonly IWaitlistService _waitlistService;
 
     public AdminController(
         IScheduledNotificationService scheduledNotificationService,
-        IAdminDashboardService dashboardService)
+        IAdminDashboardService dashboardService,
+        IWaitlistService waitlistService)
     {
         _scheduledNotificationService = scheduledNotificationService;
         _dashboardService = dashboardService;
+        _waitlistService = waitlistService;
     }
 
     public async Task<IActionResult> Index()
@@ -51,6 +54,22 @@ public class AdminController : Controller
     {
         var entries = await _dashboardService.GetWaitlistOverviewAsync();
         return View(entries);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> NotifyWaitlistEntry(int id)
+    {
+        await _waitlistService.NotifyAsync(id);
+        return RedirectToAction(nameof(Waitlist));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveWaitlistEntry(int id)
+    {
+        await _waitlistService.RemoveAsync(id);
+        return RedirectToAction(nameof(Waitlist));
     }
 
     // TEMP — remove before final submission.

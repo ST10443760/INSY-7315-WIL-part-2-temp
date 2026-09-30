@@ -90,5 +90,35 @@ namespace ThriveWellness.Services.Implementations
 
             await _notificationService.SendWaitlistNotificationAsync(booking);
         }
+
+        public async Task RemoveAsync(int waitlistId)
+        {
+            var entry = await _waitlistRepository.GetByIdAsync(waitlistId);
+            if (entry == null)
+            {
+                return;
+            }
+
+            await _waitlistRepository.RemoveAsync(waitlistId);
+
+            var remaining = (await _waitlistRepository.GetBySessionAsync(entry.SessionId))
+                .Where(w => w.Position > entry.Position);
+            foreach (var later in remaining)
+            {
+                later.Position -= 1;
+                await _waitlistRepository.UpdateAsync(later);
+            }
+        }
+
+        public async Task NotifyAsync(int waitlistId)
+        {
+            var entry = await _waitlistRepository.GetByIdAsync(waitlistId);
+            if (entry == null)
+            {
+                return;
+            }
+
+            await _notificationService.SendWaitlistCourtesyEmailAsync(entry);
+        }
     }
 }

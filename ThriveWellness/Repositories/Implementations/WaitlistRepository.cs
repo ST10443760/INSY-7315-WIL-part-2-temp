@@ -20,6 +20,11 @@ namespace ThriveWellness.Repositories.Implementations
             await _context.SaveChangesAsync();
         }
 
+        public async Task<Waitlist?> GetByIdAsync(int id)
+        {
+            return await _context.Waitlists.FirstOrDefaultAsync(w => w.WaitlistId == id);
+        }
+
         public async Task<IEnumerable<Waitlist>> GetBySessionAsync(int sessionId)
         {
             return await _context.Waitlists

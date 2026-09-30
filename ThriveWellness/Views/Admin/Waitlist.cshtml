@@ -1,45 +1,73 @@
 @model IReadOnlyList<ThriveWellness.Models.WaitlistOverviewRowViewModel>
 
 @{
-    ViewData["Title"] = "Waitlists";
+    ViewData["Title"] = "Waitlist Management";
     Layout = "_AdminLayout";
+    var bySession = Model.GroupBy(e => e.SessionId).ToList();
 }
 
-<h1>Waitlists</h1>
+<div class="thrive-admin-page-header">
+    <h1>Waitlist Management</h1>
+    <span class="thrive-admin-page-header__subtitle">Manage clients waiting for fully booked sessions.</span>
+</div>
 
-@if (!Model.Any())
+@if (!bySession.Any())
 {
-    <p>No one is currently on a waitlist.</p>
+    <div class="thrive-admin-card">
+        <p class="thrive-admin-empty">No one is currently on a waitlist.</p>
+    </div>
 }
 else
 {
-    <table class="table table-bordered table-sm">
-        <thead>
-            <tr>
-                <th>Session</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Location</th>
-                <th>Position</th>
-                <th>Client</th>
-                <th>Email</th>
-                <th>Joined</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var entry in Model)
-            {
-                <tr>
-                    <td><a asp-controller="Session" asp-action="Waitlist" asp-route-id="@entry.SessionId">@entry.SessionType</a></td>
-                    <td>@entry.SessionDate.ToString("yyyy-MM-dd")</td>
-                    <td>@entry.SessionTime.ToString(@"hh\:mm")</td>
-                    <td>@entry.LocationName</td>
-                    <td>@entry.Position</td>
-                    <td>@entry.ClientName</td>
-                    <td>@entry.ClientEmail</td>
-                    <td>@entry.DateAdded.ToString("yyyy-MM-dd HH:mm")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="thrive-admin-waitlist-groups">
+        @foreach (var group in bySession)
+        {
+            var first = group.First();
+            <details class="thrive-admin-card thrive-admin-waitlist-group" open>
+                <summary class="thrive-admin-waitlist-group__header">
+                    <span class="thrive-pill thrive-pill--warning">Session Full</span>
+                    <span class="thrive-admin-waitlist-group__info">
+                        @first.SessionType.ToDisplayLabel() &mdash; @first.LocationAddress, @first.SessionDate.ToString("ddd d MMM") @first.SessionTime.ToString(@"hh\:mm")
+                    </span>
+                    <span class="thrive-admin-waitlist-group__count">@group.Count() waiting</span>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </summary>
+
+                <div class="thrive-admin-table-wrap">
+                    <table class="thrive-admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in group.OrderBy(e => e.Position))
+                            {
+                                <tr>
+                                    <td>@entry.ClientName</td>
+                                    <td>@entry.ClientEmail</td>
+                                    <td>@entry.DateAdded.ToString("d MMM yyyy")</td>
+                                    <td>
+                                        <div class="thrive-admin-actions">
+                                            <form asp-action="NotifyWaitlistEntry" asp-route-id="@entry.WaitlistId" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="thrive-btn thrive-btn--mauve thrive-btn--sm">Notify</button>
+                                            </form>
+                                            <form asp-action="RemoveWaitlistEntry" asp-route-id="@entry.WaitlistId" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="thrive-btn thrive-btn--danger-outline thrive-btn--sm" onclick="return confirm('Remove this person from the waitlist?');">Remove</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        }
+    </div>
 }
