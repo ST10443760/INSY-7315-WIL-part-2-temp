@@ -72,16 +72,6 @@
   box-sizing: border-box;
 }
 
-html {
-  /* Always reserve the scrollbar's gutter, scrollbar or not. Without this,
-     100vw (used for the hero image's edge-to-edge bleed) measures the
-     viewport width as if there were no scrollbar, while the actual
-     centred/padded layout width does account for it - the two disagree
-     by exactly the scrollbar's width, leaving the "full bleed" image a
-     few pixels short of the true edge. */
-  scrollbar-gutter: stable;
-}
-
 body.thrive-body {
   font-family: var(--font-body);
   color: var(--color-text);
@@ -526,35 +516,57 @@ h3 {
    Hero
    ========================================================================== */
 
+/* One full-width photo band, edge to edge, with the text overlaid on
+   its left portion (readable because the photo itself fades toward the
+   page background there - see .thrive-hero__img's mask) - not a
+   two-column layout with text and image side by side. */
 .thrive-hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  gap: var(--space-6);
-  /* Was center - the image now aligns with the row's top (see
-     .thrive-hero__copy's own padding-top below) so it can sit flush
-     against the top of the section instead of floating mid-row. */
-  align-items: start;
-  /* Top padding moved onto .thrive-hero__copy: the image bleeds through
-     where the section's own top padding used to be. */
-  padding: 0 0 var(--space-6);
-  /* Fixed, mockup-proportioned height (measured off desktop-home.png:
-     ~538px once scaled to this site's actual header height) instead of
-     letting the row grow with the image's own aspect ratio - that let a
-     wide, bled image inflate to near-viewport height and crop into an
-     awkward close-up. 600px minus this section's own bottom padding
-     lands the image right in the mockup's ~500-600px range. */
-  height: 600px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  /* Shows through wherever .thrive-hero__img's mask goes transparent. */
+  background: var(--color-cream);
+  /* Fixed, shorter band instead of letting the image's own aspect ratio
+     (or the viewport) drive the height - that read as stretched/zoomed
+     in. Roughly matches desktop-home.png's own proportions. */
+  height: 520px;
 }
 
-/* Grid items default to min-width: auto, which can let a child's intrinsic
-   size force its track wider than intended. Let both tracks shrink freely. */
-.thrive-hero > * {
-  min-width: 0;
+.thrive-hero__media {
+  position: absolute;
+  inset: 0;
+}
+
+.thrive-hero__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* This photo's visual interest (mat, vase, reformer) sits in the
+     lower half, with a lot of plain wall above it - bias the crop down
+     so cropping to this band's height keeps that lower portion rather
+     than centring on mostly-empty wall. */
+  object-position: center 68%;
+  display: block;
+  /* Soft horizontal fade into the page background under the text, on
+     the left - opaque well past where the text column ends so the
+     photo itself reads clearly on the right. */
+  mask-image: linear-gradient(to right, transparent 0%, transparent 8%, black 58%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 8%, black 58%);
+}
+
+.thrive-hero__media--gradient {
+  background: radial-gradient(120% 100% at 30% 20%, #fbe9e2 0%, var(--color-beige) 55%, var(--color-pale-rose) 100%);
+}
+
+.thrive-hero__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
 }
 
 .thrive-hero__copy {
-  padding-top: var(--space-6);
+  max-width: 560px;
 }
 
 .thrive-hero__copy p {
@@ -571,72 +583,30 @@ h3 {
   max-width: none;
 }
 
-.thrive-hero__image {
-  /* Full-bleed on the top and right, per the mockup: flush with the top of
-     the section and the right edge of the viewport, no gap on either side.
-     Only the bottom-left corner still borders open page background, so
-     that's the only one that stays rounded. */
-  border-radius: 0 0 0 var(--radius-card);
-  /* Cancels .thrive-container's own right padding, plus - once the
-     viewport is wider than the container's 1400px cap - the extra margin
-     that centers it, so the image's right edge lands on the true viewport
-     edge instead of the container's. */
-  margin-right: calc(-1 * (var(--space-4) + max(0px, (100vw - 1400px) / 2)));
-  overflow: hidden;
-  /* Fills the fixed-height row (was aspect-ratio: 4/5, which - combined
-     with the bleed making this element wider - inflated the height to
-     near-viewport and forced an awkward, zoomed-in crop). */
-  height: 100%;
-  box-shadow: var(--shadow-card);
-}
-
-.thrive-hero__image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Explicit, not relying on the cover/center default: keeps the full
-     composition - wall, window light, plant, mat - centred in frame
-     rather than cropped toward one edge. */
-  object-position: center center;
-  display: block;
-  /* Soft horizontal fade into the page background on the left edge,
-     where the image still borders open cream space (top and right are
-     flush, see .thrive-hero__image above, so they don't need one). */
-  mask-image: linear-gradient(to right, transparent 0%, black 18%, black 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 100%);
-}
-
-.thrive-hero__image--gradient {
-  background: radial-gradient(120% 100% at 30% 20%, #fbe9e2 0%, var(--color-beige) 55%, var(--color-pale-rose) 100%);
-}
-
 @media (max-width: 768px) {
   .thrive-hero {
-    grid-template-columns: 1fr;
-    /* The fixed desktop height (and the single-row track that fills it)
-       only makes sense for the two-column layout - stacked, image and
-       text both need their own natural height instead. */
-    grid-template-rows: auto;
     height: auto;
-    padding-top: var(--space-6);
+    display: block;
+    padding: var(--space-6) 0;
+  }
+
+  .thrive-hero__media {
+    position: static;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    margin-bottom: var(--space-4);
+  }
+
+  .thrive-hero__img {
+    /* No overlay/fade at this width - image stacks above the text as
+       its own plain, fully-opaque rectangle. */
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 
   .thrive-hero__copy {
-    padding-top: 0;
-  }
-
-  .thrive-hero__image {
-    aspect-ratio: 16 / 10;
-    height: auto;
-    border-radius: var(--radius-card);
-    margin-right: 0;
-    order: -1;
-  }
-
-  .thrive-hero__image img {
-    /* No bleed at this width, so no fade needed either. */
-    mask-image: none;
-    -webkit-mask-image: none;
+    max-width: none;
   }
 }
 

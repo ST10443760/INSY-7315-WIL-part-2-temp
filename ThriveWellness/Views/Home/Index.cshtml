@@ -4,23 +4,25 @@
     var hasHeroImage = System.IO.File.Exists(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "images", "hero.jpg"));
 }
 
-<section class="thrive-container thrive-hero">
-    <div class="thrive-hero__copy">
-        <span class="thrive-pill thrive-pill--outline">BOUTIQUE STUDIO JOHANNESBURG</span>
-        <h1 class="thrive-h1">Move. Strengthen. Thrive.</h1>
-        <p>Boutique Pilates classes in Sunninghill and Kyalami, Johannesburg.</p>
-        <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View Class Schedule</a>
-    </div>
+<section class="thrive-hero">
     @if (hasHeroImage)
     {
-        <div class="thrive-hero__image">
-            <img src="~/images/hero.jpg" alt="A Pilates reformer and a small vase of eucalyptus in the Thrive studio" />
+        <div class="thrive-hero__media">
+            <img class="thrive-hero__img" src="~/images/hero.jpg" alt="A Pilates reformer and a small vase of eucalyptus in the Thrive studio" />
         </div>
     }
     else
     {
-        <div class="thrive-hero__image thrive-hero__image--gradient" role="img" aria-label="Warm studio-toned gradient"></div>
+        <div class="thrive-hero__media thrive-hero__media--gradient" role="img" aria-label="Warm studio-toned gradient"></div>
     }
+    <div class="thrive-container thrive-hero__inner">
+        <div class="thrive-hero__copy">
+            <span class="thrive-pill thrive-pill--outline">BOUTIQUE STUDIO JOHANNESBURG</span>
+            <h1 class="thrive-h1">Move. Strengthen. Thrive.</h1>
+            <p>Boutique Pilates classes in Sunninghill and Kyalami, Johannesburg.</p>
+            <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View Class Schedule</a>
+        </div>
+    </div>
 </section>
 
 <section class="thrive-container thrive-features">
