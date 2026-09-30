@@ -654,6 +654,30 @@ h3 {
   margin: var(--space-1) 0 0;
 }
 
+/* Pricing's amount rows, styled to sit in the same centred-card format
+   as Kyalami/Sunninghill's icon + heading + single line of text. */
+.thrive-feature-card__price {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+  font-size: 1.1rem;
+  margin: var(--space-2) 0 0;
+}
+
+.thrive-feature-card__price span {
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin-left: var(--space-1);
+}
+
+.thrive-feature-card__note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: var(--space-3) 0 0;
+}
+
 @media (max-width: 768px) {
   .thrive-features {
     grid-template-columns: 1fr;
