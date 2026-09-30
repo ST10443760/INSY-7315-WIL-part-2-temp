@@ -26,9 +26,17 @@ namespace ThriveWellness.Repositories.Implementations
 
         public async Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date)
         {
+            // Public schedule only ever shows today-or-later sessions - past
+            // sessions stay in the database (and still show in admin views,
+            // which query Sessions directly rather than through this method)
+            // for historical booking records, they just don't belong on the
+            // client-facing schedule. This was never filtered before.
+            var today = DateTime.Today;
+
             var query =
                 from session in _context.Sessions
                 join location in _context.Locations on session.LocationId equals location.LocationId
+                where session.Date.Date >= today
                 select new { session, location };
 
             if (!string.IsNullOrWhiteSpace(locationAddress))
