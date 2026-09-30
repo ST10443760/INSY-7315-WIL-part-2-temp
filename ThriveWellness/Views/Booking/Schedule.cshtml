@@ -67,11 +67,19 @@
                         </p>
                         <a class="thrive-btn thrive-btn--muted thrive-btn--block" asp-action="JoinWaitlist" asp-route-sessionId="@session.SessionId">Join Waitlist</a>
                     }
+                    else if (session.IsLowAvailability)
+                    {
+                        <p class="thrive-session-card__spots thrive-session-card__spots--low">
+                            <partial name="_Icon" model="@("alert-circle")" />
+                            @session.AvailableSpots spot@(session.AvailableSpots == 1 ? "" : "s") remaining
+                        </p>
+                        <a class="thrive-btn thrive-btn--maroon thrive-btn--block" asp-action="Book" asp-route-sessionId="@session.SessionId">Book Now</a>
+                    }
                     else
                     {
-                        <p class="thrive-session-card__spots">
-                            <partial name="_Icon" model="@("people")" />
-                            @(session.Capacity - session.BookedCount) of @session.Capacity spots available
+                        <p class="thrive-session-card__spots thrive-session-card__spots--available">
+                            <partial name="_Icon" model="@("check-circle")" />
+                            Spots available
                         </p>
                         <a class="thrive-btn thrive-btn--maroon thrive-btn--block" asp-action="Book" asp-route-sessionId="@session.SessionId">Book Now</a>
                     }

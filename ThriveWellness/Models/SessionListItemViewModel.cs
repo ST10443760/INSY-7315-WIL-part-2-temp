@@ -19,5 +19,14 @@ namespace ThriveWellness.Models
 
         // Full if an admin closed it (FR-17) or bookings have reached capacity.
         public bool IsFull => !IsOpen || BookedCount >= Capacity;
+
+        // Raw number, kept for capacity checks even though the schedule only
+        // ever shows a status ("Spots available" / "X spots remaining"), not
+        // this number itself once IsLowAvailability is true.
+        public int AvailableSpots => Capacity - BookedCount;
+
+        // 1-3 spots left is called out as low availability; 4+ is just
+        // "Spots available" with no number attached.
+        public bool IsLowAvailability => !IsFull && AvailableSpots <= 3;
     }
 }

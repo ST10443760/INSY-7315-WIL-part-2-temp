@@ -1062,11 +1062,30 @@ h3 {
   gap: var(--space-1);
   color: var(--color-text-muted);
   font-size: 0.9rem;
+  font-weight: 600;
   margin: var(--space-1) 0 var(--space-2);
 }
 
 .thrive-session-card__spots .thrive-icon {
+  width: 1.15em;
+  height: 1.15em;
   color: var(--color-dusty-rose-dark);
+}
+
+.thrive-session-card__spots--available {
+  color: var(--color-success-text);
+}
+
+.thrive-session-card__spots--available .thrive-icon {
+  color: var(--color-success-text);
+}
+
+.thrive-session-card__spots--low {
+  color: var(--color-error-text);
+}
+
+.thrive-session-card__spots--low .thrive-icon {
+  color: var(--color-error-text);
 }
 
 .thrive-session-card__full {
