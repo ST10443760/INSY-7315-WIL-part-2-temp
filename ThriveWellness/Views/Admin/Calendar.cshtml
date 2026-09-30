@@ -1,48 +1,70 @@
-@model IReadOnlyList<ThriveWellness.Models.CalendarDayViewModel>
+@model ThriveWellness.Models.AdminCalendarViewModel
 
 @{
-    ViewData["Title"] = "Session Calendar";
+    ViewData["Title"] = "Bookings Calendar";
     Layout = "_AdminLayout";
+
+    var prevMonth = Model.MonthStart.AddMonths(-1);
+    var nextMonth = Model.MonthStart.AddMonths(1);
+    var weekdays = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 }
 
-<h1>Session Calendar</h1>
+<div class="thrive-admin-page-header thrive-admin-page-header--row">
+    <div>
+        <h1>Bookings Calendar</h1>
+        <span class="thrive-admin-page-header__subtitle">@Model.MonthStart.ToString("MMMM yyyy")</span>
+    </div>
 
-@if (!Model.Any())
-{
-    <p>No sessions scheduled.</p>
-}
-else
-{
-    @foreach (var day in Model)
+    <div class="thrive-admin-calendar-nav">
+        <a class="thrive-btn thrive-btn--outline" asp-action="Calendar" asp-route-year="@prevMonth.Year" asp-route-month="@prevMonth.Month">&larr; @prevMonth.ToString("MMM")</a>
+        <a class="thrive-btn thrive-btn--outline" asp-action="Calendar" asp-route-year="@nextMonth.Year" asp-route-month="@nextMonth.Month">@nextMonth.ToString("MMM") &rarr;</a>
+    </div>
+</div>
+
+<div class="thrive-admin-calendar">
+    @foreach (var weekday in weekdays)
     {
-        <h2 class="h5 mt-4">@day.Date.ToString("dddd, d MMMM yyyy")</h2>
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Location</th>
-                    <th>Booked</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var session in day.Sessions)
-                {
-                    <tr>
-                        <td>@session.Time.ToString(@"hh\:mm")</td>
-                        <td>@session.SessionType</td>
-                        <td>@session.LocationName</td>
-                        <td>@session.BookedCount / @session.Capacity</td>
-                        <td>@(session.IsFull ? "Full" : "Open")</td>
-                        <td>
-                            <a asp-controller="Session" asp-action="Edit" asp-route-id="@session.SessionId">Edit</a>
-                            <a asp-controller="Session" asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="thrive-admin-calendar__weekday">@weekday</div>
     }
-}
+
+    @for (var i = 0; i < Model.LeadingBlankDays; i++)
+    {
+        <div class="thrive-admin-calendar__day thrive-admin-calendar__day--blank"></div>
+    }
+
+    @foreach (var day in Model.Days)
+    {
+        <div class="thrive-admin-calendar__day">
+            <div class="thrive-admin-calendar__day-number">
+                <span class="thrive-admin-calendar__weekday-label">@day.Date.ToString("ddd") &bull; </span>@day.Date.Day
+            </div>
+
+            @{
+                var visibleSessions = day.Sessions.Take(2).ToList();
+                var overflowSessions = day.Sessions.Skip(2).ToList();
+            }
+
+            @foreach (var session in visibleSessions)
+            {
+                <a class="thrive-admin-calendar__pill @(session.SessionType == "private" ? "thrive-admin-calendar__pill--private" : "")"
+                   asp-controller="Session" asp-action="Edit" asp-route-id="@session.SessionId">
+                    @session.Time.ToString(@"hh\:mm")
+                </a>
+            }
+
+            @if (overflowSessions.Any())
+            {
+                <details class="thrive-admin-calendar__more">
+                    <summary>+@overflowSessions.Count more</summary>
+                    @foreach (var session in overflowSessions)
+                    {
+                        <a class="thrive-admin-calendar__pill @(session.SessionType == "private" ? "thrive-admin-calendar__pill--private" : "")"
+                           asp-controller="Session" asp-action="Edit" asp-route-id="@session.SessionId">
+                            @session.Time.ToString(@"hh\:mm")
+                        </a>
+                    }
+                </details>
+            }
+        </div>
+    }
+</div>
