@@ -1,0 +1,30 @@
+@model ThriveWellness.Models.LocationFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Location";
+}
+
+<h1>Edit Location</h1>
+
+<div asp-validation-summary="All"></div>
+
+<form asp-action="Edit" asp-route-id="@Model.LocationId" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="LocationId" />
+
+    <div>
+        <label asp-for="Name"></label>
+        <input asp-for="Name" />
+        <span asp-validation-for="Name"></span>
+    </div>
+
+    <div>
+        <label asp-for="Address"></label>
+        <input asp-for="Address" />
+        <span asp-validation-for="Address"></span>
+    </div>
+
+    <button type="submit">Save</button>
+</form>
+
+<a asp-action="Index">Back to list</a>

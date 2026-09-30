@@ -1,0 +1,41 @@
+@model IEnumerable<ThriveWellness.Models.Location>
+
+@{
+    ViewData["Title"] = "Locations";
+}
+
+<h1>Locations</h1>
+
+@if (TempData["LocationDeleteError"] is string deleteError)
+{
+    <p style="color:red">@deleteError</p>
+}
+
+<p><a asp-action="Create">Create New Location</a></p>
+
+<table border="1" cellpadding="4">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var location in Model)
+        {
+            <tr>
+                <td>@location.Name</td>
+                <td>@location.Address</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@location.LocationId">Edit</a>
+
+                    <form asp-action="Delete" asp-route-id="@location.LocationId" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" onclick="return confirm('Delete this location?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
