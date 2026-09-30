@@ -1,0 +1,201 @@
+/* ==========================================================================
+   Thrive Wellness Pilates — admin design tokens and components.
+   Loaded alongside thrive.css (after it): reuses all of its :root tokens,
+   fonts and base component classes (buttons, inputs, cards, pills), and
+   only adds what the admin side needs on top - the sidebar shell and a
+   handful of admin-only tokens (status colours, session-type colours).
+   Built from the Figma prototype screenshots in /design-reference.
+   ========================================================================== */
+
+:root {
+  /* "Private" session-type pill, and the Clients page's "New" status pill -
+     same pale/secondary role as --color-pale-rose, just a cooler hue for
+     the second category where two need to be told apart at a glance. */
+  --color-pale-blue: #e2ecf4;
+  --color-pale-blue-text: #4a7a94;
+
+  /* "Pending" payment-status pill. */
+  --color-amber-bg: #fbedd2;
+  --color-amber-text: #8a5a10;
+
+  --admin-sidebar-width: 264px;
+}
+
+/* ==========================================================================
+   Shell
+   ========================================================================== */
+
+body.thrive-admin-body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-beige);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.thrive-admin-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.thrive-admin-main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-6);
+}
+
+/* ==========================================================================
+   Sidebar
+   ========================================================================== */
+
+.thrive-admin-sidebar {
+  flex-shrink: 0;
+  width: var(--admin-sidebar-width);
+  min-height: 100vh;
+  background: var(--color-maroon);
+  color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5) var(--space-4);
+}
+
+.thrive-admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-2) var(--space-5);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Reuses _Logo.cshtml's markup as-is, just recoloured for this context:
+   a solid white circle behind the mark (matching the mockup's badge)
+   instead of the header/footer's stroked-outline treatment, and white
+   nav-adjacent text. */
+.thrive-admin-sidebar__brand .thrive-logo {
+  color: var(--color-white);
+}
+
+.thrive-admin-sidebar__brand .thrive-logo__mark circle {
+  fill: var(--color-white);
+  stroke: none;
+}
+
+.thrive-admin-sidebar__brand .thrive-logo__mark g {
+  stroke: var(--color-maroon);
+}
+
+.thrive-admin-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.thrive-admin-nav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.75rem var(--space-3);
+  border-radius: var(--radius-button);
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-height: var(--touch-target);
+}
+
+.thrive-admin-nav__link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-white);
+}
+
+.thrive-admin-nav__link--active {
+  background: var(--color-mauve);
+  color: var(--color-white);
+}
+
+.thrive-admin-nav__link .thrive-icon {
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+}
+
+.thrive-admin-sidebar__logout {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.thrive-admin-sidebar__logout button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 0.75rem var(--space-3);
+  border-radius: var(--radius-button);
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-height: var(--touch-target);
+}
+
+.thrive-admin-sidebar__logout button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-white);
+}
+
+/* Mobile: sidebar becomes a slide-out drawer, toggled by a hamburger. */
+.thrive-admin-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .thrive-admin-shell {
+    flex-direction: column;
+  }
+
+  .thrive-admin-sidebar {
+    position: fixed;
+    inset: 0 25% 0 0;
+    z-index: 200;
+    width: auto;
+    min-height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    overflow-y: auto;
+  }
+
+  .thrive-admin-sidebar[data-open] {
+    transform: translateX(0);
+  }
+
+  .thrive-admin-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    background: var(--color-white);
+    color: var(--color-maroon);
+    cursor: pointer;
+    position: sticky;
+    top: var(--space-3);
+    margin: var(--space-3) 0 0 var(--space-3);
+    z-index: 150;
+  }
+
+  .thrive-admin-main {
+    padding: var(--space-4);
+  }
+}

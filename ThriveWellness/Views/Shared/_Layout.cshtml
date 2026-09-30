@@ -45,11 +45,6 @@
         </div>
     </header>
 
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <partial name="_AdminNav" />
-    }
-
     <main id="main-content" role="main" class="thrive-main">
         @RenderBody()
     </main>

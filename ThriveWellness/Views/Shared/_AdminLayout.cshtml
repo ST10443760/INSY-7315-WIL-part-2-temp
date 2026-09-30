@@ -1,0 +1,113 @@
+@{
+    var controllerName = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+    bool IsActive(string controller) => string.Equals(controllerName, controller, StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Thrive Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/thrive.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/thrive-admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="thrive-admin-body">
+    <a class="thrive-skip-link" href="#admin-main-content">Skip to content</a>
+
+    <div class="thrive-admin-shell">
+        <aside class="thrive-admin-sidebar" id="adminSidebar">
+            <div class="thrive-admin-sidebar__brand">
+                <partial name="_Logo" />
+            </div>
+
+            <nav aria-label="Admin">
+                <ul class="thrive-admin-nav">
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Admin") && (ViewContext.RouteData.Values["action"]?.ToString() == "Index") ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "page" : null)"
+                           asp-controller="Admin" asp-action="Index">
+                            <partial name="_Icon" model="@("grid")" />
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Calendar" ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Calendar" ? "page" : null)"
+                           asp-controller="Admin" asp-action="Calendar">
+                            <partial name="_Icon" model="@("calendar")" />
+                            Bookings Calendar
+                        </a>
+                    </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Payment") ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Payment") ? "page" : null)"
+                           asp-controller="Payment" asp-action="Index">
+                            <partial name="_Icon" model="@("card")" />
+                            Payments
+                        </a>
+                    </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Session") ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Session") ? "page" : null)"
+                           asp-controller="Session" asp-action="Index">
+                            <partial name="_Icon" model="@("activity")" />
+                            Sessions
+                        </a>
+                    </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Location") ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Location") ? "page" : null)"
+                           asp-controller="Location" asp-action="Index">
+                            <partial name="_Icon" model="@("pin")" />
+                            Locations
+                        </a>
+                    </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Clients") ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Clients") ? "page" : null)"
+                           asp-controller="Clients" asp-action="Index">
+                            <partial name="_Icon" model="@("people")" />
+                            Clients
+                        </a>
+                    </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Waitlist" ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Waitlist" ? "page" : null)"
+                           asp-controller="Admin" asp-action="Waitlist">
+                            <partial name="_Icon" model="@("list")" />
+                            Waitlist
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="thrive-admin-sidebar__logout">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit">
+                        <partial name="_Icon" model="@("logout")" />
+                        Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <button type="button" class="thrive-admin-menu-toggle" aria-expanded="false" aria-controls="adminSidebar" aria-label="Toggle admin menu">
+            <partial name="_Icon" model="@("menu")" />
+        </button>
+
+        <main id="admin-main-content" role="main" class="thrive-admin-main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/thrive-admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
