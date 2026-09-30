@@ -8,5 +8,9 @@ namespace ThriveWellness.Repositories.Interfaces
         Task<Client?> GetByEmailAsync(string email);
         Task AddAsync(Client client);
         Task UpdateAsync(Client client);
+
+        // search: null/empty for every client, or a case-insensitive
+        // substring match against name or email.
+        Task<IEnumerable<ClientOverviewViewModel>> GetAllWithStatsAsync(string? search);
     }
 }

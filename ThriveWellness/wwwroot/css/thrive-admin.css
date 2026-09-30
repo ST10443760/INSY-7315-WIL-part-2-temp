@@ -423,6 +423,11 @@ body.thrive-admin-body {
   margin-top: var(--space-4);
 }
 
+.thrive-admin-search {
+  max-width: 420px;
+  margin-bottom: var(--space-4);
+}
+
 .thrive-admin-back-link {
   margin-top: var(--space-4);
 }

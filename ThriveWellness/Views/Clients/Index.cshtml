@@ -1,0 +1,61 @@
+@model IEnumerable<ThriveWellness.Models.ClientOverviewViewModel>
+
+@{
+    ViewData["Title"] = "Clients";
+    Layout = "_AdminLayout";
+    var search = (string?)ViewData["Search"];
+    var count = Model.Count();
+}
+
+<div class="thrive-admin-page-header">
+    <h1>Clients</h1>
+    <span class="thrive-admin-page-header__subtitle">@count registered client@(count == 1 ? "" : "s").</span>
+</div>
+
+<form method="get" asp-action="Index" class="thrive-field thrive-input-icon-wrap thrive-admin-search" data-auto-submit="true">
+    <label class="thrive-visually-hidden" for="clientSearch">Search clients</label>
+    <partial name="_Icon" model="@("search")" />
+    <input type="search" id="clientSearch" name="search" class="thrive-input" placeholder="Search clients..." value="@search" />
+    <button type="submit" class="thrive-visually-hidden">Search</button>
+</form>
+
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">
+            @(string.IsNullOrWhiteSpace(search) ? "No clients yet." : $"No clients match \"{search}\".")
+        </p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Sessions</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var client in Model)
+                    {
+                        <tr>
+                            <td>@client.FullName</td>
+                            <td>@client.Email</td>
+                            <td>@client.PhoneNumber</td>
+                            <td class="thrive-admin-table__amount">@client.SessionCount</td>
+                            <td>@client.CreatedAt.ToString("d MMM yyyy")</td>
+                            <td>
+                                <span class="thrive-pill @(client.IsNew ? "thrive-pill--new" : "thrive-pill--active")">@(client.IsNew ? "New" : "Active")</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -35,5 +35,33 @@ namespace ThriveWellness.Repositories.Implementations
             _context.Clients.Update(client);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<ClientOverviewViewModel>> GetAllWithStatsAsync(string? search)
+        {
+            IQueryable<Client> query = _context.Clients;
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(c =>
+                    EF.Functions.ILike(c.FullName, $"%{term}%") ||
+                    EF.Functions.ILike(c.Email, $"%{term}%"));
+            }
+
+            var ordered = query.OrderByDescending(c => c.CreatedAt);
+
+            // Cancelled bookings don't count as a real session, matching the
+            // capacity checks used elsewhere.
+            return await ordered.Select(c => new ClientOverviewViewModel
+            {
+                ClientId = c.ClientId,
+                FullName = c.FullName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                SessionCount = _context.Bookings.Count(b => b.ClientId == c.ClientId && b.Status != "Cancelled"),
+                CreatedAt = c.CreatedAt,
+                IsNew = c.IsNew
+            }).ToListAsync();
+        }
     }
 }
