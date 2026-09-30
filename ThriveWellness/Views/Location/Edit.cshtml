@@ -5,27 +5,32 @@
     Layout = "_AdminLayout";
 }
 
-<h1>Edit Location</h1>
+<div class="thrive-admin-page-header">
+    <h1>Edit Location</h1>
+</div>
 
-<div asp-validation-summary="All"></div>
+<div class="thrive-admin-card thrive-admin-card--form">
+    <div asp-validation-summary="All" class="thrive-validation-summary"></div>
 
-<form asp-action="Edit" asp-route-id="@Model.LocationId" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="LocationId" />
+    <form asp-action="Edit" asp-route-id="@Model.LocationId" method="post" data-busy-text="Saving…">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="LocationId" />
 
-    <div>
-        <label asp-for="Name"></label>
-        <input asp-for="Name" />
-        <span asp-validation-for="Name"></span>
-    </div>
+        <div class="thrive-field">
+            <label class="thrive-label" asp-for="Name"></label>
+            <input asp-for="Name" class="thrive-input" />
+            <span asp-validation-for="Name" class="thrive-field-error"></span>
+        </div>
 
-    <div>
-        <label asp-for="Address"></label>
-        <input asp-for="Address" />
-        <span asp-validation-for="Address"></span>
-    </div>
+        <div class="thrive-field">
+            <label class="thrive-label" asp-for="Address"></label>
+            <input asp-for="Address" class="thrive-input" />
+            <span asp-validation-for="Address" class="thrive-field-error"></span>
+        </div>
 
-    <button type="submit">Save</button>
-</form>
-
-<a asp-action="Index">Back to list</a>
+        <div class="thrive-admin-form-actions">
+            <button type="submit" class="thrive-btn thrive-btn--mauve">Save</button>
+            <a class="thrive-btn thrive-btn--outline" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

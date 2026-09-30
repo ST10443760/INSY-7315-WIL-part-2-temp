@@ -5,38 +5,63 @@
     Layout = "_AdminLayout";
 }
 
-<h1>Locations</h1>
+<div class="thrive-admin-page-header thrive-admin-page-header--row">
+    <div>
+        <h1>Locations</h1>
+        <span class="thrive-admin-page-header__subtitle">Manage your studio locations.</span>
+    </div>
+    <a class="thrive-btn thrive-btn--mauve" asp-action="Create">
+        <partial name="_Icon" model="@("plus")" />
+        Create Location
+    </a>
+</div>
 
 @if (TempData["LocationDeleteError"] is string deleteError)
 {
-    <p style="color:red">@deleteError</p>
+    <div class="thrive-validation-summary">@deleteError</div>
 }
 
-<p><a asp-action="Create">Create New Location</a></p>
-
-<table border="1" cellpadding="4">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var location in Model)
-        {
-            <tr>
-                <td>@location.Name</td>
-                <td>@location.Address</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@location.LocationId">Edit</a>
-
-                    <form asp-action="Delete" asp-route-id="@location.LocationId" method="post" style="display:inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" onclick="return confirm('Delete this location?');">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">No locations yet. Create the first one to get started.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var location in Model)
+                    {
+                        <tr>
+                            <td>@location.Name</td>
+                            <td>@location.Address</td>
+                            <td>
+                                <div class="thrive-admin-actions">
+                                    <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Edit" asp-route-id="@location.LocationId">
+                                        <partial name="_Icon" model="@("edit")" />
+                                        Edit
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@location.LocationId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="thrive-btn thrive-btn--danger-outline thrive-btn--sm" onclick="return confirm('Delete this location?');">
+                                            <partial name="_Icon" model="@("trash")" />
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
