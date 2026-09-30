@@ -5,106 +5,84 @@
     Layout = "_AdminLayout";
 }
 
-<h1>Admin Dashboard</h1>
+<div class="thrive-admin-page-header">
+    <h1>Welcome back, @(User.Identity?.Name ?? "Admin")!</h1>
+    <span class="thrive-admin-page-header__subtitle">Here's what's happening at Thrive Pilates.</span>
+</div>
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted">Pending payments</h6>
-                <p class="display-6 mb-1">@Model.PendingPaymentsCount</p>
-                <a asp-controller="Payment" asp-action="Pending">Review and confirm</a>
-            </div>
-        </div>
+<div class="thrive-admin-stats">
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("calendar")" /></div>
+        <p class="thrive-admin-stat-card__number">@Model.UpcomingBookingsCount</p>
+        <p class="thrive-admin-stat-card__label">Upcoming Bookings</p>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted">Clients: new / returning</h6>
-                <p class="display-6 mb-1">@Model.NewClientCount / @Model.ReturningClientCount</p>
-                <span class="text-muted">@(Model.NewClientCount + Model.ReturningClientCount) total</span>
-            </div>
-        </div>
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("card")" /></div>
+        <p class="thrive-admin-stat-card__number">@Model.PendingPaymentsCount</p>
+        <p class="thrive-admin-stat-card__label">Pending Payments</p>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted">Clients on a waitlist</h6>
-                <p class="display-6 mb-1">@Model.WaitlistedClientCount</p>
-                <a asp-controller="Admin" asp-action="Waitlist">View waitlists</a>
-            </div>
-        </div>
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("user-plus")" /></div>
+        <p class="thrive-admin-stat-card__number">@Model.NewClientCount</p>
+        <p class="thrive-admin-stat-card__label">New Clients</p>
+    </div>
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("people")" /></div>
+        <p class="thrive-admin-stat-card__number">@Model.ReturningClientCount</p>
+        <p class="thrive-admin-stat-card__label">Returning Clients</p>
     </div>
 </div>
 
-<h2>Upcoming sessions (next 7 days)</h2>
+<h2 class="thrive-admin-section-heading">Pending Payments</h2>
 
-@if (!Model.UpcomingSessions.Any())
-{
-    <p>No sessions scheduled in the next 7 days.</p>
-}
-else
-{
-    <table class="table table-bordered table-sm">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Type</th>
-                <th>Location</th>
-                <th>Booked</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var session in Model.UpcomingSessions)
-            {
-                <tr>
-                    <td>@session.Date.ToString("yyyy-MM-dd")</td>
-                    <td>@session.Time.ToString(@"hh\:mm")</td>
-                    <td>@session.SessionType</td>
-                    <td>@session.LocationName</td>
-                    <td>@session.BookedCount / @session.Capacity</td>
-                    <td>@(session.IsFull ? "Full" : "Open")</td>
-                    <td><a asp-controller="Session" asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<div class="thrive-admin-card">
+    @if (!Model.PendingPaymentsPreview.Any())
+    {
+        <p class="thrive-admin-empty">No payments are currently pending.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Client Name</th>
+                        <th>Session</th>
+                        <th>Date</th>
+                        <th>Payment Method</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var payment in Model.PendingPaymentsPreview)
+                    {
+                        <tr>
+                            <td>@payment.ClientName</td>
+                            <td>
+                                @payment.SessionType.ToDisplayLabel()
+                                <br />
+                                <span class="thrive-admin-table__muted">@payment.LocationName</span>
+                            </td>
+                            <td>
+                                @payment.SessionDate.ToString("d MMM yyyy")
+                                <br />
+                                <span class="thrive-admin-table__muted">@payment.SessionTime.ToString(@"hh\:mm")</span>
+                            </td>
+                            <td>@payment.Method</td>
+                            <td class="thrive-admin-table__amount">R@(payment.Amount.ToString("N2"))</td>
+                            <td>
+                                <form asp-controller="Payment" asp-action="Confirm" asp-route-id="@payment.PaymentId" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="thrive-btn thrive-btn--mauve">Confirm</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-<h2>Recent bookings</h2>
-
-@if (!Model.RecentBookings.Any())
-{
-    <p>No bookings yet.</p>
-}
-else
-{
-    <table class="table table-bordered table-sm">
-        <thead>
-            <tr>
-                <th>Booked on</th>
-                <th>Client</th>
-                <th>Session</th>
-                <th>Session date</th>
-                <th>Location</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var booking in Model.RecentBookings)
-            {
-                <tr>
-                    <td>@booking.BookingDate.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>@booking.ClientName</td>
-                    <td>@booking.SessionType</td>
-                    <td>@booking.SessionDate.ToString("yyyy-MM-dd")</td>
-                    <td>@booking.LocationName</td>
-                    <td>@booking.Status</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+        <a class="thrive-admin-link" asp-controller="Payment" asp-action="Pending">View all pending payments &rarr;</a>
+    }
+</div>

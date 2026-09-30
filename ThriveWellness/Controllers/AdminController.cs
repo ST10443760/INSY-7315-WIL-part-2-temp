@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Models;
 using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
@@ -24,10 +25,26 @@ public class AdminController : Controller
         return View(dashboard);
     }
 
-    public async Task<IActionResult> Calendar()
+    public async Task<IActionResult> Calendar(int? year, int? month)
     {
-        var days = await _dashboardService.GetCalendarAsync();
-        return View(days);
+        var today = DateTime.Today;
+        var y = year ?? today.Year;
+        var m = month ?? today.Month;
+        if (m is < 1 or > 12)
+        {
+            return BadRequest();
+        }
+
+        var days = await _dashboardService.GetCalendarAsync(y, m);
+
+        var viewModel = new AdminCalendarViewModel
+        {
+            Year = y,
+            Month = m,
+            Days = days
+        };
+
+        return View(viewModel);
     }
 
     public async Task<IActionResult> Waitlist()

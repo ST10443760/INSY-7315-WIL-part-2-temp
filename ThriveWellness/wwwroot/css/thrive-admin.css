@@ -199,3 +199,313 @@ body.thrive-admin-body {
     padding: var(--space-4);
   }
 }
+
+/* ==========================================================================
+   Shared admin page furniture (heading, stat cards, table card, pills) -
+   used across Dashboard, Payments, Sessions, Locations, Clients, Waitlist.
+   ========================================================================== */
+
+.thrive-admin-page-header {
+  margin-bottom: var(--space-5);
+}
+
+.thrive-admin-page-header h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+  font-size: 2rem;
+  margin: 0;
+}
+
+.thrive-admin-page-header__subtitle {
+  display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-rose-accessible);
+  font-size: 1.1rem;
+  margin-top: var(--space-1);
+}
+
+.thrive-admin-page-header--row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.thrive-admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.thrive-admin-stat-card {
+  background: var(--color-white);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.thrive-admin-stat-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-pale-rose);
+  color: var(--color-maroon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-3);
+}
+
+.thrive-admin-stat-card__number {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+  font-size: 2rem;
+  line-height: 1;
+  margin: 0 0 var(--space-1);
+}
+
+.thrive-admin-stat-card__label {
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .thrive-admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .thrive-admin-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.thrive-admin-section-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+  font-size: 1.4rem;
+  margin: 0 0 var(--space-3);
+}
+
+.thrive-admin-card {
+  background: var(--color-white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.thrive-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.thrive-admin-table th {
+  text-align: left;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-maroon);
+  background: var(--color-beige);
+  padding: var(--space-3);
+}
+
+.thrive-admin-table td {
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.thrive-admin-table tr:first-child td {
+  border-top: none;
+}
+
+.thrive-admin-table__muted {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.thrive-admin-table__amount {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-admin-table-wrap {
+  overflow-x: auto;
+}
+
+.thrive-admin-link {
+  display: block;
+  text-align: center;
+  color: var(--color-rose-accessible);
+  font-weight: 600;
+  padding: var(--space-4);
+  text-decoration: none;
+}
+
+.thrive-admin-link:hover {
+  text-decoration: underline;
+}
+
+.thrive-admin-empty {
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* Pill colour variants beyond what thrive.css already ships (success/error/
+   outline/full): a cooler "secondary category" tone for Private sessions
+   and New clients, and an amber tone for Pending payments. Confirmed /
+   Active reuse the existing success tokens. */
+.thrive-pill--private,
+.thrive-pill--new {
+  background: var(--color-pale-blue);
+  color: var(--color-pale-blue-text);
+}
+
+.thrive-pill--pending {
+  background: var(--color-amber-bg);
+  color: var(--color-amber-text);
+}
+
+.thrive-pill--confirmed,
+.thrive-pill--active {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+/* ==========================================================================
+   Calendar
+   ========================================================================== */
+
+.thrive-admin-calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.thrive-admin-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--color-white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.thrive-admin-calendar__weekday {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-maroon);
+  background: var(--color-beige);
+  padding: var(--space-2) var(--space-2);
+  text-align: center;
+}
+
+.thrive-admin-calendar__day {
+  min-height: 110px;
+  padding: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+}
+
+.thrive-admin-calendar__day:nth-child(7n+1) {
+  border-left: none;
+}
+
+.thrive-admin-calendar__day--blank {
+  background: var(--color-beige);
+}
+
+.thrive-admin-calendar__day-number {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+/* The grid's own weekday header row already labels each column at desktop
+   width; only needed once that header is hidden (stacked mobile layout). */
+.thrive-admin-calendar__weekday-label {
+  display: none;
+}
+
+.thrive-admin-calendar__pill {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.75rem;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.55rem;
+  margin-bottom: 0.25rem;
+  background: var(--color-pale-rose);
+  color: var(--color-pale-rose-text);
+  text-decoration: none;
+}
+
+.thrive-admin-calendar__pill--private {
+  background: var(--color-pale-blue);
+  color: var(--color-pale-blue-text);
+}
+
+.thrive-admin-calendar__more {
+  font-size: 0.75rem;
+}
+
+.thrive-admin-calendar__more summary {
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.thrive-admin-calendar__more summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .thrive-admin-calendar__day {
+    min-height: 80px;
+  }
+}
+
+@media (max-width: 700px) {
+  .thrive-admin-calendar {
+    grid-template-columns: 1fr;
+  }
+
+  .thrive-admin-calendar__weekday {
+    display: none;
+  }
+
+  .thrive-admin-calendar__day {
+    border-left: none;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .thrive-admin-calendar__day--blank {
+    display: none;
+  }
+
+  .thrive-admin-calendar__weekday-label {
+    display: inline;
+  }
+}

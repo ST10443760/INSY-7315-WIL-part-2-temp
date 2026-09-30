@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
+using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Services.Implementations
@@ -8,13 +9,15 @@ namespace ThriveWellness.Services.Implementations
     public class AdminDashboardService : IAdminDashboardService
     {
         private const int UpcomingWindowDays = 7;
-        private const int RecentBookingsCount = 10;
+        private const int PendingPaymentsPreviewCount = 5;
 
         private readonly ApplicationDbContext _context;
+        private readonly IPaymentRepository _paymentRepository;
 
-        public AdminDashboardService(ApplicationDbContext context)
+        public AdminDashboardService(ApplicationDbContext context, IPaymentRepository paymentRepository)
         {
             _context = context;
+            _paymentRepository = paymentRepository;
         }
 
         public async Task<AdminDashboardViewModel> GetDashboardAsync()
@@ -29,22 +32,9 @@ namespace ThriveWellness.Services.Implementations
                 .OrderBy(s => s.Date).ThenBy(s => s.Time)
                 .ToListAsync();
 
-            var recentBookings = await (
-                from booking in _context.Bookings
-                join client in _context.Clients on booking.ClientId equals client.ClientId
-                join session in _context.Sessions on booking.SessionId equals session.SessionId
-                join location in _context.Locations on session.LocationId equals location.LocationId
-                orderby booking.BookingDate descending, booking.BookingId descending
-                select new RecentBookingViewModel
-                {
-                    BookingId = booking.BookingId,
-                    BookingDate = booking.BookingDate,
-                    ClientName = client.FullName,
-                    SessionType = session.SessionType,
-                    SessionDate = session.Date,
-                    LocationName = location.Name,
-                    Status = booking.Status
-                }).Take(RecentBookingsCount).ToListAsync();
+            var pendingPayments = (await _paymentRepository.GetPendingPaymentsAsync())
+                .Take(PendingPaymentsPreviewCount)
+                .ToList();
 
             return new AdminDashboardViewModel
             {
@@ -53,7 +43,7 @@ namespace ThriveWellness.Services.Implementations
                 ReturningClientCount = await _context.Clients.CountAsync(c => !c.IsNew),
                 WaitlistedClientCount = await _context.Waitlists.Select(w => w.ClientId).Distinct().CountAsync(),
                 UpcomingSessions = upcomingSessions,
-                RecentBookings = recentBookings
+                PendingPaymentsPreview = pendingPayments
             };
         }
 
@@ -64,14 +54,31 @@ namespace ThriveWellness.Services.Implementations
                 .ToListAsync();
         }
 
-        public async Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync()
+        public async Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync(int year, int month)
         {
-            var sessions = await GetSessionOverviewsAsync();
+            var monthStart = new DateTime(year, month, 1);
+            var monthEnd = monthStart.AddMonths(1);
 
-            return sessions
+            var sessions = await SessionOverviews()
+                .Where(s => s.Date >= monthStart && s.Date < monthEnd)
+                .OrderBy(s => s.Time)
+                .ToListAsync();
+
+            var byDay = sessions
                 .GroupBy(s => s.Date.Date)
-                .Select(g => new CalendarDayViewModel { Date = g.Key, Sessions = g.ToList() })
-                .ToList();
+                .ToDictionary(g => g.Key, g => (IReadOnlyList<SessionOverviewViewModel>)g.ToList());
+
+            var days = new List<CalendarDayViewModel>();
+            for (var date = monthStart; date < monthEnd; date = date.AddDays(1))
+            {
+                days.Add(new CalendarDayViewModel
+                {
+                    Date = date,
+                    Sessions = byDay.TryGetValue(date, out var daySessions) ? daySessions : new List<SessionOverviewViewModel>()
+                });
+            }
+
+            return days;
         }
 
         public async Task<IReadOnlyList<WaitlistOverviewRowViewModel>> GetWaitlistOverviewAsync()
