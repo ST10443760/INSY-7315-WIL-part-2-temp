@@ -2,25 +2,43 @@
 
 @{
     ViewData["Title"] = "Admin Login";
+    // Reached while signed out, so this deliberately keeps the public
+    // header/footer (per desktop-admin-login.png) rather than the
+    // sidebar shell every other admin page uses once authenticated.
+    Layout = "_Layout";
 }
 
-<h1>Admin Login</h1>
+<section class="thrive-admin-login-page">
+    <div class="thrive-admin-login-card">
+        <partial name="_Logo" />
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div asp-validation-summary="All"></div>
-}
+        <h1 class="thrive-admin-login-card__heading">Admin Login</h1>
+        <span class="thrive-admin-login-card__subtitle">Thrive Wellness Pilates Management Portal</span>
 
-<form asp-controller="Account" asp-action="Login" method="post">
-    @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="thrive-validation-summary"></div>
 
-    <div>
-        <label asp-for="Username"></label>
-        <input asp-for="Username" />
+        <form asp-controller="Account" asp-action="Login" method="post" data-busy-text="Logging in…">
+            @Html.AntiForgeryToken()
+
+            <div class="thrive-field thrive-input-icon-wrap">
+                <label class="thrive-label" asp-for="Username">Username</label>
+                <partial name="_Icon" model="@("user")" />
+                <input asp-for="Username" class="thrive-input" placeholder="Enter your username" autocomplete="username" />
+                <span asp-validation-for="Username" class="thrive-field-error"></span>
+            </div>
+
+            <div class="thrive-field thrive-input-icon-wrap">
+                <label class="thrive-label" asp-for="Password">Password</label>
+                <partial name="_Icon" model="@("lock")" />
+                <input asp-for="Password" id="adminPassword" class="thrive-input" placeholder="Enter your password" autocomplete="current-password" />
+                <button type="button" class="thrive-password-toggle" data-password-toggle="adminPassword" aria-label="Show password">
+                    <span data-icon-show><partial name="_Icon" model="@("eye")" /></span>
+                    <span data-icon-hide hidden><partial name="_Icon" model="@("eye-off")" /></span>
+                </button>
+                <span asp-validation-for="Password" class="thrive-field-error"></span>
+            </div>
+
+            <button type="submit" class="thrive-btn thrive-btn--mauve thrive-btn--block">Log In</button>
+        </form>
     </div>
-    <div>
-        <label asp-for="Password"></label>
-        <input asp-for="Password" />
-    </div>
-    <button type="submit">Login</button>
-</form>
+</section>

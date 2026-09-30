@@ -363,6 +363,12 @@ h3 {
   padding-left: 2.75rem;
 }
 
+/* A field with both a leading icon and a trailing control (the password
+   show/hide toggle) needs room on the right too. */
+.thrive-input-icon-wrap:has(.thrive-password-toggle) .thrive-input {
+  padding-right: 2.75rem;
+}
+
 .thrive-input-icon-wrap .thrive-icon {
   position: absolute;
   left: 0.9rem;
@@ -391,6 +397,15 @@ h3 {
   margin-top: 2px;
   accent-color: var(--color-maroon-dark);
   flex-shrink: 0;
+}
+
+/* asp-validation-summary renders even with zero errors (class
+   validation-summary-valid instead of -errors) - without this, every form
+   on the site shows an empty coloured box above its fields until the user
+   has actually submitted once. Pre-existing on the public side too; only
+   noticed here because the login card's plain background made it obvious. */
+.validation-summary-valid {
+  display: none;
 }
 
 .thrive-validation-summary {
@@ -1224,4 +1239,66 @@ h3 {
   .thrive-tile-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   Admin login (rendered inside the public _Layout, not the admin sidebar
+   shell - reached while signed out, per desktop-admin-login.png)
+   ========================================================================== */
+
+.thrive-admin-login-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) 0;
+}
+
+.thrive-admin-login-card {
+  background: var(--color-white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6) var(--space-5);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.thrive-admin-login-card .thrive-logo {
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.thrive-admin-login-card__heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.thrive-admin-login-card__subtitle {
+  display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-rose-accessible);
+  margin: var(--space-2) 0 var(--space-5);
+}
+
+.thrive-admin-login-card form {
+  text-align: left;
+}
+
+.thrive-password-toggle {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  min-height: 0;
 }
