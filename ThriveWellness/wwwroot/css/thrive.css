@@ -72,6 +72,16 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Always reserve the scrollbar's gutter, scrollbar or not. Without this,
+     100vw (used for the hero image's edge-to-edge bleed) measures the
+     viewport width as if there were no scrollbar, while the actual
+     centred/padded layout width does account for it - the two disagree
+     by exactly the scrollbar's width, leaving the "full bleed" image a
+     few pixels short of the true edge. */
+  scrollbar-gutter: stable;
+}
+
 body.thrive-body {
   font-family: var(--font-body);
   color: var(--color-text);
@@ -520,14 +530,23 @@ h3 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
-  align-items: center;
-  padding: var(--space-6) 0;
+  /* Was center - the image now aligns with the row's top (see
+     .thrive-hero__copy's own padding-top below) so it can sit flush
+     against the top of the section instead of floating mid-row. */
+  align-items: start;
+  /* Top padding moved onto .thrive-hero__copy: the image bleeds through
+     where the section's own top padding used to be. */
+  padding: 0 0 var(--space-6);
 }
 
 /* Grid items default to min-width: auto, which can let a child's intrinsic
    size force its track wider than intended. Let both tracks shrink freely. */
 .thrive-hero > * {
   min-width: 0;
+}
+
+.thrive-hero__copy {
+  padding-top: var(--space-6);
 }
 
 .thrive-hero__copy p {
@@ -545,7 +564,16 @@ h3 {
 }
 
 .thrive-hero__image {
-  border-radius: var(--radius-card);
+  /* Full-bleed on the top and right, per the mockup: flush with the top of
+     the section and the right edge of the viewport, no gap on either side.
+     Only the bottom-left corner still borders open page background, so
+     that's the only one that stays rounded. */
+  border-radius: 0 0 0 var(--radius-card);
+  /* Cancels .thrive-container's own right padding, plus - once the
+     viewport is wider than the container's 1400px cap - the extra margin
+     that centers it, so the image's right edge lands on the true viewport
+     edge instead of the container's. */
+  margin-right: calc(-1 * (var(--space-4) + max(0px, (100vw - 1400px) / 2)));
   overflow: hidden;
   aspect-ratio: 4 / 5;
   box-shadow: var(--shadow-card);
@@ -565,11 +593,17 @@ h3 {
 @media (max-width: 768px) {
   .thrive-hero {
     grid-template-columns: 1fr;
+    padding-top: var(--space-6);
+  }
+
+  .thrive-hero__copy {
+    padding-top: 0;
   }
 
   .thrive-hero__image {
     aspect-ratio: 16 / 10;
     border-radius: var(--radius-card);
+    margin-right: 0;
     order: -1;
   }
 }
