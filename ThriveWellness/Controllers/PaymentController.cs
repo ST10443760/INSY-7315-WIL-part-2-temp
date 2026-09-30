@@ -17,18 +17,27 @@ public class PaymentController : Controller
         _paymentService = paymentService;
     }
 
+    // status: null/"all" for everything, or "Pending"/"Confirmed" to filter -
+    // matches the All/Pending/Confirmed tabs on the page itself.
     [HttpGet]
-    public async Task<IActionResult> Pending()
+    public async Task<IActionResult> Index(string? status)
     {
-        var payments = await _paymentRepository.GetPendingPaymentsAsync();
+        var filterStatus = string.IsNullOrWhiteSpace(status) || status.Equals("all", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : status;
+
+        var payments = await _paymentRepository.GetAllPaymentsAsync(filterStatus);
+        ViewData["SelectedStatus"] = filterStatus ?? "all";
         return View(payments);
     }
 
     [HttpPost("Payment/Confirm/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Confirm(int id)
+    public async Task<IActionResult> Confirm(int id, string? status)
     {
         await _paymentService.ConfirmPaymentAsync(id);
-        return RedirectToAction(nameof(Pending));
+        // Sends the admin back to whichever tab they confirmed this from,
+        // instead of always resetting to "All".
+        return RedirectToAction(nameof(Index), new { status });
     }
 }

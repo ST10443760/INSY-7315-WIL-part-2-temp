@@ -11,7 +11,7 @@ namespace ThriveWellness.Models
         // A short preview for the dashboard's own Pending Payments table
         // (desktop-admin-dashboard.png) - the full list lives on the
         // Payments page itself, linked via "View all pending payments".
-        public IReadOnlyList<PendingPaymentViewModel> PendingPaymentsPreview { get; set; } = new List<PendingPaymentViewModel>();
+        public IReadOnlyList<PaymentOverviewViewModel> PendingPaymentsPreview { get; set; } = new List<PaymentOverviewViewModel>();
 
         // Sessions starting in the next 7 days don't map 1:1 to "bookings" -
         // this sums each of those sessions' own active booking count, so

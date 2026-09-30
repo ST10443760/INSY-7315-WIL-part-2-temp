@@ -1,0 +1,80 @@
+@model IEnumerable<ThriveWellness.Models.PaymentOverviewViewModel>
+
+@{
+    ViewData["Title"] = "Payments";
+    Layout = "_AdminLayout";
+    var selectedStatus = (string)ViewData["SelectedStatus"]!;
+}
+
+<div class="thrive-admin-page-header">
+    <h1>Payments</h1>
+    <span class="thrive-admin-page-header__subtitle">Manage client payment confirmations.</span>
+</div>
+
+<div class="thrive-admin-filter-tabs">
+    <a class="thrive-admin-filter-tab @(selectedStatus == "all" ? "thrive-admin-filter-tab--active" : "")" asp-action="Index" asp-route-status="all">All</a>
+    <a class="thrive-admin-filter-tab @(selectedStatus == "Pending" ? "thrive-admin-filter-tab--active" : "")" asp-action="Index" asp-route-status="Pending">Pending</a>
+    <a class="thrive-admin-filter-tab @(selectedStatus == "Confirmed" ? "thrive-admin-filter-tab--active" : "")" asp-action="Index" asp-route-status="Confirmed">Confirmed</a>
+</div>
+
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">No payments to show here.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Session</th>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var payment in Model)
+                    {
+                        <tr>
+                            <td>@payment.ClientName</td>
+                            <td>
+                                @payment.SessionType.ToDisplayLabel()
+                                <br />
+                                <span class="thrive-admin-table__muted">@payment.LocationName</span>
+                            </td>
+                            <td>
+                                @payment.SessionDate.ToString("d MMM yyyy")
+                                <br />
+                                <span class="thrive-admin-table__muted">@payment.SessionTime.ToString(@"hh\:mm")</span>
+                            </td>
+                            <td>@payment.Method</td>
+                            <td class="thrive-admin-table__amount">R@(payment.Amount.ToString("N2"))</td>
+                            <td>
+                                <span class="thrive-pill @(payment.Status == "Confirmed" ? "thrive-pill--confirmed" : "thrive-pill--pending")">@payment.Status</span>
+                            </td>
+                            <td>
+                                @if (payment.Status == "Confirmed")
+                                {
+                                    <span class="thrive-admin-table__muted">Paid</span>
+                                }
+                                else
+                                {
+                                    <form asp-action="Confirm" asp-route-id="@payment.PaymentId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="status" value="@selectedStatus" />
+                                        <button type="submit" class="thrive-btn thrive-btn--mauve">Confirm</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

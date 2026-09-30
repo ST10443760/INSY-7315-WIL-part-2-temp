@@ -364,6 +364,112 @@ body.thrive-admin-body {
   color: var(--color-text-muted);
 }
 
+/* ==========================================================================
+   Filter tabs (Payments: All / Pending / Confirmed)
+   ========================================================================== */
+
+.thrive-admin-filter-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.thrive-admin-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.thrive-admin-filter-tab--active {
+  background: var(--color-maroon-dark);
+  border-color: var(--color-maroon-dark);
+  color: var(--color-white);
+}
+
+/* Row of compact action buttons/forms in a table cell (Edit/Mark Full/
+   Waitlist/Delete etc.) - not in any mockup screenshot (they only show
+   Edit/Delete), extended for the actions the app already has. */
+.thrive-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.thrive-admin-actions form {
+  display: contents;
+}
+
+/* Create/Edit forms (Sessions, Locations) - no mockup, matching the
+   public booking flow's card/field styling per the brief. */
+.thrive-admin-card--form {
+  max-width: 560px;
+  padding: var(--space-5);
+}
+
+.thrive-admin-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.thrive-admin-back-link {
+  margin-top: var(--space-4);
+}
+
+/* ==========================================================================
+   Waitlist (grouped-by-session cards)
+   ========================================================================== */
+
+.thrive-admin-waitlist-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.thrive-admin-waitlist-group__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.thrive-admin-waitlist-group__header::-webkit-details-marker {
+  display: none;
+}
+
+.thrive-admin-waitlist-group__header .thrive-icon {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+}
+
+.thrive-admin-waitlist-group[open] .thrive-admin-waitlist-group__header .thrive-icon {
+  transform: rotate(180deg);
+}
+
+.thrive-admin-waitlist-group__info {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.thrive-admin-waitlist-group__count {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
 /* Pill colour variants beyond what thrive.css already ships (success/error/
    outline/full): a cooler "secondary category" tone for Private sessions
    and New clients, and an amber tone for Pending payments. Confirmed /

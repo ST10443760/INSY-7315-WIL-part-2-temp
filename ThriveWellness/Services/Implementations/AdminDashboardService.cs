@@ -32,7 +32,7 @@ namespace ThriveWellness.Services.Implementations
                 .OrderBy(s => s.Date).ThenBy(s => s.Time)
                 .ToListAsync();
 
-            var pendingPayments = (await _paymentRepository.GetPendingPaymentsAsync())
+            var pendingPayments = (await _paymentRepository.GetAllPaymentsAsync("Pending"))
                 .Take(PendingPaymentsPreviewCount)
                 .ToList();
 
@@ -91,11 +91,13 @@ namespace ThriveWellness.Services.Implementations
                 orderby session.Date, session.Time, session.SessionId, entry.Position
                 select new WaitlistOverviewRowViewModel
                 {
+                    WaitlistId = entry.WaitlistId,
                     SessionId = session.SessionId,
                     SessionType = session.SessionType,
                     SessionDate = session.Date,
                     SessionTime = session.Time,
                     LocationName = location.Name,
+                    LocationAddress = location.Address,
                     Position = entry.Position,
                     ClientName = client.FullName,
                     ClientEmail = client.Email,
