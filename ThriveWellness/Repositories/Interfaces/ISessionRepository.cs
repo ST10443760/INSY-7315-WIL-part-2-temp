@@ -14,6 +14,10 @@ namespace ThriveWellness.Repositories.Interfaces
         // Active (non-cancelled) bookings against one session - used to
         // block/redirect a booking attempt on a session that's already full.
         Task<int> GetBookedCountAsync(int sessionId);
+
+        // Whether any session - past or future - is tied to this location.
+        // Used to block deleting a location out from under its sessions.
+        Task<bool> AnyForLocationAsync(int locationId);
         Task AddAsync(Session session);
         Task UpdateAsync(Session session);
         Task DeleteAsync(int id);

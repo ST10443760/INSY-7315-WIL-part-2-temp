@@ -23,5 +23,27 @@ namespace ThriveWellness.Repositories.Implementations
         {
             return await _context.Locations.FirstOrDefaultAsync(l => l.LocationId == id);
         }
+
+        public async Task AddAsync(Location location)
+        {
+            _context.Locations.Add(location);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Location location)
+        {
+            _context.Locations.Update(location);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var location = await _context.Locations.FirstOrDefaultAsync(l => l.LocationId == id);
+            if (location != null)
+            {
+                _context.Locations.Remove(location);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

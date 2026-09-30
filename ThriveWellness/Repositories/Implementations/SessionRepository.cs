@@ -73,6 +73,11 @@ namespace ThriveWellness.Repositories.Implementations
             return _context.Bookings.CountAsync(b => b.SessionId == sessionId && b.Status != "Cancelled");
         }
 
+        public Task<bool> AnyForLocationAsync(int locationId)
+        {
+            return _context.Sessions.AnyAsync(s => s.LocationId == locationId);
+        }
+
         public async Task AddAsync(Session session)
         {
             _context.Sessions.Add(session);
