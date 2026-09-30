@@ -763,7 +763,14 @@ h3 {
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr;
   gap: var(--space-5);
-  margin-top: var(--space-5);
+}
+
+.thrive-footer__brand {
+  /* Logo + tagline are a real grid column now (used to be a full-width
+     block above the grid, with an empty placeholder column reserving its
+     space below - that's what pushed the two studio columns together on
+     the right instead of spacing all three evenly). */
+  min-width: 0;
 }
 
 .thrive-footer__tagline {
