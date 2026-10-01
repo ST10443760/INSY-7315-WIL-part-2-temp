@@ -1,0 +1,40 @@
+name: Deploy
+
+# Only runs on push to main - the branching strategy treats main as the
+# deployable branch (feature -> develop -> main).
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Reuses ci.yml's own build-and-test job (via workflow_call) rather than
+  # duplicating its steps, so there's one definition of "build and test"
+  # for both workflows to agree on.
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      # Render deploy hook - triggers a deploy of the already-connected
+      # Render service by POSTing to a per-service hook URL, no API key
+      # needed for this simpler flow.
+      #
+      # RENDER_DEPLOY_HOOK_URL needs to be added as a GitHub Actions
+      # secret (repo Settings -> Secrets and variables -> Actions -> New
+      # repository secret) once Render hosting is actually set up; that's
+      # the next step after this one, not done yet. Until that secret
+      # exists, this job deliberately does nothing meaningful - it logs
+      # why and exits successfully rather than failing the workflow for a
+      # known, expected gap.
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL is not set yet - add it as a repo secret once Render hosting is configured. Nothing to deploy to yet, skipping."
+            exit 0
+          fi
+          curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
