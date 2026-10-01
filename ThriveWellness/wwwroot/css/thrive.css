@@ -403,7 +403,14 @@ h3 {
   padding-right: 2.75rem;
 }
 
-.thrive-input-icon-wrap .thrive-icon {
+/* Direct child only - the leading icon is always a direct child of the
+   wrap, and this must NOT also match an eye/eye-off icon nested inside
+   a .thrive-password-toggle button two levels down. That icon would
+   become position:absolute relative to the toggle button itself (its
+   own nearest positioned ancestor), collapsing the button and its
+   icon-holding span to 0x0 since they'd have no in-flow content left,
+   and the icon would render off in the padding past the input's edge. */
+.thrive-input-icon-wrap > .thrive-icon {
   position: absolute;
   left: 0.9rem;
   top: 50%;
