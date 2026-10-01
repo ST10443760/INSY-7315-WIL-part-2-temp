@@ -13,6 +13,9 @@ namespace ThriveWellness.Models
         // Payments page itself, linked via "View all pending payments".
         public IReadOnlyList<PaymentOverviewViewModel> PendingPaymentsPreview { get; set; } = new List<PaymentOverviewViewModel>();
 
+        // Last 10 bookings, most recent first - FR-13.
+        public IReadOnlyList<RecentBookingViewModel> RecentBookings { get; set; } = new List<RecentBookingViewModel>();
+
         // Sessions starting in the next 7 days don't map 1:1 to "bookings" -
         // this sums each of those sessions' own active booking count, so
         // it's a real count of upcoming bookings, not sessions.

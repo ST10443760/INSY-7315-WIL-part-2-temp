@@ -506,6 +506,12 @@ body.thrive-admin-body {
   color: var(--color-success-text);
 }
 
+/* Cancelled bookings, reusing the same error tokens as the error banner. */
+.thrive-pill--cancelled {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
 /* ==========================================================================
    Calendar
    ========================================================================== */

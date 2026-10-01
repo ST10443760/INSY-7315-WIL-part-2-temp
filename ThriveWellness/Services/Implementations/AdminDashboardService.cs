@@ -10,6 +10,7 @@ namespace ThriveWellness.Services.Implementations
     {
         private const int UpcomingWindowDays = 7;
         private const int PendingPaymentsPreviewCount = 5;
+        private const int RecentBookingsCount = 10;
 
         private readonly ApplicationDbContext _context;
         private readonly IPaymentRepository _paymentRepository;
@@ -36,6 +37,23 @@ namespace ThriveWellness.Services.Implementations
                 .Take(PendingPaymentsPreviewCount)
                 .ToList();
 
+            var recentBookings = await (
+                from booking in _context.Bookings
+                join client in _context.Clients on booking.ClientId equals client.ClientId
+                join session in _context.Sessions on booking.SessionId equals session.SessionId
+                join location in _context.Locations on session.LocationId equals location.LocationId
+                orderby booking.BookingDate descending, booking.BookingId descending
+                select new RecentBookingViewModel
+                {
+                    BookingId = booking.BookingId,
+                    BookingDate = booking.BookingDate,
+                    ClientName = client.FullName,
+                    SessionType = session.SessionType,
+                    SessionDate = session.Date,
+                    LocationName = location.Name,
+                    Status = booking.Status
+                }).Take(RecentBookingsCount).ToListAsync();
+
             return new AdminDashboardViewModel
             {
                 PendingPaymentsCount = await _context.Payments.CountAsync(p => p.Status == "Pending"),
@@ -43,7 +61,8 @@ namespace ThriveWellness.Services.Implementations
                 ReturningClientCount = await _context.Clients.CountAsync(c => !c.IsNew),
                 WaitlistedClientCount = await _context.Waitlists.Select(w => w.ClientId).Distinct().CountAsync(),
                 UpcomingSessions = upcomingSessions,
-                PendingPaymentsPreview = pendingPayments
+                PendingPaymentsPreview = pendingPayments,
+                RecentBookings = recentBookings
             };
         }
 

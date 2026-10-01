@@ -86,3 +86,88 @@
         <a class="thrive-admin-link" asp-controller="Payment" asp-action="Index" asp-route-status="Pending">View all pending payments &rarr;</a>
     }
 </div>
+
+<h2 class="thrive-admin-section-heading">Upcoming Sessions</h2>
+
+<div class="thrive-admin-card">
+    @if (!Model.UpcomingSessions.Any())
+    {
+        <p class="thrive-admin-empty">No sessions scheduled in the next 7 days.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Bookings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in Model.UpcomingSessions)
+                    {
+                        <tr>
+                            <td>@session.Date.ToString("ddd d MMM yyyy")</td>
+                            <td>@session.Time.ToString(@"hh\:mm")</td>
+                            <td>
+                                <span class="thrive-pill @(session.SessionType == "private" ? "thrive-pill--private" : "")">@session.SessionType.ToDisplayLabel()</span>
+                            </td>
+                            <td>@session.LocationName</td>
+                            <td class="@(session.IsFull ? "thrive-admin-table__amount" : "")">@session.BookedCount/@session.Capacity</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<h2 class="thrive-admin-section-heading">Recent Bookings</h2>
+
+<div class="thrive-admin-card">
+    @if (!Model.RecentBookings.Any())
+    {
+        <p class="thrive-admin-empty">No bookings yet.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Session</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model.RecentBookings)
+                    {
+                        var statusPill = booking.Status switch
+                        {
+                            "Confirmed" => "thrive-pill--confirmed",
+                            "Cancelled" => "thrive-pill--cancelled",
+                            "Awaiting Payment" => "thrive-pill--pending",
+                            _ => "thrive-pill--pending"
+                        };
+                        <tr>
+                            <td>@booking.ClientName</td>
+                            <td>
+                                @booking.SessionType.ToDisplayLabel()
+                                <br />
+                                <span class="thrive-admin-table__muted">@booking.LocationName</span>
+                            </td>
+                            <td>@booking.SessionDate.ToString("d MMM yyyy")</td>
+                            <td><span class="thrive-pill @statusPill">@booking.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
