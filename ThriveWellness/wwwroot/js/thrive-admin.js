@@ -19,27 +19,3 @@
         toggle.setAttribute("aria-expanded", String(!isOpen));
     });
 })();
-
-// Password show/hide toggle on the admin login form.
-(function () {
-    "use strict";
-
-    document.querySelectorAll("[data-password-toggle]").forEach(function (toggle) {
-        var input = document.getElementById(toggle.getAttribute("data-password-toggle"));
-        var showIcon = toggle.querySelector("[data-icon-show]");
-        var hideIcon = toggle.querySelector("[data-icon-hide]");
-        if (!input) {
-            return;
-        }
-
-        toggle.addEventListener("click", function () {
-            var isHidden = input.type === "password";
-            input.type = isHidden ? "text" : "password";
-            toggle.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
-            if (showIcon && hideIcon) {
-                showIcon.hidden = isHidden;
-                hideIcon.hidden = !isHidden;
-            }
-        });
-    });
-})();

@@ -20,21 +20,25 @@
         <form asp-controller="Account" asp-action="Login" method="post" data-busy-text="Logging in…">
             @Html.AntiForgeryToken()
 
-            <div class="thrive-field thrive-input-icon-wrap">
+            <div class="thrive-field">
                 <label class="thrive-label" asp-for="Username">Username</label>
-                <partial name="_Icon" model="@("user")" />
-                <input asp-for="Username" class="thrive-input" placeholder="Enter your username" autocomplete="username" />
+                <div class="thrive-input-icon-wrap">
+                    <partial name="_Icon" model="@("user")" />
+                    <input asp-for="Username" class="thrive-input" placeholder="Enter your username" autocomplete="username" />
+                </div>
                 <span asp-validation-for="Username" class="thrive-field-error"></span>
             </div>
 
-            <div class="thrive-field thrive-input-icon-wrap">
+            <div class="thrive-field">
                 <label class="thrive-label" asp-for="Password">Password</label>
-                <partial name="_Icon" model="@("lock")" />
-                <input asp-for="Password" id="adminPassword" class="thrive-input" placeholder="Enter your password" autocomplete="current-password" />
-                <button type="button" class="thrive-password-toggle" data-password-toggle="adminPassword" aria-label="Show password">
-                    <span data-icon-show><partial name="_Icon" model="@("eye")" /></span>
-                    <span data-icon-hide hidden><partial name="_Icon" model="@("eye-off")" /></span>
-                </button>
+                <div class="thrive-input-icon-wrap">
+                    <partial name="_Icon" model="@("lock")" />
+                    <input asp-for="Password" id="adminPassword" class="thrive-input" placeholder="Enter your password" autocomplete="current-password" />
+                    <button type="button" class="thrive-password-toggle" data-password-toggle="adminPassword" aria-label="Show password">
+                        <span data-icon-show><partial name="_Icon" model="@("eye")" /></span>
+                        <span data-icon-hide hidden><partial name="_Icon" model="@("eye-off")" /></span>
+                    </button>
+                </div>
                 <span asp-validation-for="Password" class="thrive-field-error"></span>
             </div>
 
