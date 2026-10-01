@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ThriveWellness.Tests/ThriveWellness.Tests.csproj" />
+  <Project Path="ThriveWellness/ThriveWellness.csproj" />
+</Solution>
