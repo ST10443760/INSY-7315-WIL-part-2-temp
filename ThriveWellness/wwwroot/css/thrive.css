@@ -197,13 +197,22 @@ h3 {
   border: 0;
 }
 
-/* Visible keyboard focus everywhere on the public site */
+/* Visible keyboard focus everywhere on the site - public (.thrive-body)
+   and admin (.thrive-admin-body) both. This was public-only until the
+   admin restyle added its own body class; without it, nothing on any
+   admin page ever showed a focus ring. */
 .thrive-body a:focus-visible,
 .thrive-body button:focus-visible,
 .thrive-body input:focus-visible,
 .thrive-body select:focus-visible,
 .thrive-body textarea:focus-visible,
-.thrive-body [tabindex]:focus-visible {
+.thrive-body [tabindex]:focus-visible,
+.thrive-admin-body a:focus-visible,
+.thrive-admin-body button:focus-visible,
+.thrive-admin-body input:focus-visible,
+.thrive-admin-body select:focus-visible,
+.thrive-admin-body textarea:focus-visible,
+.thrive-admin-body [tabindex]:focus-visible {
   outline: 3px solid var(--color-maroon-dark);
   outline-offset: 2px;
 }

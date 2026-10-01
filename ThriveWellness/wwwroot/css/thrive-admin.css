@@ -12,7 +12,9 @@
      same pale/secondary role as --color-pale-rose, just a cooler hue for
      the second category where two need to be told apart at a glance. */
   --color-pale-blue: #e2ecf4;
-  --color-pale-blue-text: #4a7a94;
+  /* Darkened from the initial #4a7a94 (3.90:1 on --color-pale-blue,
+     fails WCAG AA) to 4.67:1. */
+  --color-pale-blue-text: #426d85;
 
   /* "Pending" payment-status pill. */
   --color-amber-bg: #fbedd2;
@@ -151,6 +153,14 @@ body.thrive-admin-body {
 .thrive-admin-sidebar__logout button:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-white);
+}
+
+/* The site-wide focus ring (thrive.css) is maroon-dark, which measures
+   1.1:1 against this sidebar's own maroon background - effectively
+   invisible. Everything inside the sidebar gets a white ring instead. */
+.thrive-admin-sidebar a:focus-visible,
+.thrive-admin-sidebar button:focus-visible {
+  outline-color: var(--color-white);
 }
 
 /* Mobile: sidebar becomes a slide-out drawer, toggled by a hamburger. */
