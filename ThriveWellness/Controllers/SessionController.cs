@@ -42,6 +42,11 @@ public class SessionController : Controller
     {
         var viewModel = new SessionFormViewModel
         {
+            // Date is a non-nullable DateTime, so leaving it unset would
+            // default to DateTime.MinValue (0001-01-01) and the date input
+            // would load already failing SessionService's past-date check.
+            // Tomorrow is a sensible starting point an admin can change.
+            Date = DateTime.Today.AddDays(1),
             Locations = await _locationRepository.GetAllAsync()
         };
         return View(viewModel);
