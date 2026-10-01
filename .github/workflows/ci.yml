@@ -1,0 +1,38 @@
+name: CI
+
+# Runs on every push to any branch, and on pull requests targeting develop
+# or main (the integration branches in the feature -> develop -> main
+# strategy), so a PR shows a status check before it's allowed to merge.
+#
+# Also declares workflow_call so deploy.yml can run this exact job as its
+# own build-and-test step instead of duplicating it.
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_call:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        run: dotnet test --no-build
