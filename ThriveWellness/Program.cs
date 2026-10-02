@@ -8,6 +8,17 @@ using ThriveWellness.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render (and most container hosts) assign the port to listen on via the
+// PORT environment variable at container start, rather than a fixed one.
+// Only override the default URL binding when it's actually set, so local
+// development (launchSettings.json, or `dotnet run --urls ...`) keeps
+// behaving exactly as before - PORT is never set outside a container.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
