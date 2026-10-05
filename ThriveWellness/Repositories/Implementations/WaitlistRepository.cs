@@ -5,6 +5,9 @@ using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Repositories.Implementations
 {
+    // Repository pattern: thin EF Core wrapper around the Waitlists table -
+    // no business rules here (the FIFO promotion/position logic lives in
+    // WaitlistService), just queries and saves.
     public class WaitlistRepository : IWaitlistRepository
     {
         private readonly ApplicationDbContext _context;

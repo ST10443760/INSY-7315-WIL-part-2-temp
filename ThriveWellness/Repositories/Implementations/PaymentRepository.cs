@@ -5,6 +5,8 @@ using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Repositories.Implementations
 {
+    // Repository pattern: thin EF Core wrapper around the Payments table -
+    // no business rules here, just queries and saves.
     public class PaymentRepository : IPaymentRepository
     {
         private readonly ApplicationDbContext _context;
@@ -30,6 +32,10 @@ namespace ThriveWellness.Repositories.Implementations
             return await _context.Payments.FirstOrDefaultAsync(p => p.BookingId == bookingId);
         }
 
+        // Backs the admin payments list: every payment (optionally filtered
+        // to one status) joined up with its booking, client, session and
+        // location so the screen can show all of that in one row, newest
+        // session first.
         public async Task<IEnumerable<PaymentOverviewViewModel>> GetAllPaymentsAsync(string? status)
         {
             var query =

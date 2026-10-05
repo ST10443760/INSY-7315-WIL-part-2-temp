@@ -5,6 +5,9 @@ using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Repositories.Implementations
 {
+    // Repository pattern: thin EF Core wrapper around the Bookings table -
+    // no business rules here, just queries and saves. BookingService and
+    // WaitlistService are the only callers.
     public class BookingRepository : IBookingRepository
     {
         private readonly ApplicationDbContext _context;

@@ -5,6 +5,9 @@ using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Repositories.Implementations
 {
+    // Repository pattern: thin EF Core wrapper around the Sessions table -
+    // no business rules here (capacity/date validation lives in
+    // SessionService), just queries and saves.
     public class SessionRepository : ISessionRepository
     {
         private readonly ApplicationDbContext _context;

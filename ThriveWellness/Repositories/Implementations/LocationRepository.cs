@@ -5,6 +5,9 @@ using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Repositories.Implementations
 {
+    // Repository pattern: thin EF Core wrapper around the Locations table -
+    // no business rules here (the "can't delete a location in use" check
+    // lives in LocationService), just queries and saves.
     public class LocationRepository : ILocationRepository
     {
         private readonly ApplicationDbContext _context;

@@ -5,6 +5,8 @@ using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Repositories.Implementations
 {
+    // Repository pattern: thin EF Core wrapper around the Clients table -
+    // no business rules here, just queries and saves.
     public class ClientRepository : IClientRepository
     {
         private readonly ApplicationDbContext _context;
@@ -36,6 +38,9 @@ namespace ThriveWellness.Repositories.Implementations
             await _context.SaveChangesAsync();
         }
 
+        // Backs the admin client list: every client (optionally filtered by
+        // a case-insensitive name/email search), newest first, each with a
+        // live count of their non-cancelled sessions.
         public async Task<IEnumerable<ClientOverviewViewModel>> GetAllWithStatsAsync(string? search)
         {
             IQueryable<Client> query = _context.Clients;
