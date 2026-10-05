@@ -6,6 +6,12 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
 
+// MVC controller: the public schedule page and the entire client-facing
+// booking flow - the multi-step booking form, joining the waitlist directly
+// from a full session, the booking confirmation page, and both cancellation
+// paths (client link, FR-18; admin stub, FR-12). Pulls in BookingService,
+// SessionService and WaitlistService rather than talking to EF Core itself,
+// keeping the actual business rules in the service layer.
 public class BookingController : Controller
 {
     private readonly IBookingService _bookingService;
@@ -86,6 +92,9 @@ public class BookingController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    // Booking flow step 2: looks up whether this email belongs to a new or
+    // returning client, and shows the Details form pre-filled accordingly
+    // (IsNewClient drives whether the intake/consent fields appear).
     public async Task<IActionResult> CheckEmail(BookingEmailStepViewModel model)
     {
         var session = await _sessionService.GetByIdAsync(model.SessionId);
@@ -125,6 +134,13 @@ public class BookingController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    // Booking flow's final step: a few cross-field rules that don't fit a
+    // single data annotation (consent only required for a new client;
+    // payment type/method always required) on top of the model's own
+    // validation, then hands off to BookingService.CreateBookingAsync.
+    // Branches three ways on the result: the full session's waitlist
+    // (RequiresWaitlist), a validation-style failure shown back on the same
+    // form, or success redirecting to the confirmation page.
     public async Task<IActionResult> Submit(BookingSubmitViewModel model)
     {
         var session = await _sessionService.GetByIdAsync(model.SessionId);
@@ -203,6 +219,10 @@ public class BookingController : Controller
     }
 
     [HttpGet("Booking/Confirmation/{bookingId:int}")]
+    // The booking confirmation page, reached right after Submit succeeds -
+    // assembles the flattened view model from four separate lookups
+    // (booking, client, session+location, payment) since nothing else needs
+    // that join and it isn't worth a dedicated repository method for it.
     public async Task<IActionResult> Confirmation(int bookingId)
     {
         var booking = await _bookingService.GetByIdAsync(bookingId);
@@ -270,6 +290,9 @@ public class BookingController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    // Completes the direct waitlist join: finds or creates the client (the
+    // same new-vs-returning lookup as the booking flow, just without a
+    // separate email step first) and adds them to the queue.
     public async Task<IActionResult> JoinWaitlistSubmit(WaitlistJoinViewModel model)
     {
         var session = await _sessionService.GetByIdAsync(model.SessionId);
@@ -319,6 +342,9 @@ public class BookingController : Controller
     }
 
     [HttpGet("Booking/Cancel/{token}")]
+    // The FR-18 cancellation link's destination - no [Authorize], since this
+    // is the one booking action a client (who never logs in) performs
+    // themselves, authenticated only by possession of the token itself.
     public async Task<IActionResult> Cancel(string token)
     {
         var result = await _bookingService.CancelBookingAsync(token);
