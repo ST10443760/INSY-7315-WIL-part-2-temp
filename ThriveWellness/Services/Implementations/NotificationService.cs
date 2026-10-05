@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
@@ -26,11 +27,15 @@ namespace ThriveWellness.Services.Implementations
         private readonly IEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
         private readonly string _appBaseUrl;
+        private readonly PaymentOptions _paymentOptions;
         private readonly ILogger<NotificationService> _logger;
 
         // AppBaseUrl has to be configured for cancellation links (FR-18) to
         // point anywhere real, so this fails fast at startup rather than
-        // emailing a client a broken link later.
+        // emailing a client a broken link later. PaymentOptions is treated
+        // differently (see BuildPaymentDetailsHtml below) - an unconfigured
+        // bank account is far less broken than an unconfigured app URL, so
+        // it degrades gracefully per email instead of failing startup.
         public NotificationService(
             IBookingRepository bookingRepository,
             IClientRepository clientRepository,
@@ -40,6 +45,7 @@ namespace ThriveWellness.Services.Implementations
             IEmailSender emailSender,
             ApplicationDbContext context,
             IConfiguration configuration,
+            IOptions<PaymentOptions> paymentOptions,
             ILogger<NotificationService> logger)
         {
             _bookingRepository = bookingRepository;
@@ -51,6 +57,7 @@ namespace ThriveWellness.Services.Implementations
             _context = context;
             _appBaseUrl = configuration["AppBaseUrl"]?.TrimEnd('/')
                 ?? throw new InvalidOperationException("AppBaseUrl is not configured.");
+            _paymentOptions = paymentOptions.Value;
             _logger = logger;
         }
 
@@ -133,6 +140,7 @@ namespace ThriveWellness.Services.Implementations
             var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
             var payment = await _paymentRepository.GetByBookingIdAsync(booking.BookingId);
             var cancelUrl = $"{_appBaseUrl}/Booking/Cancel/{booking.CancellationToken}";
+            var paymentDetails = BuildPaymentDetailsHtml(client, booking, payment);
 
             var html = $"""
                 <p>Hi {client.FullName},</p>
@@ -142,16 +150,64 @@ namespace ThriveWellness.Services.Implementations
                     <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
                     <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
                     <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
-                    <li><strong>Amount due:</strong> R{payment?.Amount}</li>
                 </ul>
-                <p><strong>To pay by EFT:</strong> Thrive Wellness, Account 123456789, Branch code 000000.
-                Please use your name as the payment reference.</p>
-                <p><strong>Prefer cash?</strong> That's fine too - you can pay in person before your class.</p>
+                {paymentDetails}
                 <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
                 """;
 
             await _emailSender.SendEmailAsync(client.Email, "Your Thrive Wellness booking is confirmed", html);
             await WriteNotificationRecordAsync(booking.BookingId, "Confirmation");
+        }
+
+        // Builds the confirmation email's payment block: the amount owing
+        // (payment.Amount - already computed from the shared PaymentPricing
+        // constants when this Payment row was created in BookingService, so
+        // there's no need to re-derive R120/R450 here), the studio's real
+        // banking details from configuration, and an EFT reference of the
+        // client's name plus booking number. One item per line as plain
+        // text (no table or image) so the account number can still be
+        // copied on a phone. Cash is always mentioned as an alternative,
+        // configured or not.
+        //
+        // If any of AccountHolder/Bank/AccountNumber isn't configured, logs
+        // a warning (so a missing Render env var gets noticed quickly) and
+        // swaps the bank-detail lines for a plain-language fallback instead
+        // of emailing a client blanks or leftover placeholder text.
+        private string BuildPaymentDetailsHtml(Client client, Booking booking, Payment? payment)
+        {
+            var amountLine = payment != null ? $"Amount due: R{payment.Amount}<br>" : string.Empty;
+
+            string bankDetailsLines;
+            if (HasCompletePaymentDetails())
+            {
+                bankDetailsLines = $"""
+                    Account holder: {_paymentOptions.AccountHolder}<br>
+                    Bank: {_paymentOptions.Bank}<br>
+                    Account number: {_paymentOptions.AccountNumber}<br>
+                    Reference: {client.FullName} {booking.BookingId}<br>
+                    """;
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Payment account details are not fully configured (Payment:AccountHolder/Bank/AccountNumber) - " +
+                    "booking {BookingId}'s confirmation email will not include them.",
+                    booking.BookingId);
+                bankDetailsLines = "The studio will send you payment details separately.<br>";
+            }
+
+            return $"""
+                <p><strong>Payment</strong><br>
+                {amountLine}{bankDetailsLines}
+                Cash is also accepted at class.</p>
+                """;
+        }
+
+        private bool HasCompletePaymentDetails()
+        {
+            return !string.IsNullOrWhiteSpace(_paymentOptions.AccountHolder)
+                && !string.IsNullOrWhiteSpace(_paymentOptions.Bank)
+                && !string.IsNullOrWhiteSpace(_paymentOptions.AccountNumber);
         }
 
         // The day-before reminder, sent by ScheduledNotificationService's
