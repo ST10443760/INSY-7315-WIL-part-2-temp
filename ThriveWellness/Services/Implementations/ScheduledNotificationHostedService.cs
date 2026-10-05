@@ -23,6 +23,10 @@ namespace ThriveWellness.Services.Implementations
             _logger = logger;
         }
 
+        // Runs RunOnceAsync immediately on startup, then again every
+        // Interval for as long as the app is running - PeriodicTimer handles
+        // the "wait, unless shutdown was requested" part, so this doesn't
+        // need its own cancellation bookkeeping.
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var timer = new PeriodicTimer(Interval);
