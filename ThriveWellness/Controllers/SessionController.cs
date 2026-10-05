@@ -6,6 +6,9 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
 
+// MVC controller: admin CRUD for class sessions, plus the two capacity
+// actions (MarkFull/MarkOpen) and a per-session waitlist view. Follows the
+// same validation-exception-to-form-error pattern as LocationController.
 [Authorize]
 public class SessionController : Controller
 {
@@ -168,6 +171,8 @@ public class SessionController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    // Reopening also tries to promote the next waitlisted client (FR-11) -
+    // see SessionService.MarkAsOpenAsync.
     public async Task<IActionResult> MarkOpen(int id)
     {
         await _sessionService.MarkAsOpenAsync(id);
@@ -175,6 +180,11 @@ public class SessionController : Controller
     }
 
     [HttpGet]
+    // The waitlist for one specific session (contrast
+    // AdminDashboardService.GetWaitlistOverviewAsync, which is every
+    // session's waitlist at once) - resolves each entry's client name/email
+    // one at a time since there's no dedicated join for this single-session
+    // case.
     public async Task<IActionResult> Waitlist(int id)
     {
         var session = await _sessionService.GetByIdAsync(id);
