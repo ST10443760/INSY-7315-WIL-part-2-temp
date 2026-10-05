@@ -6,6 +6,12 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Service layer: read-only queries that power the admin dashboard and
+    // its related screens - the headline counts, the next week of sessions,
+    // a preview of pending payments, the most recent bookings (FR-13), the
+    // full month calendar view, and the waitlist overview. Nothing here
+    // mutates state; it exists purely to keep these joins and projections
+    // out of the controller.
     public class AdminDashboardService : IAdminDashboardService
     {
         private const int UpcomingWindowDays = 7;
@@ -21,6 +27,11 @@ namespace ThriveWellness.Services.Implementations
             _paymentRepository = paymentRepository;
         }
 
+        // Assembles everything the main dashboard page shows in one call:
+        // headline counts, the next UpcomingWindowDays of sessions, a short
+        // preview of pending payments, and the most recent bookings - run as
+        // several independent queries rather than one giant join, since each
+        // piece has a different shape and none of them depend on another.
         public async Task<AdminDashboardViewModel> GetDashboardAsync()
         {
             // Sessions are compared against the local calendar date, matching
@@ -66,6 +77,8 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
+        // All sessions (not just the dashboard's upcoming window), for the
+        // full session-management list screen.
         public async Task<IReadOnlyList<SessionOverviewViewModel>> GetSessionOverviewsAsync()
         {
             return await SessionOverviews()
@@ -73,6 +86,10 @@ namespace ThriveWellness.Services.Implementations
                 .ToListAsync();
         }
 
+        // Builds a full month's worth of calendar cells, one per day, even
+        // for days with no sessions - so the calendar view can just iterate
+        // the result and render something for every date without
+        // special-casing gaps itself.
         public async Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync(int year, int month)
         {
             var monthStart = new DateTime(year, month, 1);
@@ -100,6 +117,10 @@ namespace ThriveWellness.Services.Implementations
             return days;
         }
 
+        // Every waitlist entry across every session, for the admin waitlist
+        // screen - ordered by session first and then queue position, so
+        // entries for the same class stay grouped together in the order
+        // they'd actually be promoted.
         public async Task<IReadOnlyList<WaitlistOverviewRowViewModel>> GetWaitlistOverviewAsync()
         {
             return await (
@@ -124,6 +145,10 @@ namespace ThriveWellness.Services.Implementations
                 }).ToListAsync();
         }
 
+        // Shared projection used by GetDashboardAsync, GetSessionOverviewsAsync
+        // and GetCalendarAsync, so the booked-count calculation below only
+        // has to agree with BookingService/WaitlistService's own capacity
+        // checks in one place.
         // Cancelled bookings don't count against capacity, matching the
         // capacity checks in BookingService and WaitlistService.
         private IQueryable<SessionOverviewViewModel> SessionOverviews()
