@@ -28,14 +28,24 @@
         <div class="thrive-container thrive-header__bar">
             <partial name="_Logo" />
 
-            <button type="button" class="thrive-nav-toggle" aria-expanded="false" aria-controls="thrive-nav-list" aria-label="Toggle menu">
-                <svg class="thrive-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
+            <button type="button" class="thrive-nav-toggle" aria-expanded="false" aria-controls="thrive-nav-list" aria-label="Open menu">
+                <span data-icon-closed>
+                    <svg class="thrive-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </span>
+                <span data-icon-open hidden>
+                    <partial name="_Icon" model="@("x")" />
+                </span>
             </button>
 
             <nav aria-label="Main">
                 <ul class="thrive-nav__list" id="thrive-nav-list">
+                    <li class="thrive-nav__close-row">
+                        <button type="button" class="thrive-nav__close" id="thrive-nav-close" aria-label="Close menu">
+                            <partial name="_Icon" model="@("x")" />
+                        </button>
+                    </li>
                     <li><a class="thrive-nav__link @(isHome ? "thrive-nav__link--active" : "")" aria-current="@(isHome ? "page" : null)" asp-controller="Home" asp-action="Index">HOME</a></li>
                     <li><a class="thrive-nav__link @(isSchedule ? "thrive-nav__link--active" : "")" aria-current="@(isSchedule ? "page" : null)" asp-controller="Booking" asp-action="Schedule">SCHEDULE</a></li>
                     <li><a class="thrive-nav__link @(isAbout ? "thrive-nav__link--active" : "")" aria-current="@(isAbout ? "page" : null)" asp-controller="Home" asp-action="About">ABOUT</a></li>
@@ -44,6 +54,8 @@
             </nav>
         </div>
     </header>
+
+    <div class="thrive-menu-backdrop" id="thrive-nav-backdrop" hidden></div>
 
     <main id="main-content" role="main" class="thrive-main">
         @RenderBody()
