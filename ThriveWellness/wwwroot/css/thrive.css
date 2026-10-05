@@ -810,6 +810,17 @@ h3 {
   padding: 0;
 }
 
+/* Only ever meant to show inside the open mobile dropdown - needs its own
+   default-hidden rule here (same as .thrive-nav-toggle above) since the
+   mobile media query only ever adds display back, it never removes it
+   from somewhere else. Without this, the close button rendered at every
+   width with no styling applied (the >768px rule below is the only place
+   that ever gave it any), showing up as a bare, browser-default-bordered
+   X between the logo and the nav links on desktop. */
+.thrive-nav__close-row {
+  display: none;
+}
+
 .thrive-nav__link {
   font-family: var(--font-heading);
   font-weight: 600;
