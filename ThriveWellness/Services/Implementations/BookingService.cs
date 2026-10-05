@@ -16,10 +16,6 @@ namespace ThriveWellness.Services.Implementations
     // new-vs-returning client distinction all live in exactly one place.
     public class BookingService : IBookingService
     {
-        // FR-06 pricing tiers.
-        private const decimal PerClassPrice = 120m;
-        private const decimal MonthlyPrice = 450m;
-
         private readonly IClientRepository _clientRepository;
         private readonly IBookingRepository _bookingRepository;
         private readonly ISessionRepository _sessionRepository;
@@ -143,7 +139,7 @@ namespace ThriveWellness.Services.Implementations
             {
                 BookingId = booking.BookingId,
                 Method = request.Method,
-                Amount = GetAmountForPaymentType(request.PaymentType),
+                Amount = PaymentPricing.GetAmountForPaymentType(request.PaymentType),
                 Status = "Pending",
                 PaymentType = request.PaymentType
             };
@@ -235,16 +231,6 @@ namespace ThriveWellness.Services.Implementations
         public Task<Booking?> GetByIdAsync(int bookingId)
         {
             return _bookingRepository.GetByIdAsync(bookingId);
-        }
-
-        private static decimal GetAmountForPaymentType(string paymentType)
-        {
-            return paymentType switch
-            {
-                "monthly" => MonthlyPrice,
-                "per-class" => PerClassPrice,
-                _ => throw new ArgumentException($"Unknown payment type: {paymentType}")
-            };
         }
     }
 }
