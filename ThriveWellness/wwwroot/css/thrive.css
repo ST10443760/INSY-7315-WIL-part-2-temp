@@ -834,6 +834,24 @@ h3 {
 @media (max-width: 768px) {
   .thrive-nav-toggle {
     display: inline-flex;
+    /* Stays clickable above the backdrop (z-index: 90) while the menu is
+       open, so "tap the hamburger again" keeps working as its own
+       affordance rather than being intercepted by the backdrop. */
+    position: relative;
+    z-index: 110;
+  }
+
+  /* The <nav> wrapping the list would otherwise still count as a third
+     flex item in .thrive-header__bar's `justify-content: space-between`
+     even once its only child (the list) is display:none - stranding the
+     toggle button in the middle of the row instead of flush against the
+     container's right padding, since space-between was distributing
+     space across three items, not two. display: contents removes the
+     wrapper from the flex layout entirely; the list becomes the direct
+     flex item instead (same display:none behaviour when closed, and
+     already removed from flow by its own position:absolute once open). */
+  .thrive-header__bar > nav {
+    display: contents;
   }
 
   .thrive-nav__list {
@@ -861,6 +879,46 @@ h3 {
   .thrive-nav__link {
     width: 100%;
   }
+
+  .thrive-nav__close-row {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    padding-bottom: var(--space-2);
+  }
+
+  .thrive-nav__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    border: none;
+    background: none;
+    color: var(--color-maroon);
+    cursor: pointer;
+  }
+}
+
+/* Backdrop for an open mobile menu (public nav list or admin sidebar
+   drawer) - shared so both layouts behave identically. Sits below its own
+   panel's z-index but above ordinary page content; [hidden] still wins
+   over the fixed positioning. */
+.thrive-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 10, 14, 0.35);
+  z-index: 90;
+}
+
+.thrive-menu-backdrop[hidden] {
+  display: none;
+}
+
+/* Set on <body> (alongside .thrive-body/.thrive-admin-body) for as long as
+   either mobile menu is open, so the page behind it can't be scrolled. */
+body.thrive-menu-open {
+  overflow: hidden;
 }
 
 /* ==========================================================================
