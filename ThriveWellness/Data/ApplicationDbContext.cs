@@ -4,6 +4,12 @@ using ThriveWellness.Models;
 
 namespace ThriveWellness.Data
 {
+    // EF Core's entry point to the database: the DbSets every repository
+    // queries against, plus (in OnModelCreating below) the relationship
+    // configuration, seeded location data, and the DateTime handling that
+    // Npgsql needs. Registered once in Program.cs and injected as a Scoped
+    // service - one instance per HTTP request, shared by every repository
+    // that request touches.
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -24,6 +30,14 @@ namespace ThriveWellness.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Every relationship below is spelled out explicitly rather than
+            // left to EF Core's own convention-based discovery, and every
+            // one restricts deletes except the true child records (a
+            // booking's Payment, IntakeForm and Notifications, which only
+            // exist because that booking does) - deleting a Client, Session
+            // or Booking that still has dependent rows fails loudly instead
+            // of quietly cascading data loss through the booking history.
 
             // Location 1:many Session
             modelBuilder.Entity<Session>()
