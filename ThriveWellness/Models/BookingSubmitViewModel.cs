@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ThriveWellness.Models
 {
+    // View model (with data annotations for MVC's built-in validation) for
+    // the booking flow's second step - the full form, shown once
+    // CheckClientStatusAsync has determined new vs. returning (IsNewClient).
     public class BookingSubmitViewModel
     {
         [Required]

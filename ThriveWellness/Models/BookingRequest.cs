@@ -1,5 +1,9 @@
 namespace ThriveWellness.Models
 {
+    // Plain input to BookingService.CreateBookingAsync - the controller
+    // builds this from BookingSubmitViewModel after MVC's own validation has
+    // passed, so the service layer never has to depend on an
+    // MVC-specific, annotated view model.
     public class BookingRequest
     {
         public string Email { get; set; } = string.Empty;

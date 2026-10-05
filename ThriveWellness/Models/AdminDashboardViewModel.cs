@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // View model for the main admin dashboard page - the aggregate result of
+    // AdminDashboardService.GetDashboardAsync.
     public class AdminDashboardViewModel
     {
         public int PendingPaymentsCount { get; set; }

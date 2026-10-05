@@ -1,5 +1,9 @@
 namespace ThriveWellness.Models
 {
+    // View model for the admin calendar page - wraps
+    // AdminDashboardService.GetCalendarAsync's per-day results with the two
+    // extra values the Razor view needs to actually lay out a grid (which
+    // month, and how many blank cells come before day 1).
     public class AdminCalendarViewModel
     {
         public int Year { get; set; }

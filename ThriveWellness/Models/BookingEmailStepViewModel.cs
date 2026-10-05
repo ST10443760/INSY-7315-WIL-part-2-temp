@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ThriveWellness.Models
 {
+    // View model for the booking flow's first step - just a session and an
+    // email, enough for CheckClientStatusAsync to decide whether the next
+    // step shows the full intake form or just a confirmation.
     public class BookingEmailStepViewModel
     {
         [Required]

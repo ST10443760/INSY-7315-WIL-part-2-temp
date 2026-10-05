@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // View model for one row of the admin client list - see
+    // ClientRepository.GetAllWithStatsAsync.
     public class ClientOverviewViewModel
     {
         public int ClientId { get; set; }

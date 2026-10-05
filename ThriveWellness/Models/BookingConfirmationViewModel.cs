@@ -1,5 +1,8 @@
 namespace ThriveWellness.Models
 {
+    // View model for the booking confirmation page shown right after
+    // CreateBookingAsync succeeds - a flattened view of the booking, its
+    // session, its location and its cancellation link all in one shape.
     public class BookingConfirmationViewModel
     {
         public int BookingId { get; set; }
