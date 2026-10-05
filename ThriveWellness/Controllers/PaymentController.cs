@@ -5,6 +5,10 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
 
+// MVC controller: the admin payments list and the "mark as confirmed"
+// action. [Authorize] means every action here requires the admin sign-in
+// cookie from AccountController.Login - there's no payment-specific
+// permission, just "signed in or not".
 [Authorize]
 public class PaymentController : Controller
 {
