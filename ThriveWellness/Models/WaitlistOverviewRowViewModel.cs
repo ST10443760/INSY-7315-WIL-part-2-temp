@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // View model for one row of the admin's cross-session waitlist overview
+    // - see AdminDashboardService.GetWaitlistOverviewAsync.
     public class WaitlistOverviewRowViewModel
     {
         public int WaitlistId { get; set; }

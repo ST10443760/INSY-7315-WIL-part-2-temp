@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ThriveWellness.Models
 {
+    // View model (with data annotations) for the admin add/edit session form
+    // - SessionId is 0 for a new session, or an existing one being edited.
     public class SessionFormViewModel
     {
         public int SessionId { get; set; }

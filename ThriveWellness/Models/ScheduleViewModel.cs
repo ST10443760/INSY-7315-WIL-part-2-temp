@@ -1,5 +1,8 @@
 namespace ThriveWellness.Models
 {
+    // View model for the public schedule page - the session list plus
+    // enough state (the location dropdown's options, what's currently
+    // selected) to redraw the filter controls after a filtered request.
     public class ScheduleViewModel
     {
         public IEnumerable<SessionListItemViewModel> Sessions { get; set; } = Enumerable.Empty<SessionListItemViewModel>();

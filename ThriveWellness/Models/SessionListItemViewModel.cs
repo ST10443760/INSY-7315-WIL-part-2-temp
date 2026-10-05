@@ -1,5 +1,9 @@
 namespace ThriveWellness.Models
 {
+    // View model for one row of the public schedule - see
+    // SessionRepository.GetScheduleAsync. The IsFull/AvailableSpots/
+    // IsLowAvailability properties exist so the Razor view never has to
+    // repeat this arithmetic itself.
     public class SessionListItemViewModel
     {
         public int SessionId { get; set; }

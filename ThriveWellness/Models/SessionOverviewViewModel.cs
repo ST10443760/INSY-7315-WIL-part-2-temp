@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // View model for one row of the admin session list, upcoming-sessions
+    // table and calendar - see AdminDashboardService.SessionOverviews.
     public class SessionOverviewViewModel
     {
         public int SessionId { get; set; }

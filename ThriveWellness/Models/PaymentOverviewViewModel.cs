@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // View model for one row of the admin payments list - see
+    // PaymentRepository.GetAllPaymentsAsync.
     public class PaymentOverviewViewModel
     {
         public int PaymentId { get; set; }

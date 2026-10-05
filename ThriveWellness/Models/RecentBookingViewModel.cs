@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // View model for one row of the dashboard's "recent bookings" table
+    // (FR-13) - see AdminDashboardService.GetDashboardAsync.
     public class RecentBookingViewModel
     {
         public int BookingId { get; set; }
