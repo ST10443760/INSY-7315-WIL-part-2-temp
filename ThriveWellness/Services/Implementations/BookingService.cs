@@ -6,6 +6,14 @@ using ThriveWellness.Services;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Service layer: owns the booking lifecycle end to end - checking whether
+    // an email belongs to a new or returning client, creating a booking
+    // (with its intake form and pending payment) or routing to the waitlist
+    // when a session is full, and cancelling a booking either by the
+    // client's own link (FR-18) or by an admin (FR-12). Called by
+    // BookingController; never touched directly by a view. Sits between the
+    // controller and the repositories so capacity checks, pricing and the
+    // new-vs-returning client distinction all live in exactly one place.
     public class BookingService : IBookingService
     {
         // FR-06 pricing tiers.
@@ -38,6 +46,10 @@ namespace ThriveWellness.Services.Implementations
             _context = context;
         }
 
+        // Looks up a client by email so the booking form can decide whether
+        // to show the full intake form (new client) or just confirm details
+        // (returning client) - this is the "returning client" detection used
+        // by the first step of the booking flow.
         public async Task<ClientStatusResult> CheckClientStatusAsync(string email)
         {
             var client = await _clientRepository.GetByEmailAsync(email);
@@ -55,6 +67,14 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
+        // Creates a booking end to end: finds or creates the client,
+        // requires consent for a brand-new client, checks the session has
+        // room, creates the booking and its pending payment (plus an intake
+        // form for new clients), and sends the confirmation email. Returns a
+        // failure if consent is missing or the session doesn't exist; returns
+        // RequiresWaitlist - without creating anything - if the session is
+        // full or closed, so the caller can offer the waitlist instead
+        // (FR-11).
         public async Task<BookingCreateResult> CreateBookingAsync(BookingRequest request)
         {
             var client = await _clientRepository.GetByEmailAsync(request.Email);
@@ -97,6 +117,8 @@ namespace ThriveWellness.Services.Implementations
             var activeBookings = (await _bookingRepository.GetBookingsBySessionAsync(request.SessionId))
                 .Count(b => b.Status != "Cancelled");
 
+            // Closed or at/over capacity - either way there's no room, so the
+            // caller gets routed to the waitlist instead of a booking.
             if (!session.IsOpen || activeBookings >= session.Capacity)
             {
                 // The client (found or just created above) already exists at
@@ -151,6 +173,12 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
+        // Client-facing cancellation entry point: looks the booking up by its
+        // single-use cancellation token (FR-18), since the link in the
+        // confirmation/waitlist emails is the only thing a client has to
+        // cancel with - there's no login for them to go through. Fails with
+        // a generic "invalid link" message rather than hinting at whether a
+        // token almost matched.
         public async Task<CancelBookingResult> CancelBookingAsync(string cancellationToken)
         {
             var booking = await _bookingRepository.GetByCancellationTokenAsync(cancellationToken);
@@ -164,6 +192,9 @@ namespace ThriveWellness.Services.Implementations
             return await CancelAsync(booking, notifyClient: false);
         }
 
+        // Admin-facing cancellation entry point (FR-12): looks the booking up
+        // by its database id, since an admin is acting from the dashboard,
+        // not a link.
         public async Task<CancelBookingResult> CancelByAdminAsync(int bookingId)
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId);
@@ -177,6 +208,10 @@ namespace ThriveWellness.Services.Implementations
             return await CancelAsync(booking, notifyClient: true);
         }
 
+        // Shared cancellation logic for both entry points above: flips the
+        // booking to Cancelled, frees its slot for the waitlist, and only
+        // emails the client when an admin did the cancelling - a client who
+        // clicked their own cancellation link already knows.
         private async Task<CancelBookingResult> CancelAsync(Booking booking, bool notifyClient)
         {
             if (booking.Status == "Cancelled")
