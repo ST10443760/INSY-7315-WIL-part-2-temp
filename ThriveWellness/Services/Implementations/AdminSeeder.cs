@@ -5,6 +5,11 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Runs once at startup (invoked from Program.cs) to make sure the single
+    // admin account configured via Admin:Username/Admin:Password exists and
+    // has the right password hash - this is how an admin account comes to
+    // exist at all, since there's no sign-up flow (by design: this system
+    // only ever has one admin account).
     public class AdminSeeder : IAdminSeeder
     {
         private readonly ApplicationDbContext _context;
@@ -24,6 +29,10 @@ namespace ThriveWellness.Services.Implementations
             _logger = logger;
         }
 
+        // Creates the admin account if it doesn't exist yet, or brings its
+        // password hash in line with configuration if it's drifted - safe to
+        // call on every startup, including ones where nothing about the
+        // admin account changed.
         public async Task SeedAsync()
         {
             // On Render, Admin__Username/Admin__Password (double underscore)
