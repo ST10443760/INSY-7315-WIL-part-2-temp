@@ -4,6 +4,9 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Service layer: CRUD for studio locations, with one rule layered on top
+    // of the repository - a location can't be deleted while any session
+    // (past or future) still references it.
     public class LocationService : ILocationService
     {
         private readonly ILocationRepository _locationRepository;
@@ -25,6 +28,7 @@ namespace ThriveWellness.Services.Implementations
             return _locationRepository.GetByIdAsync(id);
         }
 
+        // Creates a new location after checking it has a name and address.
         public Task CreateAsync(Location location)
         {
             Validate(location);
@@ -32,6 +36,8 @@ namespace ThriveWellness.Services.Implementations
             return _locationRepository.AddAsync(location);
         }
 
+        // Updates an existing location after the same name/address
+        // validation as create.
         public Task UpdateAsync(Location location)
         {
             Validate(location);
@@ -39,6 +45,8 @@ namespace ThriveWellness.Services.Implementations
             return _locationRepository.UpdateAsync(location);
         }
 
+        // Deletes a location - blocked (see the check below) if any session
+        // still points at it, past or future.
         public async Task DeleteAsync(int id)
         {
             // A session (past or future) keeps this location referenced for
@@ -54,6 +62,8 @@ namespace ThriveWellness.Services.Implementations
             await _locationRepository.DeleteAsync(id);
         }
 
+        // Shared validation for create and update: name and address are the
+        // two fields every other screen displays, so neither can be blank.
         private static void Validate(Location location)
         {
             if (string.IsNullOrWhiteSpace(location.Name))
