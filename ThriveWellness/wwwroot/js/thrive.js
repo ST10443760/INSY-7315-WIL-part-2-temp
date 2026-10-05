@@ -1,23 +1,111 @@
-// Mobile nav toggle for the public header. Plain JS, no framework:
-// the brief asks for no icon font / JS icon library and to keep the
-// public bundle light.
+// Generic mobile menu controller: a hamburger toggle (icon swaps to an X
+// while open) plus four ways to close - tapping the toggle again, an
+// explicit close button inside the panel, tapping a backdrop outside it,
+// or Escape - and auto-close if the viewport grows past the breakpoint
+// while open. Drives both the public nav menu and the admin sidebar
+// drawer, which are functionally identical, just different selectors and
+// breakpoints. Lives here, not thrive-admin.js, and is loaded on both
+// layouts - an earlier bug (the Login page's password toggle) came from a
+// handler that only loaded in the admin-only script but was needed on a
+// page using the public layout.
 (function () {
     "use strict";
 
-    var toggle = document.querySelector(".thrive-nav-toggle");
-    var list = document.getElementById("thrive-nav-list");
-    if (!toggle || !list) {
-        return;
+    function createMenuController(config) {
+        var toggle = document.querySelector(config.toggleSelector);
+        var panel = document.querySelector(config.panelSelector);
+        var backdrop = document.querySelector(config.backdropSelector);
+        var closeButton = document.querySelector(config.closeButtonSelector);
+        if (!toggle || !panel) {
+            return;
+        }
+
+        var iconClosed = toggle.querySelector("[data-icon-closed]");
+        var iconOpen = toggle.querySelector("[data-icon-open]");
+
+        function isOpen() {
+            return panel.hasAttribute("data-open");
+        }
+
+        function setOpen(open) {
+            if (open) {
+                panel.setAttribute("data-open", "");
+            } else {
+                panel.removeAttribute("data-open");
+            }
+            // The admin drawer hides off-screen with a transform rather
+            // than display:none, so its links/buttons stay focusable
+            // while "closed" unless marked inert - harmless to set on the
+            // public menu too, which is already display:none when closed.
+            panel.inert = !open;
+            toggle.setAttribute("aria-expanded", String(open));
+            toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+            if (iconClosed && iconOpen) {
+                iconClosed.hidden = open;
+                iconOpen.hidden = !open;
+            }
+            if (backdrop) {
+                backdrop.hidden = !open;
+            }
+            document.body.classList.toggle("thrive-menu-open", open);
+        }
+
+        function close(returnFocus) {
+            if (!isOpen()) {
+                return;
+            }
+            setOpen(false);
+            if (returnFocus) {
+                toggle.focus();
+            }
+        }
+
+        toggle.addEventListener("click", function () {
+            setOpen(!isOpen());
+        });
+
+        if (closeButton) {
+            closeButton.addEventListener("click", function () {
+                close(true);
+            });
+        }
+
+        if (backdrop) {
+            backdrop.addEventListener("click", function () {
+                close(true);
+            });
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                close(true);
+            }
+        });
+
+        window.addEventListener("resize", function () {
+            if (isOpen() && window.innerWidth > config.breakpoint) {
+                // The viewport grew past the breakpoint - close without
+                // moving focus, since the toggle itself is about to be
+                // hidden by the desktop layout anyway.
+                setOpen(false);
+            }
+        });
     }
 
-    toggle.addEventListener("click", function () {
-        var isOpen = list.hasAttribute("data-open");
-        if (isOpen) {
-            list.removeAttribute("data-open");
-        } else {
-            list.setAttribute("data-open", "");
-        }
-        toggle.setAttribute("aria-expanded", String(!isOpen));
+    createMenuController({
+        toggleSelector: ".thrive-nav-toggle",
+        panelSelector: "#thrive-nav-list",
+        backdropSelector: "#thrive-nav-backdrop",
+        closeButtonSelector: "#thrive-nav-close",
+        breakpoint: 768
+    });
+
+    createMenuController({
+        toggleSelector: ".thrive-admin-menu-toggle",
+        panelSelector: "#adminSidebar",
+        backdropSelector: "#adminSidebarBackdrop",
+        closeButtonSelector: "#adminSidebarClose",
+        breakpoint: 900
     });
 })();
 
