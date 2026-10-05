@@ -168,6 +168,10 @@ body.thrive-admin-body {
   display: none;
 }
 
+.thrive-admin-sidebar__close {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .thrive-admin-shell {
     flex-direction: column;
@@ -188,6 +192,22 @@ body.thrive-admin-body {
     transform: translateX(0);
   }
 
+  .thrive-admin-sidebar__brand {
+    justify-content: space-between;
+  }
+
+  .thrive-admin-sidebar__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    border: none;
+    background: none;
+    color: var(--color-white);
+    cursor: pointer;
+  }
+
   .thrive-admin-menu-toggle {
     display: flex;
     align-items: center;
@@ -201,7 +221,11 @@ body.thrive-admin-body {
     cursor: pointer;
     position: sticky;
     top: var(--space-3);
-    margin: var(--space-3) 0 0 var(--space-3);
+    /* Flush right against the same right edge as .thrive-admin-main's own
+       padding below, via the auto left margin pushing it across this
+       column-direction flex container's cross axis - was a fixed
+       margin-left instead, which left it stranded near the left edge. */
+    margin: var(--space-3) var(--space-4) 0 auto;
     z-index: 150;
   }
 
