@@ -2,6 +2,8 @@ using ThriveWellness.Models;
 
 namespace ThriveWellness.Repositories.Interfaces
 {
+    // Repository pattern: the only place that queries or writes the Payments
+    // table directly.
     public interface IPaymentRepository
     {
         Task CreateAsync(Payment payment);

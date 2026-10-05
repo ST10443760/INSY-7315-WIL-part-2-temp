@@ -2,6 +2,8 @@ using ThriveWellness.Models;
 
 namespace ThriveWellness.Repositories.Interfaces
 {
+    // Repository pattern: the only place that queries or writes the Sessions
+    // table directly.
     public interface ISessionRepository
     {
         Task<IEnumerable<Session>> GetAllAsync();

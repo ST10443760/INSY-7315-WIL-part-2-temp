@@ -2,6 +2,8 @@ using ThriveWellness.Models;
 
 namespace ThriveWellness.Repositories.Interfaces
 {
+    // Repository pattern: the only place that queries or writes the Clients
+    // table directly.
     public interface IClientRepository
     {
         Task<Client?> GetByIdAsync(int id);
