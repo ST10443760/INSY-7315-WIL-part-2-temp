@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ThriveWellness.Data;
+using ThriveWellness.Models;
 using ThriveWellness.Repositories.Implementations;
 using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Implementations;
@@ -32,6 +33,14 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Options pattern: binds the "Payment" section (Payment__AccountHolder/
+// Payment__Bank/Payment__AccountNumber as Render env vars) into a typed
+// PaymentOptions, injected via IOptions<PaymentOptions> rather than every
+// consumer re-reading IConfiguration by string key. Values are optional -
+// appsettings.json ships only empty placeholders - so NotificationService
+// is the one that decides what "not configured" means for an email.
+builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection("Payment"));
 
 // Every repository and service below is Scoped - one instance per HTTP
 // request - matching ApplicationDbContext's own lifetime (it's also
