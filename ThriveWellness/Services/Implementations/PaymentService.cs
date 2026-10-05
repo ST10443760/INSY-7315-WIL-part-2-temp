@@ -3,11 +3,21 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Service layer: confirms a pending payment (an admin marking "paid"
+    // after an EFT or cash payment comes in) and flips its booking to
+    // Confirmed. Also the subject half of the Observer pattern -
+    // PaymentConfirmed is raised here, and NotificationService subscribes to
+    // it from Program.cs (the composition root), so this class never needs
+    // to know notifications exist at all.
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IBookingRepository _bookingRepository;
 
+        // Observer pattern: anything that cares about a payment being
+        // confirmed subscribes here instead of this service calling it
+        // directly - currently only NotificationService does, to send the
+        // new client's welcome email.
         public event EventHandler<PaymentConfirmedEventArgs>? PaymentConfirmed;
 
         public PaymentService(IPaymentRepository paymentRepository, IBookingRepository bookingRepository)
@@ -16,6 +26,11 @@ namespace ThriveWellness.Services.Implementations
             _bookingRepository = bookingRepository;
         }
 
+        // Marks a payment Confirmed and its booking Confirmed, then raises
+        // PaymentConfirmed for anything subscribed (see the TODO below).
+        // Throws if the payment or its booking can't be found, since an
+        // admin only ever reaches this from a payment that's already on
+        // screen.
         public async Task ConfirmPaymentAsync(int paymentId)
         {
             var payment = await _paymentRepository.GetByIdAsync(paymentId);
