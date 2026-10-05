@@ -5,6 +5,12 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
 
+// MVC controller: standard admin CRUD for studio locations. Every write
+// action catches LocationService's ArgumentException and turns it into a
+// form error (Create/Edit) or a TempData message (Delete) rather than
+// letting it become an unhandled 500 - that's how the "name/address
+// required" and "location has sessions tied to it" rules actually reach the
+// admin's screen.
 [Authorize]
 public class LocationController : Controller
 {
