@@ -60,6 +60,7 @@ builder.Services.AddScoped<IPaymentService>(sp =>
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IScheduledNotificationService, ScheduledNotificationService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IAdminSeeder, AdminSeeder>();
 builder.Services.AddHostedService<ScheduledNotificationHostedService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -75,24 +76,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
-// Seed a test admin account for local development.
-// TODO: remove this before deploying anywhere near production — the
-// username/password below are placeholders for local testing only.
-if (app.Environment.IsDevelopment())
+// Config-driven admin seeding - see AdminSeeder for the rules (missing
+// password = no-op, existing account only gets re-hashed if the
+// configured password actually changed). Runs in every environment: it's
+// a deliberate no-op wherever Admin:Password isn't set, so this is safe
+// to leave unconditional rather than gated to Development.
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-
-    if (!dbContext.Admins.Any())
-    {
-        dbContext.Admins.Add(new ThriveWellness.Models.Admin
-        {
-            Username = "admin",
-            PasswordHash = authService.HashPassword("Password123!")
-        });
-        dbContext.SaveChanges();
-    }
+    var adminSeeder = scope.ServiceProvider.GetRequiredService<IAdminSeeder>();
+    await adminSeeder.SeedAsync();
 }
 
 // Configure the HTTP request pipeline.
