@@ -7,6 +7,15 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Service layer: builds and sends every client-facing email the system
+    // sends - booking confirmation (including the FR-18 cancellation link),
+    // welcome, reminder, first-timer location, waitlist promotion, waitlist
+    // courtesy, and cancellation - and logs each send as a Notification row
+    // so ScheduledNotificationService can tell what's already gone out.
+    // Also the observer half of the Observer pattern: OnPaymentConfirmed is
+    // wired up to IPaymentService.PaymentConfirmed from Program.cs rather
+    // than from this class's own constructor (see that method's comment for
+    // why).
     public class NotificationService : INotificationService
     {
         private readonly IBookingRepository _bookingRepository;
@@ -19,6 +28,9 @@ namespace ThriveWellness.Services.Implementations
         private readonly string _appBaseUrl;
         private readonly ILogger<NotificationService> _logger;
 
+        // AppBaseUrl has to be configured for cancellation links (FR-18) to
+        // point anywhere real, so this fails fast at startup rather than
+        // emailing a client a broken link later.
         public NotificationService(
             IBookingRepository bookingRepository,
             IClientRepository clientRepository,
@@ -59,6 +71,8 @@ namespace ThriveWellness.Services.Implementations
             HandlePaymentConfirmedAsync(e).GetAwaiter().GetResult();
         }
 
+        // Only sends the welcome email if the booking still exists -
+        // defensive against a payment somehow outliving its booking.
         private async Task HandlePaymentConfirmedAsync(PaymentConfirmedEventArgs e)
         {
             var booking = await _bookingRepository.GetByIdAsync(e.BookingId);
@@ -68,6 +82,10 @@ namespace ThriveWellness.Services.Implementations
             }
         }
 
+        // Sent once, right after a brand-new client's first payment is
+        // confirmed (via the Observer subscription above) - covers class
+        // details and what to bring, since this is their very first session
+        // with us.
         public async Task SendWelcomeEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -98,6 +116,10 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Welcome");
         }
 
+        // Sent the moment a booking is created (before payment), covering
+        // the class details, the amount owing and how to pay, and the FR-18
+        // cancellation link - this is often the only email a client gets
+        // before turning up, so it has to be self-contained.
         public async Task SendConfirmationEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -132,6 +154,9 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Confirmation");
         }
 
+        // The day-before reminder, sent by ScheduledNotificationService's
+        // hourly sweep rather than triggered by anything a client or admin
+        // does directly.
         public async Task SendReminderEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -160,6 +185,9 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Reminder");
         }
 
+        // Morning-of "here's exactly where to go" email, sent only to new
+        // clients on the day of their first class - also driven by the
+        // scheduled sweep, not a direct user action.
         public async Task SendLocationEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -187,6 +215,9 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Location");
         }
 
+        // Sent when PromoteNextInLineAsync turns a waitlist entry into a
+        // real booking - includes the same FR-18 cancellation link as a
+        // normal confirmation, since this new booking needs one too.
         public async Task SendWaitlistNotificationAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -216,6 +247,10 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "WaitlistPromotion");
         }
 
+        // The one-off "you're close" email WaitlistService.NotifyAsync
+        // triggers - unlike the other Send*Async methods this takes a
+        // Waitlist entry rather than a Booking, since nothing has been
+        // booked yet.
         public async Task SendWaitlistCourtesyEmailAsync(Waitlist entry)
         {
             var client = await _clientRepository.GetByIdAsync(entry.ClientId);
@@ -245,6 +280,9 @@ namespace ThriveWellness.Services.Implementations
             await _emailSender.SendEmailAsync(client.Email, "You're on the waitlist - a spot may be opening up", html);
         }
 
+        // Sent only for an admin-initiated cancellation (see
+        // BookingService.CancelAsync's notifyClient flag) - a client who
+        // cancelled via their own link already knows.
         public async Task SendCancellationEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -274,6 +312,9 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Cancellation");
         }
 
+        // Logs that a given email type went out for a booking, so
+        // ScheduledNotificationService's "has this already been sent" checks
+        // have something to query against.
         private async Task WriteNotificationRecordAsync(int bookingId, string type)
         {
             _context.Notifications.Add(new Notification
