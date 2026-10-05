@@ -1,5 +1,8 @@
 namespace ThriveWellness.Models
 {
+    // Entity: one row per booking's payment, created Pending alongside the
+    // booking and flipped to Confirmed by PaymentService once an admin
+    // verifies an EFT or cash payment came in.
     public class Payment
     {
         public int PaymentId { get; set; }

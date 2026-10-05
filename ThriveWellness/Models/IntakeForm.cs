@@ -1,5 +1,7 @@
 namespace ThriveWellness.Models
 {
+    // Entity: the medical-notes/consent form captured once, for a brand-new
+    // client's first booking only - see BookingService.CreateBookingAsync.
     public class IntakeForm
     {
         public int IntakeFormId { get; set; }
