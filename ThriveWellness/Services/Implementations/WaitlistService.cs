@@ -5,6 +5,13 @@ using ThriveWellness.Services;
 
 namespace ThriveWellness.Services.Implementations
 {
+    // Service layer: manages the FIFO waitlist for a full session (FR-11) -
+    // joining it, promoting the next person in line into a real booking once
+    // a spot frees up, removing someone early, and sending a one-off
+    // "you're getting close" courtesy email. Called by BookingService (to
+    // offer the waitlist when a session is full), SessionService (when an
+    // admin reopens a closed session), and directly by the admin waitlist
+    // screen.
     public class WaitlistService : IWaitlistService
     {
         private readonly IWaitlistRepository _waitlistRepository;
@@ -27,6 +34,10 @@ namespace ThriveWellness.Services.Implementations
             _notificationService = notificationService;
         }
 
+        // Adds a client to the back of the queue for a session (FR-11):
+        // position is just "one more than the current maximum", so a
+        // mid-queue removal (see RemoveAsync below) never has to leave a gap
+        // for a later join to worry about.
         public async Task<Waitlist> JoinWaitlistAsync(int clientId, int sessionId)
         {
             var existing = (await _waitlistRepository.GetBySessionAsync(sessionId)).ToList();
@@ -44,6 +55,12 @@ namespace ThriveWellness.Services.Implementations
             return entry;
         }
 
+        // Called whenever a spot might have opened up (a booking
+        // cancellation, or an admin reopening a closed session): takes the
+        // first person off the waitlist, turns them into a real booking, and
+        // shifts everyone behind them up one position. Does nothing if the
+        // queue is empty, the session is closed, or (see the capacity guard
+        // below) a spot didn't actually free up.
         public async Task PromoteNextInLineAsync(int sessionId)
         {
             var next = await _waitlistRepository.GetNextInLineAsync(sessionId);
@@ -91,6 +108,9 @@ namespace ThriveWellness.Services.Implementations
             await _notificationService.SendWaitlistNotificationAsync(booking);
         }
 
+        // Removes a single waitlist entry (e.g. an admin manually clearing
+        // someone) and shifts everyone behind them up one position, so the
+        // ordering never ends up with a gap in it.
         public async Task RemoveAsync(int waitlistId)
         {
             var entry = await _waitlistRepository.GetByIdAsync(waitlistId);
@@ -110,6 +130,10 @@ namespace ThriveWellness.Services.Implementations
             }
         }
 
+        // Sends the one-off "you're getting close, a spot may open soon"
+        // courtesy email for a specific waitlist entry - distinct from the
+        // automatic email PromoteNextInLineAsync sends once they're actually
+        // off the list.
         public async Task NotifyAsync(int waitlistId)
         {
             var entry = await _waitlistRepository.GetByIdAsync(waitlistId);
