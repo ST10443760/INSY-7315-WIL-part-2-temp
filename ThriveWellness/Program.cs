@@ -6,6 +6,14 @@ using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Implementations;
 using ThriveWellness.Services.Interfaces;
 
+// The composition root: the one place that knows about every concrete
+// implementation in the app and wires interfaces to them. Everything else
+// (controllers, services, repositories) only ever depends on interfaces, so
+// this file is also the single place a swapped implementation - a different
+// email provider, a mocked repository for a test host - would need to
+// change. Split into three parts: builder.Services registrations (what DI
+// can construct), the one piece of actual startup work (seeding the admin
+// account), and the HTTP pipeline (the order middleware runs in).
 var builder = WebApplication.CreateBuilder(args);
 
 // Render (and most container hosts) assign the port to listen on via the
@@ -25,6 +33,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Every repository and service below is Scoped - one instance per HTTP
+// request - matching ApplicationDbContext's own lifetime (it's also
+// Scoped, registered just above by AddDbContext). A repository or service
+// can't safely be Singleton while it holds a reference to a Scoped
+// DbContext, and doesn't need to be Transient since nothing here keeps
+// per-call state between methods.
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
@@ -63,6 +77,11 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminSeeder, AdminSeeder>();
 builder.Services.AddHostedService<ScheduledNotificationHostedService>();
 
+// Cookie auth is the only scheme - there's one admin account and no API
+// clients needing a token-based scheme instead. HttpOnly stops the cookie
+// being read from JavaScript (mitigating session theft via XSS); the 30
+// minute sliding expiry means an active admin stays signed in, but an idle
+// tab doesn't stay signed in indefinitely.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -95,6 +114,19 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Middleware order matters - each piece only sees what the one before it
+// let through:
+// - HTTPS redirect and static files first, before routing even has to run
+//   for an asset request.
+// - UseRouting has to come before UseAuthentication/UseAuthorization, since
+//   those need to know which endpoint was matched (and whether it's the
+//   [Authorize]-protected kind) before they can decide anything.
+// - UseAuthentication (who is this request from, if anyone - reads the
+//   cookie) always runs before UseAuthorization (are they allowed to reach
+//   this endpoint) - authorization can't evaluate [Authorize] without
+//   authentication having already set the user identity first.
+// - Routes are mapped last, since nothing above needs the endpoints to
+//   exist yet, only to run before the request actually reaches one.
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
