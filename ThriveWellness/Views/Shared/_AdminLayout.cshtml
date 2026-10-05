@@ -23,6 +23,9 @@
         <aside class="thrive-admin-sidebar" id="adminSidebar">
             <div class="thrive-admin-sidebar__brand">
                 <partial name="_Logo" />
+                <button type="button" class="thrive-admin-sidebar__close" id="adminSidebarClose" aria-label="Close menu">
+                    <partial name="_Icon" model="@("x")" />
+                </button>
             </div>
 
             <nav aria-label="Admin">
@@ -97,8 +100,13 @@
             </div>
         </aside>
 
-        <button type="button" class="thrive-admin-menu-toggle" aria-expanded="false" aria-controls="adminSidebar" aria-label="Toggle admin menu">
-            <partial name="_Icon" model="@("menu")" />
+        <button type="button" class="thrive-admin-menu-toggle" aria-expanded="false" aria-controls="adminSidebar" aria-label="Open menu">
+            <span data-icon-closed>
+                <partial name="_Icon" model="@("menu")" />
+            </span>
+            <span data-icon-open hidden>
+                <partial name="_Icon" model="@("x")" />
+            </span>
         </button>
 
         <main id="admin-main-content" role="main" class="thrive-admin-main">
@@ -106,8 +114,10 @@
         </main>
     </div>
 
+    <div class="thrive-menu-backdrop" id="adminSidebarBackdrop" hidden></div>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/thrive-admin.js" asp-append-version="true"></script>
+    <script src="~/js/thrive.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
