@@ -146,3 +146,14 @@ starts without creating or updating an admin account and nobody can log in.
 dotnet ef database update --project ThriveWellness
 dotnet run --project ThriveWellness
 ```
+
+## Tests
+
+```
+dotnet test
+```
+
+This runs 34 tests, covering six service classes: `AdminSeeder`,
+`BookingService`, `NotificationService`, `PaymentService`, `SessionService`
+and `WaitlistService`. Controllers and the repositories' query shapes are
+not covered yet (see Known limitations).
