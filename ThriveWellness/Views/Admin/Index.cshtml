@@ -3,10 +3,14 @@
 @{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "_AdminLayout";
+    // The dashboard greeting's display name - separate from the login
+    // username (User.Identity.Name, set in AuthService/AccountController),
+    // which this does not touch. One constant, used once, right here.
+    const string AdminDisplayName = "Saudah";
 }
 
 <div class="thrive-admin-page-header">
-    <h1>Welcome back, @(User.Identity?.Name ?? "Admin")!</h1>
+    <h1>Welcome back, @AdminDisplayName!</h1>
     <span class="thrive-admin-page-header__subtitle">Here's what's happening at Thrive Pilates.</span>
 </div>
 
