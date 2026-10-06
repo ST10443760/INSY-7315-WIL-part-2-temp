@@ -220,3 +220,12 @@ Work was built as a series of feature branches, merged into `main`:
 - Session cookies and form posts are expected to run over HTTPS in production.
 - Cancellation uses a cryptographically random, single-use token rather than a login, since clients never create an account.
 - Real credentials and connection strings are kept out of the repository, in `appsettings.Development.json` (gitignored) locally and in environment variables on Render.
+
+## Known limitations
+
+- **Free-tier cold start.** The hosting tier spins the container down after a period of inactivity, so the first request after a while is slower.
+- **Gmail spam placement.** Emails sometimes land in Gmail's spam folder rather than the inbox, because the sending domain is not authenticated.
+- **A single admin account.** There is no multi-admin support and no roles.
+- **No online payments.** EFT and cash payments are confirmed manually by the admin; there is no payment gateway integration.
+- **Emails are sent synchronously.** A booking or payment confirmation waits on the full email send before returning a response. A background queue is the planned next step.
+- **No custom domain.** A custom domain was recommended in Task 1 but is not set up.
