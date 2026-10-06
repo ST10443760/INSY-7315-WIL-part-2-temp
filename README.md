@@ -55,3 +55,49 @@ Null Devs
 | Containers | Docker |
 | Hosting | Render |
 | CI/CD | GitHub Actions |
+
+## Architecture
+
+The app follows MVC: controllers handle HTTP requests and validation only,
+views are server-rendered Razor pages, and models and view models carry data
+between the two. Business rules live in a service layer, not in controllers,
+so the same rule cannot drift between two places that both need it, and it
+can be unit tested without starting the web app. Data access goes through
+the Repository pattern: every table has a thin repository behind an
+interface, and services depend on the interface, never on the database
+context directly. Payment confirmation uses the Observer pattern: the
+payment service raises an event when a payment is confirmed, and the
+notification service reacts to it without the payment service knowing an
+email will be sent.
+
+Project structure (`ThriveWellness/`):
+
+```
+ThriveWellness/
+  Controllers/              MVC controllers
+  Data/                     ApplicationDbContext
+  Migrations/                EF Core migrations
+  Models/                    Entities and view models
+  Repositories/
+    Interfaces/
+    Implementations/
+  Services/
+    Interfaces/
+    Implementations/
+  Views/                     Razor views, one folder per controller
+  wwwroot/                   Static files (css, js, images)
+  Dockerfile
+  Program.cs                 Composition root and HTTP pipeline
+```
+
+A new booking request flows like this: the client submits the schedule
+page's booking form, `BookingController` validates it and calls
+`BookingService`, which checks capacity, creates the client (if new), the
+booking, the payment, and the intake form through their repositories, then
+calls `NotificationService` to send the confirmation email through
+`EmailSender`. Control returns to the controller, which redirects to a
+confirmation page.
+
+See [docs/CODE_WALKTHROUGH.md](docs/CODE_WALKTHROUGH.md) for a full,
+file-by-file trace of this and every other feature, plus the design
+decisions and bugs found along the way.
