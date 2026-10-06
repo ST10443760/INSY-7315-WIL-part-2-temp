@@ -229,3 +229,11 @@ Work was built as a series of feature branches, merged into `main`:
 - **No online payments.** EFT and cash payments are confirmed manually by the admin; there is no payment gateway integration.
 - **Emails are sent synchronously.** A booking or payment confirmation waits on the full email send before returning a response. A background queue is the planned next step.
 - **No custom domain.** A custom domain was recommended in Task 1 but is not set up.
+
+## Documentation and design
+
+- [docs/CODE_WALKTHROUGH.md](docs/CODE_WALKTHROUGH.md): a full walkthrough of how each feature works, the design decisions behind it, and bugs found and fixed.
+- [Figma desktop prototype](https://www.figma.com/community/file/1671168701070686139/insy7315-desktop-interactable-prototype)
+- [Figma mobile prototype](https://www.figma.com/community/file/1671168418793571256/insy7315-mobile-interactiveprototype)
+
+The Task 1 documentation was submitted separately.
