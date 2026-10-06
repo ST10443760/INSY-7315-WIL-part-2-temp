@@ -157,3 +157,34 @@ This runs 34 tests, covering six service classes: `AdminSeeder`,
 `BookingService`, `NotificationService`, `PaymentService`, `SessionService`
 and `WaitlistService`. Controllers and the repositories' query shapes are
 not covered yet (see Known limitations).
+
+## CI/CD and deployment
+
+Two GitHub Actions workflows:
+
+- **`ci.yml`** runs on every push to any branch, and on pull requests
+  targeting `develop` or `main`. It restores, builds, and runs
+  `dotnet test`. It also declares `workflow_call`, so `deploy.yml` can reuse
+  this exact job instead of duplicating it.
+- **`deploy.yml`** runs on every push to `main`. It first calls `ci.yml` as
+  a gate; if that passes, it POSTs to a Render deploy hook URL, stored as
+  the `RENDER_DEPLOY_HOOK_URL` repository secret.
+
+Render builds and runs the app from `ThriveWellness/Dockerfile` (a two-stage
+build: the SDK image builds and publishes the app, then the ASP.NET runtime
+image runs it). Render assigns the container's listening port through the
+`PORT` environment variable, which `Program.cs` reads at startup.
+
+Render environment variable names (values are set in the Render dashboard,
+not in the repository):
+
+- `PORT` (set by Render itself)
+- `ConnectionStrings__DefaultConnection`
+- `Admin__Username`
+- `Admin__Password`
+- `Payment__AccountHolder`
+- `Payment__Bank`
+- `Payment__AccountNumber`
+- `SendGridApiKey`
+- `SendGridFromEmail`
+- `AppBaseUrl`
