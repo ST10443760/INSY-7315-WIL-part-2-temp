@@ -101,3 +101,48 @@ confirmation page.
 See [docs/CODE_WALKTHROUGH.md](docs/CODE_WALKTHROUGH.md) for a full,
 file-by-file trace of this and every other feature, plus the design
 decisions and bugs found along the way.
+
+## Run locally
+
+### Prerequisites
+
+- .NET 8 SDK
+- A PostgreSQL database (a free instance on a host such as Railway works, or a local install)
+- The `dotnet-ef` tool, for running migrations: `dotnet tool install --global dotnet-ef`
+
+### Clone
+
+```
+git clone <repository-url>
+cd INSY-7315-WIL-part-2-temp
+```
+
+### Configuration
+
+Settings are read from `ThriveWellness/appsettings.Development.json` when
+running locally (this file is not committed; copy the keys below into it).
+Every setting can also be set as an environment variable instead; nested
+settings use a double underscore in place of the colon, for example
+`Admin__Password`.
+
+| Setting | What it's for | Placeholder value |
+|---|---|---|
+| `ConnectionStrings:DefaultConnection` | Connects to the PostgreSQL database | `Host=localhost;Port=5432;Database=thrive;Username=postgres;Password=postgres` |
+| `Admin:Username` | The admin account's username | `admin` |
+| `Admin:Password` | The admin account's password | `choose-a-password` |
+| `Payment:AccountHolder` | Shown to clients paying by EFT | `Thrive Wellness Pilates` |
+| `Payment:Bank` | Shown to clients paying by EFT | `Example Bank` |
+| `Payment:AccountNumber` | Shown to clients paying by EFT | `0000000000` |
+| `SendGridApiKey` | Authenticates with SendGrid to send email | `SG.your-api-key` |
+| `SendGridFromEmail` | The address emails are sent from | `no-reply@example.com` |
+| `AppBaseUrl` | Used to build absolute links in emails, such as the cancellation link | `https://localhost:7291` |
+
+No default admin account exists. `Admin:Password` must be set, or the app
+starts without creating or updating an admin account and nobody can log in.
+
+### Migrate and run
+
+```
+dotnet ef database update --project ThriveWellness
+dotnet run --project ThriveWellness
+```
