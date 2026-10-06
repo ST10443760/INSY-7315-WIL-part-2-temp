@@ -188,3 +188,26 @@ not in the repository):
 - `SendGridApiKey`
 - `SendGridFromEmail`
 - `AppBaseUrl`
+
+## Branching
+
+Work was built as a series of feature branches, merged into `main`:
+
+- `feature/project-scaffold`
+- `feature/session-management`
+- `feature/booking-system`
+- `feature/auth`
+- `feature/payment-tracking`
+- `feature/email-service`
+- `feature/waitlist`
+- `feature/location-management`
+- `feature/admin-dashboard`
+- `feature/admin-design`
+- `feature/frontend-design`
+- `feature/dockerfile`
+- `feature/ci-cd`
+- `feature/unit-tests`
+- `feature/eft-details`
+- `feature/comments`
+- `feature/cleanup`
+- `fix/desktop-menu-close-button`
