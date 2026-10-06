@@ -271,9 +271,13 @@ namespace ThriveWellness.Services.Implementations
             await WriteNotificationRecordAsync(booking.BookingId, "Location");
         }
 
-        // Sent when PromoteNextInLineAsync turns a waitlist entry into a
-        // real booking - includes the same FR-18 cancellation link as a
-        // normal confirmation, since this new booking needs one too.
+        // Sent whenever a waitlist entry is turned into a real booking -
+        // whether automatically (PromoteNextInLineAsync, when a cancellation
+        // or a reopened session frees a spot) or by an admin's explicit "Add
+        // to class" button. Reuses the same payment-details block as the
+        // ordinary booking confirmation email (BuildPaymentDetailsHtml),
+        // since this booking needs paying for exactly the same way a normal
+        // one does, plus the same FR-18 cancellation link.
         public async Task SendWaitlistNotificationAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -285,7 +289,9 @@ namespace ThriveWellness.Services.Implementations
 
             var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
             var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+            var payment = await _paymentRepository.GetByBookingIdAsync(booking.BookingId);
             var cancelUrl = $"{_appBaseUrl}/Booking/Cancel/{booking.CancellationToken}";
+            var paymentDetails = BuildPaymentDetailsHtml(client, booking, payment);
 
             var html = $"""
                 <p>Hi {client.FullName},</p>
@@ -296,6 +302,7 @@ namespace ThriveWellness.Services.Implementations
                     <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
                     <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
                 </ul>
+                {paymentDetails}
                 <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
                 """;
 

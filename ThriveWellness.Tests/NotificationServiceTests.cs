@@ -206,4 +206,32 @@ public class NotificationServiceTests
         Assert.DoesNotContain("123456789", sentHtml);
         Assert.DoesNotContain("Branch code 000000", sentHtml);
     }
+
+    [Fact]
+    public async Task SendWaitlistNotificationAsync_IncludesTheSamePaymentDetailsBlockAsAConfirmationEmail()
+    {
+        // Part 2/3 of the "Add to class" feature: whether a client is
+        // promoted automatically or by an admin's button, they need to know
+        // how much to pay and how, not just that they got a spot.
+        var booking = FakeBooking();
+        var payment = FakePayment("monthly", PaymentPricing.MonthlyPrice);
+        SetUpLookupsFor(booking, payment);
+
+        string? sentHtml = null;
+        _emailSender
+            .Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string, string>((_, _, html) => sentHtml = html)
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        await service.SendWaitlistNotificationAsync(booking);
+
+        Assert.NotNull(sentHtml);
+        Assert.Contains("spot opened up", sentHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Test Studio Holdings", sentHtml);
+        Assert.Contains("Test Bank", sentHtml);
+        Assert.Contains("0000000000", sentHtml);
+        Assert.Contains($"R{PaymentPricing.MonthlyPrice}", sentHtml);
+        Assert.Contains("Cancel this booking", sentHtml);
+    }
 }

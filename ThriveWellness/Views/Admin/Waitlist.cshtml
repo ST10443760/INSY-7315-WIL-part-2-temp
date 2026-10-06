@@ -11,6 +11,12 @@
     <span class="thrive-admin-page-header__subtitle">Manage clients waiting for fully booked sessions.</span>
 </div>
 
+@if (TempData["WaitlistBannerMessage"] is string bannerMessage)
+{
+    var bannerType = TempData["WaitlistBannerType"] as string ?? "notice";
+    <div class="thrive-banner thrive-banner--@bannerType">@bannerMessage</div>
+}
+
 @if (!bySession.Any())
 {
     <div class="thrive-admin-card">
@@ -55,6 +61,10 @@ else
                                             <form asp-action="NotifyWaitlistEntry" asp-route-id="@entry.WaitlistId" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="thrive-btn thrive-btn--mauve thrive-btn--sm">Notify</button>
+                                            </form>
+                                            <form asp-action="AddToClass" asp-route-id="@entry.WaitlistId" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="thrive-btn thrive-btn--mauve thrive-btn--sm" onclick="return confirm('Add @entry.ClientName to this class and email them payment details?');">Add to class</button>
                                             </form>
                                             <form asp-action="RemoveWaitlistEntry" asp-route-id="@entry.WaitlistId" method="post">
                                                 @Html.AntiForgeryToken()
