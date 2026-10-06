@@ -34,7 +34,7 @@ Null Devs
 - Payment confirmation for EFT and cash payments.
 - Location management.
 - A client overview with search.
-- Waitlist management, including manually notifying or removing an entry.
+- Waitlist management, including manually notifying or removing an entry, or moving a waitlisted client straight into a class.
 
 ### Automated emails
 
