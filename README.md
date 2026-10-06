@@ -211,3 +211,12 @@ Work was built as a series of feature branches, merged into `main`:
 - `feature/comments`
 - `feature/cleanup`
 - `fix/desktop-menu-close-button`
+
+## Security
+
+- Passwords are hashed with BCrypt, which generates and embeds its own random salt. The plaintext password is never stored.
+- Every state-changing form includes an anti-forgery token, and every matching controller action validates it.
+- All database queries go through Entity Framework Core, which parameterises every value. No raw SQL is built from user input.
+- Session cookies and form posts are expected to run over HTTPS in production.
+- Cancellation uses a cryptographically random, single-use token rather than a login, since clients never create an account.
+- Real credentials and connection strings are kept out of the repository, in `appsettings.Development.json` (gitignored) locally and in environment variables on Render.
