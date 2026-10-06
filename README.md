@@ -237,3 +237,8 @@ Work was built as a series of feature branches, merged into `main`:
 - [Figma mobile prototype](https://www.figma.com/community/file/1671168418793571256/insy7315-mobile-interactiveprototype)
 
 The Task 1 documentation was submitted separately.
+
+## Admin access
+
+Username: `admin`. The password is set through the `Admin__Password`
+setting and is provided in class or on request.
