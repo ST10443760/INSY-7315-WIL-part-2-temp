@@ -133,7 +133,7 @@ settings use a double underscore in place of the colon, for example
 | `Payment:AccountHolder` | Shown to clients paying by EFT | `Thrive Wellness Pilates` |
 | `Payment:Bank` | Shown to clients paying by EFT | `Example Bank` |
 | `Payment:AccountNumber` | Shown to clients paying by EFT | `0000000000` |
-| `SendGridApiKey` | Authenticates with SendGrid to send email | `SG.your-api-key` |
+| `SendGridApiKey` | Authenticates with SendGrid to send email | `your-sendgrid-api-key` |
 | `SendGridFromEmail` | The address emails are sent from | `no-reply@example.com` |
 | `AppBaseUrl` | Used to build absolute links in emails, such as the cancellation link | `https://localhost:7291` |
 
