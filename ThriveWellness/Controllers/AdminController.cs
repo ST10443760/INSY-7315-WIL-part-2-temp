@@ -85,4 +85,33 @@ public class AdminController : Controller
         await _waitlistService.RemoveAsync(id);
         return RedirectToAction(nameof(Waitlist));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    // Manually promotes one waitlist entry into an Awaiting-Payment booking
+    // with a Pending payment - see WaitlistService.AddToClassAsync for the
+    // guards (session full/closed/past, client already booked) and the
+    // shared promotion routine this and automatic promotion both go through.
+    public async Task<IActionResult> AddToClass(int id)
+    {
+        var result = await _waitlistService.AddToClassAsync(id);
+
+        if (!result.Success)
+        {
+            TempData["WaitlistBannerType"] = "error";
+            TempData["WaitlistBannerMessage"] = result.ErrorMessage;
+        }
+        else if (!result.EmailSent)
+        {
+            TempData["WaitlistBannerType"] = "notice";
+            TempData["WaitlistBannerMessage"] = "Added to class, but the email could not be sent.";
+        }
+        else
+        {
+            TempData["WaitlistBannerType"] = "success";
+            TempData["WaitlistBannerMessage"] = "Added to class. A payment details email has been sent.";
+        }
+
+        return RedirectToAction(nameof(Waitlist));
+    }
 }
