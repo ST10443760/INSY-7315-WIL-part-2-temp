@@ -1,5 +1,7 @@
-# Thrive Wellness Pilates Booking System
-
-[![CI](https://github.com/ST10443760/INSY-7315-WIL-part-2-temp/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/ST10443760/INSY-7315-WIL-part-2-temp/actions/workflows/ci.yml)
+# Thrive Wellness Pilates
 
 A booking and studio-management system for Thrive Wellness Pilates, built with ASP.NET Core MVC (.NET 8) and PostgreSQL.
+
+Live site: https://thrive-wellness-pilates.onrender.com
+
+The site runs on a free hosting tier. The first request after a period of inactivity can take 30 to 60 seconds while the server starts back up.
