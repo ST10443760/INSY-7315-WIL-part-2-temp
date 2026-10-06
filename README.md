@@ -43,3 +43,15 @@ Null Devs
 - A scheduled reminder email, sent the day before a session.
 - A scheduled location email, sent on the day of a session to new clients.
 - A cancellation link that frees the slot and promotes the next person on the waitlist.
+
+## Tech stack
+
+| Area | Technology |
+|---|---|
+| Framework | ASP.NET Core MVC, .NET 8 |
+| Data access | Entity Framework Core 8, Npgsql |
+| Database | PostgreSQL, hosted on Railway |
+| Email | SendGrid |
+| Containers | Docker |
+| Hosting | Render |
+| CI/CD | GitHub Actions |
