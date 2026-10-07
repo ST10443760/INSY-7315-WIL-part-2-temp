@@ -127,7 +127,12 @@ public class BookingServiceTests
     [Fact]
     public async Task CreateBookingAsync_ReturningClient_DoesNotRequireConsentAndSkipsIntakeForm()
     {
-        var existing = new Client { ClientId = 5, Email = "returning@example.com", IsNew = false };
+        // Full name and phone match what ValidRequest() submits exactly, so
+        // this test still isolates what it's named for: the already-not-new
+        // flag causing no redundant update. (Editing those details onto an
+        // existing client is covered on its own in
+        // CreateBookingAsync_ExistingClient_*.)
+        var existing = new Client { ClientId = 5, Email = "returning@example.com", FullName = "New Client", PhoneNumber = "0821234567", IsNew = false };
         _clientRepository.Setup(r => r.GetByEmailAsync("returning@example.com")).ReturnsAsync(existing);
         _sessionRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(OpenSession());
         _bookingRepository.Setup(r => r.GetBookingsBySessionAsync(1)).ReturnsAsync(Enumerable.Empty<Booking>());
@@ -146,7 +151,7 @@ public class BookingServiceTests
         Assert.True(result.Success);
         // Only a new client's booking writes an IntakeForm row.
         Assert.Equal(0, await context.IntakeForms.CountAsync());
-        // Already not-new, so no redundant update to flip the flag.
+        // Already not-new and nothing edited, so no update at all.
         _clientRepository.Verify(r => r.UpdateAsync(It.IsAny<Client>()), Times.Never);
     }
 
