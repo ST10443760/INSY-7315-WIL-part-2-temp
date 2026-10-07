@@ -155,6 +155,121 @@ public class BookingServiceTests
         _clientRepository.Verify(r => r.UpdateAsync(It.IsAny<Client>()), Times.Never);
     }
 
+    // ---- Saving an existing client's edited details (the readonly-field
+    // follow-up bug: the form let a returning client edit these, but
+    // nothing saved the edit) ----
+
+    [Fact]
+    public async Task CreateBookingAsync_ExistingClient_PhoneNumberChanged_SavesTrimmedPhoneNumber()
+    {
+        var existing = new Client { ClientId = 5, Email = "returning@example.com", FullName = "New Client", PhoneNumber = "0000000000", IsNew = false };
+        _clientRepository.Setup(r => r.GetByEmailAsync("returning@example.com")).ReturnsAsync(existing);
+        _sessionRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(OpenSession());
+        _bookingRepository.Setup(r => r.GetBookingsBySessionAsync(1)).ReturnsAsync(Enumerable.Empty<Booking>());
+        _bookingRepository.Setup(r => r.CreateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        var request = ValidRequest(consentSigned: false);
+        request.Email = "returning@example.com";
+        request.PhoneNumber = "  0821234567  "; // a form field can submit surrounding whitespace
+
+        var result = await service.CreateBookingAsync(request);
+
+        Assert.True(result.Success);
+        Assert.Equal("0821234567", existing.PhoneNumber);
+        _clientRepository.Verify(r => r.UpdateAsync(It.Is<Client>(c => c.PhoneNumber == "0821234567")), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_ExistingClient_FullNameChanged_SavesTrimmedFullName()
+    {
+        var existing = new Client { ClientId = 5, Email = "returning@example.com", FullName = "Old Name", PhoneNumber = "0821234567", IsNew = false };
+        _clientRepository.Setup(r => r.GetByEmailAsync("returning@example.com")).ReturnsAsync(existing);
+        _sessionRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(OpenSession());
+        _bookingRepository.Setup(r => r.GetBookingsBySessionAsync(1)).ReturnsAsync(Enumerable.Empty<Booking>());
+        _bookingRepository.Setup(r => r.CreateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        var request = ValidRequest(consentSigned: false);
+        request.Email = "returning@example.com";
+        request.FullName = "  New Client  ";
+
+        var result = await service.CreateBookingAsync(request);
+
+        Assert.True(result.Success);
+        Assert.Equal("New Client", existing.FullName);
+        _clientRepository.Verify(r => r.UpdateAsync(It.Is<Client>(c => c.FullName == "New Client")), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_ExistingClient_OnlyWhitespaceDiffers_DoesNotUpdate()
+    {
+        var existing = new Client { ClientId = 5, Email = "returning@example.com", FullName = "New Client", PhoneNumber = "0821234567", IsNew = false };
+        _clientRepository.Setup(r => r.GetByEmailAsync("returning@example.com")).ReturnsAsync(existing);
+        _sessionRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(OpenSession());
+        _bookingRepository.Setup(r => r.GetBookingsBySessionAsync(1)).ReturnsAsync(Enumerable.Empty<Booking>());
+        _bookingRepository.Setup(r => r.CreateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        var request = ValidRequest(consentSigned: false);
+        request.Email = "returning@example.com";
+        request.FullName = "  New Client  ";
+        request.PhoneNumber = "  0821234567  ";
+
+        var result = await service.CreateBookingAsync(request);
+
+        Assert.True(result.Success);
+        _clientRepository.Verify(r => r.UpdateAsync(It.IsAny<Client>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_ExistingClient_DetailsChanged_NeverChangesEmailOrPaymentType()
+    {
+        var existing = new Client { ClientId = 5, Email = "returning@example.com", FullName = "Old Name", PhoneNumber = "0000000000", PaymentType = "monthly", IsNew = false };
+        _clientRepository.Setup(r => r.GetByEmailAsync("returning@example.com")).ReturnsAsync(existing);
+        _sessionRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(OpenSession());
+        _bookingRepository.Setup(r => r.GetBookingsBySessionAsync(1)).ReturnsAsync(Enumerable.Empty<Booking>());
+        _bookingRepository.Setup(r => r.CreateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        // ValidRequest's PaymentType is "per-class" - deliberately different
+        // from the client's stored "monthly", since PaymentType is a
+        // per-booking choice, not a client detail to sync.
+        var request = ValidRequest(consentSigned: false);
+        request.Email = "returning@example.com";
+
+        var result = await service.CreateBookingAsync(request);
+
+        Assert.True(result.Success);
+        Assert.Equal("returning@example.com", existing.Email);
+        Assert.Equal("monthly", existing.PaymentType);
+        _clientRepository.Verify(r => r.UpdateAsync(It.Is<Client>(c => c.Email == "returning@example.com" && c.PaymentType == "monthly")), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_NewClient_DetailsSavingLogicDoesNotApply()
+    {
+        _clientRepository.Setup(r => r.GetByEmailAsync(It.IsAny<string>())).ReturnsAsync((Client?)null);
+        Client? created = null;
+        _clientRepository
+            .Setup(r => r.AddAsync(It.IsAny<Client>()))
+            .Callback<Client>(c => { c.ClientId = 50; created = c; })
+            .Returns(Task.CompletedTask);
+        _sessionRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(OpenSession());
+        _bookingRepository.Setup(r => r.GetBookingsBySessionAsync(1)).ReturnsAsync(Enumerable.Empty<Booking>());
+        _bookingRepository.Setup(r => r.CreateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        var result = await service.CreateBookingAsync(ValidRequest(consentSigned: true));
+
+        Assert.True(result.Success);
+        Assert.NotNull(created);
+        _clientRepository.Verify(r => r.AddAsync(It.IsAny<Client>()), Times.Once);
+        // The new-client path builds the Client straight from the request
+        // and never reaches the existing-client edit check at all.
+        _clientRepository.Verify(r => r.UpdateAsync(It.IsAny<Client>()), Times.Never);
+    }
+
     [Fact]
     public async Task CreateBookingAsync_SessionAtCapacity_ReturnsRequiresWaitlistInsteadOfBooking()
     {
