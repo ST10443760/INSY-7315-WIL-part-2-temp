@@ -54,7 +54,7 @@
 
                 <div class="thrive-field">
                     <label class="thrive-label" asp-for="PhoneNumber"></label>
-                    <input asp-for="PhoneNumber" class="thrive-input" placeholder="e.g. +27 92 359 2376" />
+                    <input asp-for="PhoneNumber" class="thrive-input" inputmode="tel" autocomplete="tel" placeholder="e.g. +27 92 359 2376" />
                     <span asp-validation-for="PhoneNumber" class="thrive-field-error"></span>
                 </div>
 
@@ -70,9 +70,14 @@
                     <input asp-for="FullName" class="thrive-input" readonly />
                 </div>
 
+                @* Editable, not readonly: a returning client confirms or edits
+                   their pre-filled details here (see the Task 1 journey).
+                   Email above stays readonly - it's the identifier a
+                   returning client is looked up by, not a detail to edit. *@
                 <div class="thrive-field">
                     <label class="thrive-label" asp-for="PhoneNumber"></label>
-                    <input asp-for="PhoneNumber" class="thrive-input" readonly />
+                    <input asp-for="PhoneNumber" class="thrive-input" inputmode="tel" autocomplete="tel" placeholder="e.g. +27 92 359 2376" />
+                    <span asp-validation-for="PhoneNumber" class="thrive-field-error"></span>
                 </div>
             }
 
