@@ -472,3 +472,7 @@ Stated plainly, as they actually are today:
   payment (and creating a booking) currently waits on the full SendGrid
   round-trip before returning a response to the admin or client, rather than
   queuing the send in the background.
+- **Returning-client identification.** Returning clients are identified by
+  email only, so anyone who knows a client's email can see and change their
+  name and phone. A verification step, such as an emailed code, is the next
+  improvement.

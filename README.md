@@ -229,6 +229,7 @@ Work was built as a series of feature branches, merged into `main`:
 - **No online payments.** EFT and cash payments are confirmed manually by the admin; there is no payment gateway integration.
 - **Emails are sent synchronously.** A booking or payment confirmation waits on the full email send before returning a response. A background queue is the planned next step.
 - **No custom domain.** A custom domain was recommended in Task 1 but is not set up.
+- **Returning-client identification.** Returning clients are identified by email only, so anyone who knows a client's email can see and change their name and phone. A verification step, such as an emailed code, is the next improvement.
 
 ## Documentation and design
 
