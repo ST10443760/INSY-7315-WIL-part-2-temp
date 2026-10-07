@@ -104,6 +104,26 @@ namespace ThriveWellness.Services.Implementations
                 await _clientRepository.UpdateAsync(client);
             }
 
+            // A returning client's details form is pre-filled but editable
+            // (see Views/Booking/Details.cshtml) - save any edit here, since
+            // nothing else in this flow does. Email is the identifier
+            // they're looked up by, so it's never touched, and PaymentType
+            // is a per-booking choice, not a client detail, so it isn't
+            // either. Trimmed and compared against the stored values so a
+            // confirmed, unedited submission never writes anything.
+            if (!isNewClient)
+            {
+                var trimmedFullName = request.FullName.Trim();
+                var trimmedPhoneNumber = request.PhoneNumber.Trim();
+
+                if (trimmedFullName != client!.FullName || trimmedPhoneNumber != client.PhoneNumber)
+                {
+                    client.FullName = trimmedFullName;
+                    client.PhoneNumber = trimmedPhoneNumber;
+                    await _clientRepository.UpdateAsync(client);
+                }
+            }
+
             var session = await _sessionRepository.GetByIdAsync(request.SessionId);
             if (session == null)
             {
