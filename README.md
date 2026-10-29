@@ -140,6 +140,20 @@ settings use a double underscore in place of the colon, for example
 No default admin account exists. `Admin:Password` must be set, or the app
 starts without creating or updating an admin account and nobody can log in.
 
+### Local development
+
+Local development uses a throwaway PostgreSQL in Docker, never the live
+database. Start it with:
+
+```
+docker compose -f docker-compose.dev.yml up -d
+```
+
+It listens on port 5433, so point `DefaultConnection` at
+`Host=localhost;Port=5433;Database=thrive_dev;Username=postgres;Password=devpass`,
+then migrate and run the app as below. The live database is only touched by
+the demo reset script and by deploys.
+
 ### Migrate and run
 
 ```
