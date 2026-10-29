@@ -167,7 +167,7 @@ dotnet run --project ThriveWellness
 dotnet test
 ```
 
-This runs 65 tests, covering six service classes: `AdminSeeder`,
+This runs 66 tests, covering six service classes: `AdminSeeder`,
 `BookingService`, `NotificationService`, `PaymentService`, `SessionService`
 and `WaitlistService`. Controllers and the repositories' query shapes are
 not covered yet (see Known limitations).
