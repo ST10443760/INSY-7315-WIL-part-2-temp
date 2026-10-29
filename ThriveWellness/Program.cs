@@ -32,6 +32,11 @@ if (!string.IsNullOrEmpty(port))
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// EF Core's EnableRetryOnFailure is deliberately NOT turned on here: an
+// execution strategy that retries can't be combined with the manual
+// BeginTransactionAsync calls (WaitlistService, for one) without wrapping
+// every one of them in CreateExecutionStrategy().ExecuteAsync - EF throws
+// otherwise. Startup resilience is handled by StartupSeeding instead.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
