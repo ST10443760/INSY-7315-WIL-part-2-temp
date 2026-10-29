@@ -35,15 +35,15 @@ namespace ThriveWellness.Services
                     await seed();
                     return true;
                 }
-                catch (Exception ex) when (IsDatabaseError(ex))
+                catch (Exception ex) when (FindDatabaseError(ex) is { } dbError)
                 {
                     // Type and message only - never the exception object
-                    // itself, the inner exceptions or anything from
+                    // itself, its stack trace or anything from
                     // configuration, so a connection string can't end up
                     // in the logs.
                     logger.LogWarning(
                         "Startup seeding failed (attempt {Attempt} of {MaxAttempts}): {ExceptionType}: {ExceptionMessage}",
-                        attempt, maxAttempts, ex.GetType().Name, ex.Message);
+                        attempt, maxAttempts, dbError.GetType().Name, dbError.Message);
 
                     if (attempt < maxAttempts)
                     {
@@ -61,7 +61,21 @@ namespace ThriveWellness.Services
         // NpgsqlException (connection refused, DNS failure, SSL, server
         // errors) derives from DbException; DbUpdateException covers a
         // failed SaveChanges; TimeoutException covers a connect timeout.
-        private static bool IsDatabaseError(Exception ex) =>
-            ex is DbException or DbUpdateException or TimeoutException;
+        // The inner exceptions are searched too, because Npgsql's default
+        // execution strategy wraps a transient connection failure in an
+        // InvalidOperationException ("likely due to a transient failure")
+        // even with retry-on-failure off. Returns the database exception
+        // found, or null if this isn't a database error at all.
+        private static Exception? FindDatabaseError(Exception ex)
+        {
+            for (Exception? current = ex; current != null; current = current.InnerException)
+            {
+                if (current is DbException or DbUpdateException or TimeoutException)
+                {
+                    return current;
+                }
+            }
+            return null;
+        }
     }
 }
