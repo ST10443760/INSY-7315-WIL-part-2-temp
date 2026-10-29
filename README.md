@@ -107,7 +107,7 @@ decisions and bugs found along the way.
 ### Prerequisites
 
 - .NET 8 SDK
-- A PostgreSQL database (a free instance on a host such as Railway works, or a local install)
+- Docker, for the local development database (or any PostgreSQL install)
 - The `dotnet-ef` tool, for running migrations: `dotnet tool install --global dotnet-ef`
 
 ### Clone
