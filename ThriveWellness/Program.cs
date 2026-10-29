@@ -156,6 +156,15 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Liveness check for the host: answers as long as the process is up, with
+// no database call, so a database outage never makes the app look dead.
+// Not linked from anywhere in the UI, and never cached.
+app.MapGet("/health", (HttpContext context) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    return Results.Text("OK");
+}).AllowAnonymous();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
