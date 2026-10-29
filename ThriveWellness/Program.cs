@@ -4,6 +4,7 @@ using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Implementations;
 using ThriveWellness.Repositories.Interfaces;
+using ThriveWellness.Services;
 using ThriveWellness.Services.Implementations;
 using ThriveWellness.Services.Interfaces;
 
@@ -109,11 +110,17 @@ var app = builder.Build();
 // configured password actually changed). Runs in every environment: it's
 // a deliberate no-op wherever Admin:Password isn't set, so this is safe
 // to leave unconditional rather than gated to Development.
-using (var scope = app.Services.CreateScope())
+//
+// Non-fatal: if the database is unreachable, StartupSeeding logs a warning,
+// retries a few times and then lets the app start anyway, instead of the
+// process exiting and Render restart-looping the whole site. Each attempt
+// gets a fresh scope, so a failed attempt's DbContext isn't reused.
+await StartupSeeding.RunWithRetryAsync(async () =>
 {
+    using var scope = app.Services.CreateScope();
     var adminSeeder = scope.ServiceProvider.GetRequiredService<IAdminSeeder>();
     await adminSeeder.SeedAsync();
-}
+}, app.Logger);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
