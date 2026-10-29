@@ -165,6 +165,34 @@ app.MapGet("/health", (HttpContext context) =>
     return Results.Text("OK");
 }).AllowAnonymous();
 
+// Readiness check for the database: one quick connection test, capped at 3
+// seconds so a hanging connection can't hold the request open. The body
+// only ever says OK or unavailable - never the host, error or connection
+// details.
+app.MapGet("/health/db", async (HttpContext context, ApplicationDbContext db) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+
+    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+    timeout.CancelAfter(TimeSpan.FromSeconds(3));
+
+    bool canConnect;
+    try
+    {
+        canConnect = await db.Database.CanConnectAsync(timeout.Token);
+    }
+    catch (Exception)
+    {
+        // Timeout (OperationCanceledException) or anything else the
+        // provider throws - either way the database isn't usable right now.
+        canConnect = false;
+    }
+
+    return canConnect
+        ? Results.Text("OK")
+        : Results.Text("Database unavailable", statusCode: StatusCodes.Status503ServiceUnavailable);
+}).AllowAnonymous();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
