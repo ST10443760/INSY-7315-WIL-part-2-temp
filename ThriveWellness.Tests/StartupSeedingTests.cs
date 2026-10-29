@@ -94,6 +94,22 @@ public class StartupSeedingTests
     }
 
     [Fact]
+    public async Task RunWithRetryAsync_DatabaseErrorWrappedByExecutionStrategy_IsStillCaught()
+    {
+        // The shape Npgsql's default execution strategy actually throws when
+        // the server refuses the connection.
+        var wrapped = new InvalidOperationException(
+            "An exception has been raised that is likely due to a transient failure.",
+            new NpgsqlException("Failed to connect to 127.0.0.1:5433"));
+
+        var result = await StartupSeeding.RunWithRetryAsync(
+            () => throw wrapped, _logger, delayBetweenAttempts: TimeSpan.Zero);
+
+        Assert.False(result);
+        Assert.Contains("NpgsqlException: Failed to connect to 127.0.0.1:5433", _logger.Entries.First().Message);
+    }
+
+    [Fact]
     public async Task RunWithRetryAsync_NonDatabaseError_StillPropagates()
     {
         var calls = 0;
