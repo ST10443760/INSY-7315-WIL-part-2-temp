@@ -1,0 +1,25 @@
+# Throwaway Postgres for local development only - never used in production.
+# The password below is local-only and safe to commit. Start it with:
+#   docker compose -f docker-compose.dev.yml up -d
+services:
+  thrive-dev-db:
+    image: postgres:18
+    container_name: thrive-dev-db
+    environment:
+      POSTGRES_DB: thrive_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpass
+    ports:
+      - "5433:5432"
+    volumes:
+      # postgres:18 keeps its data in a versioned subfolder, so the volume
+      # mounts one level up at /var/lib/postgresql.
+      - thrive-dev-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d thrive_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  thrive-dev-data:
