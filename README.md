@@ -50,7 +50,7 @@ Null Devs
 |---|---|
 | Framework | ASP.NET Core MVC, .NET 8 |
 | Data access | Entity Framework Core 8, Npgsql |
-| Database | PostgreSQL, hosted on Railway |
+| Database | PostgreSQL, hosted on Neon |
 | Email | SendGrid |
 | Containers | Docker |
 | Hosting | Render |
