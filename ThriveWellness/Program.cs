@@ -88,6 +88,7 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<IRefundService, RefundService>();
 builder.Services.AddScoped<IClientDashboardService, ClientDashboardService>();
 builder.Services.AddScoped<IRewardsService, RewardsService>();
+builder.Services.AddScoped<IRevenueService, RevenueService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // PaymentService is the Observer-pattern subject (Task 1 doc, Section 9.3).
