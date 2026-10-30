@@ -106,6 +106,21 @@ public class ScheduledNotificationServiceTests
     }
 
     [Fact]
+    public async Task SendDueRemindersAsync_PreviousReminderFailed_TriesAgainInsteadOfSkipping()
+    {
+        using var context = NewInMemoryContext();
+        AddSession(context, 1, Tomorrow);
+        AddBooking(context, 10, 1);
+        context.Notifications.Add(new Notification { BookingId = 10, Type = "Reminder", SentAt = DateTime.UtcNow.AddHours(-1), Status = NotificationStatus.Failed });
+        await context.SaveChangesAsync();
+
+        var result = await CreateService(context).SendDueRemindersAsync();
+
+        Assert.Equal(1, result.Sent);
+        Assert.Equal(0, result.Skipped);
+    }
+
+    [Fact]
     public async Task SendDueRemindersAsync_NothingDue_ReturnsAllZeros()
     {
         using var context = NewInMemoryContext();
