@@ -4,6 +4,9 @@
     ViewData["Title"] = "Booking Received";
     ViewData["ThriveBodyBeige"] = true;
     var isEft = string.Equals(Model.Method, "EFT", StringComparison.OrdinalIgnoreCase);
+    var isCard = PaymentMethods.IsCard(Model.Method);
+    var isPaid = Model.PaymentStatus == PaymentStatuses.Confirmed;
+    var canPayByCard = isCard && Model.PaymentStatus == PaymentStatuses.Pending && Model.Status != "Cancelled";
     var amountText = Model.AmountDue.HasValue ? $"R{Model.AmountDue.Value}" : "the class fee";
 }
 
@@ -47,18 +50,41 @@
         @* What the client has to do next depends on how they chose to pay -
            nothing is paid yet, so this page never calls the booking
            confirmed. *@
-        <p class="thrive-booking-caption">
-            <strong>Next step:</strong>
-            @if (isEft)
+        @if (isCard && isPaid)
+        {
+            <p class="thrive-booking-caption">
+                <strong>Paid:</strong> your card payment went through and you're booked in.
+            </p>
+
+            <a class="thrive-btn thrive-btn--rose thrive-btn--block" asp-controller="Checkout" asp-action="Receipt" asp-route-paymentId="@Model.PaymentId">View receipt</a>
+        }
+        else if (isCard)
+        {
+            <p class="thrive-booking-caption">
+                <strong>Next step:</strong>
+                pay @amountText securely by card to confirm your spot. If you close this page, you can pay later from your dashboard.
+            </p>
+
+            @if (canPayByCard)
             {
-                <text>pay @amountText by EFT using the banking details in the email we've just sent you, with your name and booking number (@Model.BookingId) as the reference.</text>
+                <a class="thrive-btn thrive-btn--rose thrive-btn--block" asp-controller="Checkout" asp-action="Pay" asp-route-bookingId="@Model.BookingId">Pay now</a>
             }
-            else
-            {
-                <text>bring @amountText in cash and pay at the studio before your class starts.</text>
-            }
-            We'll email you again once the studio has received your payment.
-        </p>
+        }
+        else
+        {
+            <p class="thrive-booking-caption">
+                <strong>Next step:</strong>
+                @if (isEft)
+                {
+                    <text>pay @amountText by EFT using the banking details in the email we've just sent you, with your name and booking number (@Model.BookingId) as the reference.</text>
+                }
+                else
+                {
+                    <text>bring @amountText in cash and pay at the studio before your class starts.</text>
+                }
+                We'll email you again once the studio has received your payment.
+            </p>
+        }
 
         <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
 
