@@ -2052,3 +2052,29 @@ body.thrive-menu-open {
     max-width: none;
   }
 }
+
+/* Client cancellation: the "what happens next" list and the second button. */
+.thrive-cancel-summary {
+  background: var(--color-beige);
+  border-radius: var(--radius-input);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.thrive-cancel-summary p {
+  margin: 0 0 var(--space-2);
+  color: var(--color-maroon);
+}
+
+.thrive-cancel-summary ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.thrive-cancel-summary li + li {
+  margin-top: var(--space-1);
+}
+
+.thrive-cancel-keep {
+  margin-top: var(--space-2);
+}
