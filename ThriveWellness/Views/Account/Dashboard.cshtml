@@ -6,6 +6,11 @@
 
     string ChipClass(ClientBookingViewModel booking) =>
         booking.IsCancelled || booking.NoShow ? "thrive-status--cancelled" : booking.IsPaid ? "thrive-status--paid" : "thrive-status--pending";
+
+    var rewards = Model.Rewards;
+    var earnedBadges = rewards.Badges.Where(b => b.Earned).ToList();
+    var lockedBadges = rewards.Badges.Where(b => !b.Earned).ToList();
+    string Weeks(int n) => n == 1 ? "1 week" : $"{n} weeks";
 }
 
 <section class="thrive-container thrive-dashboard">
@@ -13,70 +18,6 @@
         <h1 class="thrive-h2-serif-italic">Hi @Model.FirstName</h1>
         <p class="thrive-text-muted">Your classes, payments and waitlists in one place.</p>
     </header>
-
-    @{ var rewards = Model.Rewards; }
-    <section class="thrive-dashboard__section thrive-rewards" id="rewards" aria-labelledby="rewards-heading">
-        <h2 class="thrive-dashboard__heading" id="rewards-heading">Rewards</h2>
-
-        @if (!rewards.HasAttended)
-        {
-            <div class="thrive-dashboard__empty">
-                <p>Your rewards start with your first class. Come along, and your streak and first badge will show up here.</p>
-                <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
-            </div>
-        }
-        else
-        {
-            <div class="thrive-rewards__summary">
-                <div class="thrive-streak-card">
-                    <partial name="_BadgeIcon" model="@("flame")" />
-                    <div>
-                        <p class="thrive-streak-card__value">@rewards.CurrentStreak @(rewards.CurrentStreak == 1 ? "week" : "weeks") <span>current streak</span></p>
-                        <p class="thrive-streak-card__sub">Longest: @rewards.LongestStreak @(rewards.LongestStreak == 1 ? "week" : "weeks")</p>
-                        <p class="thrive-streak-card__note">@rewards.Encouragement</p>
-                    </div>
-                </div>
-                <p class="thrive-rewards__next">
-                    <strong>@rewards.EarnedCount of @rewards.Badges.Count badges earned.</strong>
-                    @if (rewards.NextBadgeText != null)
-                    {
-                        <span>Next: @rewards.NextBadgeText.</span>
-                    }
-                    else
-                    {
-                        <span>You've earned every badge - amazing.</span>
-                    }
-                </p>
-            </div>
-        }
-
-        <ul class="thrive-badge-grid">
-            @foreach (var badge in rewards.Badges)
-            {
-                <li class="thrive-badge @(badge.Earned ? "thrive-badge--earned" : "thrive-badge--locked")">
-                    <partial name="_BadgeIcon" model="@badge.IconKey" />
-                    <span class="thrive-badge__name">@badge.Name</span>
-                    <span class="thrive-badge__desc">@badge.Description</span>
-                    @if (badge.Earned)
-                    {
-                        <span class="thrive-badge__state">
-                            Earned @badge.AwardedAt!.Value.ToString("d MMM yyyy")
-                            @if (badge.IsNew)
-                            {
-                                <span class="thrive-badge__new">New</span>
-                            }
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="thrive-badge__state thrive-badge__state--locked">
-                            <partial name="_Icon" model="@("lock")" />Locked
-                        </span>
-                    }
-                </li>
-            }
-        </ul>
-    </section>
 
     <div class="thrive-dashboard__tiles">
         <div class="thrive-tile">
@@ -94,153 +35,245 @@
             <span class="thrive-tile__label">Total spent</span>
             <span class="thrive-dashboard__tile-value">@Money.Format(Model.TotalSpent)</span>
         </div>
+        <div class="thrive-tile">
+            <partial name="_BadgeIcon" model="@("flame")" />
+            <span class="thrive-tile__label">Current streak</span>
+            <span class="thrive-dashboard__tile-value">@Weeks(rewards.CurrentStreak)</span>
+        </div>
     </div>
 
-    <section class="thrive-dashboard__section" aria-labelledby="upcoming-heading">
-        <h2 class="thrive-dashboard__heading" id="upcoming-heading">Upcoming bookings</h2>
-        @if (!Model.Upcoming.Any())
-        {
-            <div class="thrive-dashboard__empty">
-                <p>You have no upcoming classes yet. Find a time that suits you.</p>
-                <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
-            </div>
-        }
-        else
-        {
-            <ul class="thrive-dash-list">
-                @foreach (var booking in Model.Upcoming)
-                {
-                    <li class="thrive-dash-item">
-                        <div class="thrive-dash-item__when">
-                            <span class="thrive-dash-item__date">@booking.SessionDate.ToString("ddd d MMM")</span>
-                            <span class="thrive-dash-item__time">@booking.SessionTime.ToString(@"hh\:mm")</span>
-                        </div>
-                        <div class="thrive-dash-item__what">
-                            <span class="thrive-dash-item__title">@booking.SessionType.ToDisplayLabel()</span>
-                            <span class="thrive-dash-item__sub">@booking.LocationName, @booking.LocationAddress</span>
-                        </div>
-                        <span class="thrive-status @ChipClass(booking)">@booking.StatusLabel</span>
-                        <div class="thrive-dash-item__actions">
-                            @if (booking.CanPayByCard)
-                            {
-                                <a class="thrive-btn thrive-btn--rose thrive-btn--sm" asp-controller="Checkout" asp-action="Pay" asp-route-bookingId="@booking.BookingId">Pay now</a>
-                            }
-                            @if (!booking.IsCancelled)
-                            {
-                                <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-controller="Booking" asp-action="CancelBooking" asp-route-bookingId="@booking.BookingId">Cancel</a>
-                            }
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
-
-    <section class="thrive-dashboard__section" aria-labelledby="past-heading">
-        <h2 class="thrive-dashboard__heading" id="past-heading">Past bookings</h2>
-        @if (!Model.Past.Any())
-        {
-            <div class="thrive-dashboard__empty">
-                <p>Your past classes will show up here after your first session.</p>
-                <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
-            </div>
-        }
-        else
-        {
-            <ul class="thrive-dash-list">
-                @foreach (var booking in Model.Past)
-                {
-                    <li class="thrive-dash-item thrive-dash-item--past">
-                        <div class="thrive-dash-item__when">
-                            <span class="thrive-dash-item__date">@booking.SessionDate.ToString("d MMM yyyy")</span>
-                            <span class="thrive-dash-item__time">@booking.SessionTime.ToString(@"hh\:mm")</span>
-                        </div>
-                        <div class="thrive-dash-item__what">
-                            <span class="thrive-dash-item__title">@booking.SessionType.ToDisplayLabel()</span>
-                            <span class="thrive-dash-item__sub">@booking.LocationName, @booking.LocationAddress</span>
-                        </div>
-                        <span class="thrive-status @ChipClass(booking)">@booking.StatusLabel</span>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
-
-    <section class="thrive-dashboard__section" aria-labelledby="payments-heading">
-        <h2 class="thrive-dashboard__heading" id="payments-heading">Payments and receipts</h2>
-        @if (!Model.Payments.Any())
-        {
-            <div class="thrive-dashboard__empty">
-                <p>You haven't made any payments yet. Book a class to get started.</p>
-                <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
-            </div>
-        }
-        else
-        {
-            <ul class="thrive-dash-list">
-                @foreach (var payment in Model.Payments)
-                {
-                    <li class="thrive-dash-item">
-                        <div class="thrive-dash-item__when">
-                            <span class="thrive-dash-item__date">@Money.Format(payment.Amount)</span>
-                            @if (payment.PaidAt.HasValue)
-                            {
-                                <span class="thrive-dash-item__time">@payment.PaidAt.Value.ToString("d MMM yyyy")</span>
-                            }
-                        </div>
-                        <div class="thrive-dash-item__what">
-                            <span class="thrive-dash-item__title">@payment.SessionType.ToDisplayLabel(), @payment.SessionDate.ToString("d MMM")</span>
-                            <span class="thrive-dash-item__sub">
-                                @if (!string.IsNullOrEmpty(payment.Last4))
+    @* Two columns from 1024px: bookings, payments and waitlist on the left,
+       Rewards on the right. Narrower, everything stacks in page order, which
+       puts Rewards straight after Upcoming bookings. *@
+    <div class="thrive-dashboard__layout">
+        <section class="thrive-dashboard__section thrive-dash-area--upcoming" aria-labelledby="upcoming-heading">
+            <h2 class="thrive-dashboard__heading" id="upcoming-heading">Upcoming bookings</h2>
+            @if (!Model.Upcoming.Any())
+            {
+                <div class="thrive-dashboard__empty">
+                    <p>You have no upcoming classes yet. Find a time that suits you.</p>
+                    <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
+                </div>
+            }
+            else
+            {
+                <ul class="thrive-dash-list">
+                    @foreach (var booking in Model.Upcoming)
+                    {
+                        <li class="thrive-dash-item">
+                            <div class="thrive-dash-item__when">
+                                <span class="thrive-dash-item__date">@booking.SessionDate.ToString("ddd d MMM")</span>
+                                <span class="thrive-dash-item__time">@booking.SessionTime.ToString(@"hh\:mm")</span>
+                            </div>
+                            <div class="thrive-dash-item__what">
+                                <span class="thrive-dash-item__title">@booking.SessionType.ToDisplayLabel()</span>
+                                <span class="thrive-dash-item__sub">@booking.LocationName, @booking.LocationAddress</span>
+                            </div>
+                            <span class="thrive-status @ChipClass(booking)">@booking.StatusLabel</span>
+                            <div class="thrive-dash-item__actions">
+                                @if (booking.CanPayByCard)
                                 {
-                                    @($"{payment.Brand} ending in {payment.Last4}")
+                                    <a class="thrive-btn thrive-btn--rose thrive-btn--sm" asp-controller="Checkout" asp-action="Pay" asp-route-bookingId="@booking.BookingId">Pay now</a>
                                 }
-                                else
+                                @if (!booking.IsCancelled)
                                 {
-                                    @($"{(PaymentMethods.IsCard(payment.Method) ? "Card" : payment.Method == PaymentMethods.Eft ? "EFT" : "Cash")}, confirmed by the studio")
+                                    <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-controller="Booking" asp-action="CancelBooking" asp-route-bookingId="@booking.BookingId">Cancel</a>
                                 }
-                            </span>
-                        </div>
-                        <span class="thrive-status @(payment.Status == PaymentStatuses.Confirmed ? "thrive-status--paid" : "thrive-status--refund")">@(payment.Status == PaymentStatuses.Confirmed ? "Paid" : payment.Status)</span>
-                        <div class="thrive-dash-item__actions">
-                            @if (payment.HasReceipt)
-                            {
-                                <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-controller="Checkout" asp-action="Receipt" asp-route-paymentId="@payment.PaymentId">Receipt</a>
-                            }
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
 
-    <section class="thrive-dashboard__section" aria-labelledby="waitlist-heading">
-        <h2 class="thrive-dashboard__heading" id="waitlist-heading">Waitlist</h2>
-        @if (!Model.Waitlist.Any())
-        {
-            <div class="thrive-dashboard__empty">
-                <p>You're not waiting for any classes. If a class is full, you can join its waitlist from the schedule.</p>
-                <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
-            </div>
-        }
-        else
-        {
-            <ul class="thrive-dash-list">
-                @foreach (var entry in Model.Waitlist)
+        <aside class="thrive-dashboard__section thrive-rewards thrive-dash-area--rewards" id="rewards" aria-labelledby="rewards-heading">
+            <h2 class="thrive-dashboard__heading" id="rewards-heading">Rewards</h2>
+
+            @if (!rewards.HasAttended)
+            {
+                <p class="thrive-rewards__empty">Your streak and badges start with your first class.</p>
+                <a class="thrive-btn thrive-btn--maroon thrive-btn--sm" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
+            }
+            else
+            {
+                <dl class="thrive-rewards__streaks">
+                    <div>
+                        <dt>Current streak</dt>
+                        <dd>@Weeks(rewards.CurrentStreak)</dd>
+                    </div>
+                    <div>
+                        <dt>Longest streak</dt>
+                        <dd>@Weeks(rewards.LongestStreak)</dd>
+                    </div>
+                </dl>
+                <p class="thrive-rewards__note">@rewards.Encouragement</p>
+
+                <div class="thrive-rewards__next">
+                    @if (rewards.NextBadgeText != null)
+                    {
+                        <p id="next-badge-label">Next: @rewards.NextBadgeText</p>
+                        <progress class="thrive-rewards__progress" value="@rewards.NextBadgeCurrent" max="@rewards.NextBadgeTarget" aria-labelledby="next-badge-label">@rewards.NextBadgeCurrent of @rewards.NextBadgeTarget</progress>
+                    }
+                    else
+                    {
+                        <p>You've earned every badge - amazing.</p>
+                    }
+                </div>
+
+                <h3 class="thrive-rewards__subheading">Earned badges (@earnedBadges.Count of @rewards.Badges.Count)</h3>
+                @if (earnedBadges.Any())
                 {
-                    <li class="thrive-dash-item">
-                        <div class="thrive-dash-item__when">
-                            <span class="thrive-dash-item__date">@entry.SessionDate.ToString("ddd d MMM")</span>
-                            <span class="thrive-dash-item__time">@entry.SessionTime.ToString(@"hh\:mm")</span>
-                        </div>
-                        <div class="thrive-dash-item__what">
-                            <span class="thrive-dash-item__title">@entry.SessionType.ToDisplayLabel()</span>
-                            <span class="thrive-dash-item__sub">@entry.LocationName, @entry.LocationAddress</span>
-                        </div>
-                        <span class="thrive-status thrive-status--pending">#@entry.Position in line</span>
-                    </li>
+                    <ul class="thrive-badge-list">
+                        @foreach (var badge in earnedBadges)
+                        {
+                            <li class="thrive-badge-chip thrive-badge-chip--earned">
+                                <partial name="_BadgeIcon" model="@badge.IconKey" />
+                                <span class="thrive-badge-chip__text">
+                                    <span class="thrive-badge-chip__name">@badge.Name</span>
+                                    <span class="thrive-badge-chip__meta">
+                                        Earned @badge.AwardedAt!.Value.ToString("d MMM yyyy")
+                                        @if (badge.IsNew)
+                                        {
+                                            <span class="thrive-badge__new">New</span>
+                                        }
+                                    </span>
+                                </span>
+                            </li>
+                        }
+                    </ul>
                 }
-            </ul>
-        }
-    </section>
+                else
+                {
+                    <p class="thrive-rewards__note">No badges yet - your next class could earn one.</p>
+                }
+
+                @if (lockedBadges.Any())
+                {
+                    <details class="thrive-rewards__locked">
+                        <summary>See all badges (@lockedBadges.Count locked)</summary>
+                        <ul class="thrive-badge-list">
+                            @foreach (var badge in lockedBadges)
+                            {
+                                <li class="thrive-badge-chip thrive-badge-chip--locked">
+                                    <partial name="_BadgeIcon" model="@badge.IconKey" />
+                                    <span class="thrive-badge-chip__text">
+                                        <span class="thrive-badge-chip__name">@badge.Name</span>
+                                        <span class="thrive-badge-chip__meta"><partial name="_Icon" model="@("lock")" />Locked: @badge.Description</span>
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    </details>
+                }
+            }
+        </aside>
+
+        <section class="thrive-dashboard__section thrive-dash-area--payments" aria-labelledby="payments-heading">
+            <h2 class="thrive-dashboard__heading" id="payments-heading">Payments and receipts</h2>
+            @if (!Model.Payments.Any())
+            {
+                <div class="thrive-dashboard__empty">
+                    <p>You haven't made any payments yet. Book a class to get started.</p>
+                    <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
+                </div>
+            }
+            else
+            {
+                <ul class="thrive-dash-list">
+                    @foreach (var payment in Model.Payments)
+                    {
+                        <li class="thrive-dash-item">
+                            <div class="thrive-dash-item__when">
+                                <span class="thrive-dash-item__date">@Money.Format(payment.Amount)</span>
+                                @if (payment.PaidAt.HasValue)
+                                {
+                                    <span class="thrive-dash-item__time">@payment.PaidAt.Value.ToString("d MMM yyyy")</span>
+                                }
+                            </div>
+                            <div class="thrive-dash-item__what">
+                                <span class="thrive-dash-item__title">@payment.SessionType.ToDisplayLabel(), @payment.SessionDate.ToString("d MMM")</span>
+                                <span class="thrive-dash-item__sub">
+                                    @if (!string.IsNullOrEmpty(payment.Last4))
+                                    {
+                                        @($"{payment.Brand} ending in {payment.Last4}")
+                                    }
+                                    else
+                                    {
+                                        @($"{(PaymentMethods.IsCard(payment.Method) ? "Card" : payment.Method == PaymentMethods.Eft ? "EFT" : "Cash")}, confirmed by the studio")
+                                    }
+                                </span>
+                            </div>
+                            <span class="thrive-status @(payment.Status == PaymentStatuses.Confirmed ? "thrive-status--paid" : "thrive-status--refund")">@(payment.Status == PaymentStatuses.Confirmed ? "Paid" : payment.Status)</span>
+                            <div class="thrive-dash-item__actions">
+                                @if (payment.HasReceipt)
+                                {
+                                    <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-controller="Checkout" asp-action="Receipt" asp-route-paymentId="@payment.PaymentId">Receipt</a>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="thrive-dashboard__section thrive-dash-area--past" aria-labelledby="past-heading">
+            <h2 class="thrive-dashboard__heading" id="past-heading">Past bookings</h2>
+            @if (!Model.Past.Any())
+            {
+                <div class="thrive-dashboard__empty">
+                    <p>Your past classes will show up here after your first session.</p>
+                    <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
+                </div>
+            }
+            else
+            {
+                <ul class="thrive-dash-list">
+                    @foreach (var booking in Model.Past)
+                    {
+                        <li class="thrive-dash-item thrive-dash-item--past">
+                            <div class="thrive-dash-item__when">
+                                <span class="thrive-dash-item__date">@booking.SessionDate.ToString("d MMM yyyy")</span>
+                                <span class="thrive-dash-item__time">@booking.SessionTime.ToString(@"hh\:mm")</span>
+                            </div>
+                            <div class="thrive-dash-item__what">
+                                <span class="thrive-dash-item__title">@booking.SessionType.ToDisplayLabel()</span>
+                                <span class="thrive-dash-item__sub">@booking.LocationName, @booking.LocationAddress</span>
+                            </div>
+                            <span class="thrive-status @ChipClass(booking)">@booking.StatusLabel</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="thrive-dashboard__section thrive-dash-area--waitlist" aria-labelledby="waitlist-heading">
+            <h2 class="thrive-dashboard__heading" id="waitlist-heading">Waitlist</h2>
+            @if (!Model.Waitlist.Any())
+            {
+                <div class="thrive-dashboard__empty">
+                    <p>You're not waiting for any classes. If a class is full, you can join its waitlist from the schedule.</p>
+                    <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
+                </div>
+            }
+            else
+            {
+                <ul class="thrive-dash-list">
+                    @foreach (var entry in Model.Waitlist)
+                    {
+                        <li class="thrive-dash-item">
+                            <div class="thrive-dash-item__when">
+                                <span class="thrive-dash-item__date">@entry.SessionDate.ToString("ddd d MMM")</span>
+                                <span class="thrive-dash-item__time">@entry.SessionTime.ToString(@"hh\:mm")</span>
+                            </div>
+                            <div class="thrive-dash-item__what">
+                                <span class="thrive-dash-item__title">@entry.SessionType.ToDisplayLabel()</span>
+                                <span class="thrive-dash-item__sub">@entry.LocationName, @entry.LocationAddress</span>
+                            </div>
+                            <span class="thrive-status thrive-status--pending">#@entry.Position in line</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
 </section>
