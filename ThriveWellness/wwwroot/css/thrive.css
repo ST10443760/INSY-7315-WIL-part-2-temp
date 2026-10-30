@@ -1451,6 +1451,68 @@ body.thrive-menu-open {
   text-align: left;
 }
 
+/* Client dashboard: past classes as a plain list under the upcoming cards. */
+.thrive-past-bookings {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-6);
+}
+
+.thrive-past-bookings li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Client sign-in page: the explanation line, the Google button and the
+   separate admin link underneath. */
+.thrive-signin-note {
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-5);
+}
+
+.thrive-signin-admin-link {
+  margin: var(--space-5) 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* Follows Google's sign-in button branding: white, a thin grey border, the
+   colour "G" and "Sign in with Google" in a medium weight. */
+.thrive-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: 0.65rem 1rem;
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #747775;
+  border-radius: var(--radius-button);
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.thrive-google-btn:hover {
+  background: #f8f8f8;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.thrive-google-btn:focus-visible {
+  outline: 2px solid var(--color-maroon);
+  outline-offset: 2px;
+}
+
+.thrive-google-btn__logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 .thrive-password-toggle {
   position: absolute;
   right: 0.9rem;
