@@ -38,8 +38,8 @@ Null Devs
 
 ### Automated emails
 
-- A confirmation email when a booking is created.
-- A welcome email when an admin confirms a payment.
+- A booking received email when a booking is created, with payment details. It holds the spot pending payment and never says the booking is confirmed.
+- A payment confirmed email when an admin confirms a payment.
 - A scheduled reminder email, sent the day before a session.
 - A scheduled location email, sent on the day of a session to new clients.
 - A cancellation link that frees the slot and promotes the next person on the waitlist.
