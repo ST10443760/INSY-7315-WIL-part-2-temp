@@ -302,8 +302,11 @@ namespace ThriveWellness.Services.Implementations
                     SessionType = session.SessionType,
                     SessionDate = session.Date,
                     SessionTime = session.Time,
+                    LocationName = location.Name,
                     LocationAddress = location.Address,
                     Status = booking.Status,
+                    PaymentId = payment != null ? payment.PaymentId : null,
+                    PaymentMethod = payment != null ? payment.Method : null,
                     PaymentStatus = payment != null ? payment.Status : null,
                     Amount = payment != null ? payment.Amount : null,
                     CancellationToken = booking.CancellationToken

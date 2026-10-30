@@ -18,20 +18,20 @@ public class AccountController : Controller
 {
     private readonly IAuthService _authService;
     private readonly IClientAccountService _clientAccountService;
-    private readonly IBookingService _bookingService;
+    private readonly IClientDashboardService _dashboardService;
     private readonly IAuthenticationSchemeProvider _schemeProvider;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         IAuthService authService,
         IClientAccountService clientAccountService,
-        IBookingService bookingService,
+        IClientDashboardService dashboardService,
         IAuthenticationSchemeProvider schemeProvider,
         ILogger<AccountController> logger)
     {
         _authService = authService;
         _clientAccountService = clientAccountService;
-        _bookingService = bookingService;
+        _dashboardService = dashboardService;
         _schemeProvider = schemeProvider;
         _logger = logger;
     }
@@ -125,21 +125,13 @@ public class AccountController : Controller
         return LocalRedirectOrDashboard(Url.IsLocalUrl(returnUrl) ? returnUrl : null);
     }
 
-    // The signed-in client's own page: their upcoming and past bookings.
+    // The signed-in client's own page: summary tiles, upcoming and past
+    // bookings, payments and receipts, and their waitlists.
     [HttpGet]
     [Authorize(Policy = AuthPolicies.ClientOnly)]
     public async Task<IActionResult> Dashboard()
     {
-        var bookings = await _bookingService.GetClientBookingsAsync(User.GetClientId()!.Value);
-        var today = DateTime.Today;
-
-        var model = new ClientDashboardViewModel
-        {
-            FullName = User.Identity?.Name ?? string.Empty,
-            Upcoming = bookings.Where(b => b.SessionDate.Date >= today).OrderBy(b => b.SessionDate).ThenBy(b => b.SessionTime).ToList(),
-            Past = bookings.Where(b => b.SessionDate.Date < today).ToList()
-        };
-
+        var model = await _dashboardService.GetDashboardAsync(User.GetClientId()!.Value, User.FirstName());
         return View(model);
     }
 
