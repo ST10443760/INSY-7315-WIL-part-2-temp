@@ -21,7 +21,7 @@ namespace ThriveWellness.Authorization
         public static int? GetClientId(this ClaimsPrincipal user) =>
             user.IsClient() && int.TryParse(user.FindFirstValue(AuthPolicies.ClientIdClaim), out var id) ? id : null;
 
-        // "Jane" from "Jane Doe", for the header greeting.
+        // "Jane" from "Jane Doe", for the dashboard greeting.
         public static string FirstName(this ClaimsPrincipal user)
         {
             var name = user.Identity?.Name?.Trim() ?? string.Empty;

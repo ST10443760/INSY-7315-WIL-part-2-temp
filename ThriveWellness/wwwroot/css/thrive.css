@@ -854,12 +854,8 @@ h3 {
   color: var(--color-text-muted);
 }
 
-/* The signed-in client's greeting (plain text) and the Sign out form
-   button, made to sit in the nav exactly like the links around them. */
-.thrive-nav__greeting {
-  color: var(--color-maroon);
-}
-
+/* The signed-in client's Sign out form button, made to sit in the nav
+   exactly like the links around it. */
 .thrive-nav__button {
   background: none;
   border: none;
