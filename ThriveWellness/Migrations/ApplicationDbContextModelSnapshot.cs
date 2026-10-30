@@ -196,6 +196,12 @@ namespace ThriveWellness.Migrations
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Sent");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
