@@ -109,6 +109,144 @@
     });
 })();
 
+// The signed-in profile menu in the public header (wide screens only - the
+// mobile panel shows the same links as a plain section instead). A button
+// with aria-haspopup/aria-expanded/aria-controls that opens a small menu:
+// click, Enter or Space toggles it (opening from the keyboard moves focus
+// to the first item); Arrow Up/Down move between items; Escape closes it
+// and returns focus to the button; clicking outside it or tabbing away
+// closes it. Separate from the mobile menu controller above, and it stops
+// its own Escape from reaching that controller's handler.
+(function () {
+    "use strict";
+
+    document.querySelectorAll("[data-profile-menu]").forEach(function (root) {
+        var trigger = root.querySelector("[aria-haspopup]");
+        var menu = trigger ? document.getElementById(trigger.getAttribute("aria-controls")) : null;
+        if (!trigger || !menu) {
+            return;
+        }
+
+        function items() {
+            return Array.prototype.slice.call(menu.querySelectorAll("[role=menuitem]"));
+        }
+
+        function isOpen() {
+            return !menu.hidden;
+        }
+
+        // Keeps the panel on screen: it's right-aligned to the button by
+        // CSS; if a narrow window still pushes it past the left edge, it's
+        // nudged back in.
+        function keepOnScreen() {
+            menu.style.right = "";
+            var rect = menu.getBoundingClientRect();
+            if (rect.left < 8) {
+                menu.style.right = (rect.left - 8) + "px";
+            }
+        }
+
+        function open(focusIndex) {
+            menu.hidden = false;
+            trigger.setAttribute("aria-expanded", "true");
+            keepOnScreen();
+            if (focusIndex !== undefined) {
+                var list = items();
+                var index = focusIndex < 0 ? list.length - 1 : focusIndex;
+                if (list[index]) {
+                    list[index].focus();
+                }
+            }
+        }
+
+        function close(returnFocus) {
+            if (!isOpen()) {
+                return;
+            }
+            menu.hidden = true;
+            trigger.setAttribute("aria-expanded", "false");
+            if (returnFocus) {
+                trigger.focus();
+            }
+        }
+
+        trigger.addEventListener("click", function (event) {
+            if (isOpen()) {
+                close(false);
+            } else {
+                // detail is 0 when the click came from Enter or Space.
+                open(event.detail === 0 ? 0 : undefined);
+            }
+        });
+
+        trigger.addEventListener("keydown", function (event) {
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                open(0);
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                open(-1);
+            }
+        });
+
+        menu.addEventListener("keydown", function (event) {
+            var list = items();
+            var current = list.indexOf(document.activeElement);
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                list[(current + 1) % list.length].focus();
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                list[(current - 1 + list.length) % list.length].focus();
+            } else if (event.key === "Home") {
+                event.preventDefault();
+                list[0].focus();
+            } else if (event.key === "End") {
+                event.preventDefault();
+                list[list.length - 1].focus();
+            }
+        });
+
+        root.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && isOpen()) {
+                event.stopPropagation();
+                close(true);
+            }
+        });
+
+        document.addEventListener("click", function (event) {
+            if (isOpen() && !root.contains(event.target)) {
+                close(false);
+            }
+        });
+
+        // Tabbing (or otherwise moving focus) out of the menu closes it.
+        // relatedTarget isn't always filled in, so where focus actually
+        // landed is checked once it has moved. Focus dropping to the page
+        // itself (a click on blank space) is left to the click handler.
+        root.addEventListener("focusout", function (event) {
+            if (event.relatedTarget) {
+                if (isOpen() && !root.contains(event.relatedTarget)) {
+                    close(false);
+                }
+                return;
+            }
+            window.setTimeout(function () {
+                var active = document.activeElement;
+                if (isOpen() && active && active !== document.body && !root.contains(active)) {
+                    close(false);
+                }
+            }, 0);
+        });
+
+        window.addEventListener("resize", function () {
+            if (isOpen()) {
+                keepOnScreen();
+            }
+        });
+    });
+})();
+
 // Disables a submit button and swaps its label while a form is submitting,
 // so a slow request (e.g. a real SendGrid call) can't be double-submitted.
 (function () {
