@@ -1,0 +1,16 @@
+using ThriveWellness.Models;
+
+namespace ThriveWellness.Services.Interfaces
+{
+    // The one seam between the app and whoever actually moves the money.
+    // Checkout only ever talks to this interface, so swapping the simulated
+    // gateway for PayFast or Stripe means a new implementation and one DI
+    // line in Program.cs, nothing else.
+    public interface IPaymentGateway
+    {
+        // Charges the card. A declined or invalid card is a normal result
+        // (Success = false with a failure code and message), not an
+        // exception.
+        Task<GatewayChargeResult> ChargeAsync(GatewayChargeRequest request, CancellationToken cancellationToken = default);
+    }
+}
