@@ -21,5 +21,10 @@ namespace ThriveWellness.Models
         // CancellationTokenGenerator for how it's generated and what
         // "single use" means for it.
         public string CancellationToken { get; set; } = string.Empty;
+
+        // Set by the admin after a class when the client didn't turn up. A
+        // no-show never counts as attended (see Attendance), so it earns no
+        // badges and doesn't extend a streak.
+        public bool NoShow { get; set; }
     }
 }
