@@ -38,6 +38,15 @@ public class EmailFailureTests
             Capacity = 10,
             IsOpen = true
         });
+        // As created at Google sign-in: no phone yet, no bookings yet.
+        _context.Clients.Add(new Client
+        {
+            ClientId = 1,
+            GoogleSubject = "google-sub-1",
+            FullName = "Jane Doe",
+            Email = "jane@example.com",
+            IsNew = true
+        });
         _context.SaveChanges();
 
         _emailSender
@@ -74,7 +83,7 @@ public class EmailFailureTests
 
     private static BookingRequest NewClientRequest() => new()
     {
-        Email = "jane@example.com",
+        ClientId = 1,
         FullName = "Jane Doe",
         PhoneNumber = "082 123 4567",
         PaymentType = "per-class",

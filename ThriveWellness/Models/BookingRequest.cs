@@ -6,7 +6,9 @@ namespace ThriveWellness.Models
     // MVC-specific, annotated view model.
     public class BookingRequest
     {
-        public string Email { get; set; } = string.Empty;
+        // The signed-in client, from their sign-in cookie - never from a
+        // form field, so nobody can book as someone else.
+        public int ClientId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         // Billing plan for this booking's payment: "per-class" or "monthly".

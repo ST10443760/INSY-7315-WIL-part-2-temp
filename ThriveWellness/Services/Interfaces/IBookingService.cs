@@ -4,7 +4,7 @@ namespace ThriveWellness.Services.Interfaces
 {
     public interface IBookingService
     {
-        Task<ClientStatusResult> CheckClientStatusAsync(string email);
+        Task<bool> IsFirstBookingAsync(int clientId);
         Task<BookingCreateResult> CreateBookingAsync(BookingRequest request);
         Task<CancelBookingResult> CancelBookingAsync(string cancellationToken);
         Task<CancelBookingResult> CancelByAdminAsync(int bookingId);

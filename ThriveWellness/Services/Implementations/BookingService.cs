@@ -7,14 +7,14 @@ using ThriveWellness.Services;
 
 namespace ThriveWellness.Services.Implementations
 {
-    // Service layer: owns the booking lifecycle end to end - checking whether
-    // an email belongs to a new or returning client, creating a booking
+    // Service layer: owns the booking lifecycle end to end - creating a
+    // booking for the signed-in client
     // (with its intake form and pending payment) or routing to the waitlist
     // when a session is full, and cancelling a booking either by the
     // client's own link (FR-18) or by an admin (FR-12). Called by
     // BookingController; never touched directly by a view. Sits between the
     // controller and the repositories so capacity checks, pricing and the
-    // new-vs-returning client distinction all live in exactly one place.
+    // first-booking intake rule all live in exactly one place.
     public class BookingService : IBookingService
     {
         private readonly IClientRepository _clientRepository;
@@ -46,86 +46,81 @@ namespace ThriveWellness.Services.Implementations
             _logger = logger;
         }
 
-        // Looks up a client by email so the booking form can decide whether
-        // to show the full intake form (new client) or just confirm details
-        // (returning client) - this is the "returning client" detection used
-        // by the first step of the booking flow.
-        public async Task<ClientStatusResult> CheckClientStatusAsync(string email)
+        // Whether this client has never booked before - their first booking
+        // is the one that needs the intake form and consent (FR-05). Any
+        // booking counts, cancelled or not, since its intake form was still
+        // filled in.
+        public async Task<bool> IsFirstBookingAsync(int clientId)
         {
-            var client = await _clientRepository.GetByEmailAsync(email);
-
-            if (client == null)
-            {
-                return new ClientStatusResult { IsNew = true };
-            }
-
-            return new ClientStatusResult
-            {
-                IsNew = false,
-                FullName = client.FullName,
-                PhoneNumber = client.PhoneNumber
-            };
+            return !(await _bookingRepository.GetBookingsByClientAsync(clientId)).Any();
         }
 
-        // Creates a booking end to end: finds or creates the client,
-        // requires consent for a brand-new client, checks the session has
-        // room, creates the booking and its pending payment (plus an intake
-        // form for new clients), and sends the confirmation email. Returns a
-        // failure if consent is missing or the session doesn't exist; returns
-        // RequiresWaitlist - without creating anything - if the session is
-        // full or closed, so the caller can offer the waitlist instead
-        // (FR-11).
+        // Creates a booking end to end for the signed-in client (the
+        // controller passes their ClientId from the sign-in cookie, never
+        // from the form): requires consent on their first booking, saves any
+        // edit to their name or phone number, checks the session has room,
+        // creates the booking and its pending payment (plus an intake form on
+        // a first booking), and sends the booking received email. Returns a
+        // failure if the client or session doesn't exist or consent is
+        // missing; returns RequiresWaitlist - without creating a booking - if
+        // the session is full or closed, so the caller can offer the waitlist
+        // instead (FR-11).
         public async Task<BookingCreateResult> CreateBookingAsync(BookingRequest request)
         {
-            var client = await _clientRepository.GetByEmailAsync(request.Email);
-            var isNewClient = client == null;
-
-            if (isNewClient)
+            var client = await _clientRepository.GetByIdAsync(request.ClientId);
+            if (client == null)
             {
-                if (!request.ConsentSigned)
-                {
-                    return new BookingCreateResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Consent must be given to complete the intake form."
-                    };
-                }
-
-                client = new Client
-                {
-                    FullName = request.FullName,
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    IsNew = true,
-                    PaymentType = request.PaymentType,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await _clientRepository.AddAsync(client);
+                return new BookingCreateResult { Success = false, ErrorMessage = "We couldn't find your account. Please sign in again." };
             }
-            else if (client!.IsNew)
+
+            var isFirstBooking = await IsFirstBookingAsync(client.ClientId);
+
+            if (isFirstBooking && !request.ConsentSigned)
+            {
+                return new BookingCreateResult
+                {
+                    Success = false,
+                    ErrorMessage = "Consent must be given to complete the intake form."
+                };
+            }
+
+            // The details form is pre-filled from the client's account but
+            // editable - save any edit to name or phone here, since nothing
+            // else in this flow does (a returning client's edited phone used
+            // to be lost). Email comes from their Google account, so it's
+            // never touched. A first booking also records the client's
+            // payment plan, as the old new-client path did; after that
+            // PaymentType is a per-booking choice, not a client detail. A
+            // client who already booked before stops being "new" - that's
+            // what drives the first-timer location email. Trimmed and
+            // compared against the stored values so a confirmed, unedited
+            // submission never writes anything.
+            var trimmedFullName = request.FullName.Trim();
+            var trimmedPhoneNumber = request.PhoneNumber.Trim();
+            var changed = false;
+
+            if (trimmedFullName != client.FullName || trimmedPhoneNumber != client.PhoneNumber)
+            {
+                client.FullName = trimmedFullName;
+                client.PhoneNumber = trimmedPhoneNumber;
+                changed = true;
+            }
+
+            if (isFirstBooking && string.IsNullOrEmpty(client.PaymentType))
+            {
+                client.PaymentType = request.PaymentType;
+                changed = true;
+            }
+
+            if (!isFirstBooking && client.IsNew)
             {
                 client.IsNew = false;
-                await _clientRepository.UpdateAsync(client);
+                changed = true;
             }
 
-            // A returning client's details form is pre-filled but editable
-            // (see Views/Booking/Details.cshtml) - save any edit here, since
-            // nothing else in this flow does. Email is the identifier
-            // they're looked up by, so it's never touched, and PaymentType
-            // is a per-booking choice, not a client detail, so it isn't
-            // either. Trimmed and compared against the stored values so a
-            // confirmed, unedited submission never writes anything.
-            if (!isNewClient)
+            if (changed)
             {
-                var trimmedFullName = request.FullName.Trim();
-                var trimmedPhoneNumber = request.PhoneNumber.Trim();
-
-                if (trimmedFullName != client!.FullName || trimmedPhoneNumber != client.PhoneNumber)
-                {
-                    client.FullName = trimmedFullName;
-                    client.PhoneNumber = trimmedPhoneNumber;
-                    await _clientRepository.UpdateAsync(client);
-                }
+                await _clientRepository.UpdateAsync(client);
             }
 
             var session = await _sessionRepository.GetByIdAsync(request.SessionId);
@@ -169,7 +164,7 @@ namespace ThriveWellness.Services.Implementations
             };
             await _paymentRepository.CreateAsync(payment);
 
-            if (isNewClient)
+            if (isFirstBooking)
             {
                 var intakeForm = new IntakeForm
                 {
