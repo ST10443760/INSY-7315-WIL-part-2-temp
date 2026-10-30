@@ -4,6 +4,7 @@
     ViewData["Title"] = "Clients";
     Layout = "_AdminLayout";
     var search = (string?)ViewData["Search"];
+    var sortByAttended = ViewData["SortByAttended"] as bool? == true;
     var count = Model.Count();
 }
 
@@ -16,6 +17,10 @@
     <label class="thrive-visually-hidden" for="clientSearch">Search clients</label>
     <partial name="_Icon" model="@("search")" />
     <input type="search" id="clientSearch" name="search" class="thrive-input" placeholder="Search clients..." value="@search" />
+    @if (sortByAttended)
+    {
+        <input type="hidden" name="sort" value="attended" />
+    }
     <button type="submit" class="thrive-visually-hidden">Search</button>
 </form>
 
@@ -36,6 +41,18 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Sessions</th>
+                        <th>
+                            @if (sortByAttended)
+                            {
+                                <a class="thrive-admin-sort thrive-admin-sort--active" asp-action="Index" asp-route-search="@search" aria-label="Attended, sorted most first. Click to sort by newest client.">Attended &darr;</a>
+                            }
+                            else
+                            {
+                                <a class="thrive-admin-sort" asp-action="Index" asp-route-search="@search" asp-route-sort="attended">Attended</a>
+                            }
+                        </th>
+                        <th>Streak</th>
+                        <th>Badges</th>
                         <th>Joined</th>
                         <th>Status</th>
                     </tr>
@@ -48,6 +65,9 @@
                             <td>@client.Email</td>
                             <td>@client.PhoneNumber</td>
                             <td class="thrive-admin-table__amount">@client.SessionCount</td>
+                            <td class="thrive-admin-table__amount">@client.AttendedCount</td>
+                            <td>@client.CurrentStreak @(client.CurrentStreak == 1 ? "week" : "weeks")</td>
+                            <td>@client.BadgeCount</td>
                             <td>@client.CreatedAt.ToString("d MMM yyyy")</td>
                             <td>
                                 <span class="thrive-pill @(client.IsNew ? "thrive-pill--new" : "thrive-pill--active")">@(client.IsNew ? "New" : "Active")</span>

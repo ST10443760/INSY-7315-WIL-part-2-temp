@@ -11,5 +11,10 @@ namespace ThriveWellness.Models
         public int SessionCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsNew { get; set; }
+
+        // From RewardsService, using the shared Attendance rule.
+        public int AttendedCount { get; set; }
+        public int CurrentStreak { get; set; }
+        public int BadgeCount { get; set; }
     }
 }
