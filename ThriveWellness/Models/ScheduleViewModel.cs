@@ -11,5 +11,9 @@ namespace ThriveWellness.Models
         // Bare Location.Address value (e.g. "Sunninghill"), or null for "All Locations".
         public string? SelectedLocation { get; set; }
         public DateTime? SelectedDate { get; set; }
+
+        // The week being shown, with its Previous/Next targets (null where
+        // browsing is clamped).
+        public ThriveWellness.Services.ScheduleWeek Week { get; set; } = null!;
     }
 }
