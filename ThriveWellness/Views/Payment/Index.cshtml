@@ -19,6 +19,17 @@
     <a class="thrive-admin-filter-tab @(selectedStatus == PaymentStatuses.Refunded ? "thrive-admin-filter-tab--active" : "")" asp-action="Index" asp-route-status="@PaymentStatuses.Refunded">Refunded</a>
 </div>
 
+@if (TempData["PaymentBannerMessage"] is string bannerMessage)
+{
+    <div class="thrive-banner thrive-banner--success" role="status">
+        @bannerMessage
+        @if (TempData["PaymentBannerWarning"] is string bannerWarning)
+        {
+            <span class="thrive-banner__warning">@bannerWarning</span>
+        }
+    </div>
+}
+
 <div class="thrive-admin-card">
     @if (!Model.Any())
     {
@@ -84,7 +95,12 @@
                                 }
                                 else if (payment.Status == PaymentStatuses.RefundDue)
                                 {
-                                    <span class="thrive-admin-table__muted">Refund the client by EFT or cash</span>
+                                    <span class="thrive-admin-table__muted">Refund the client by EFT or cash, then:</span>
+                                    <form asp-action="MarkRefunded" asp-route-id="@payment.PaymentId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="status" value="@selectedStatus" />
+                                        <button type="submit" class="thrive-btn thrive-btn--outline thrive-btn--sm">Mark refunded</button>
+                                    </form>
                                 }
                                 else if (payment.Status == PaymentStatuses.Refunded)
                                 {
