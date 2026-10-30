@@ -1,7 +1,7 @@
 @model ThriveWellness.Models.BookingSubmitViewModel
 
 @{
-    ViewData["Title"] = "Confirm Your Booking";
+    ViewData["Title"] = "Complete Your Booking";
     ViewData["ThriveBodyBeige"] = true;
 }
 
@@ -26,7 +26,7 @@
 
         <div asp-validation-summary="All" class="thrive-validation-summary"></div>
 
-        <form asp-controller="Booking" asp-action="Submit" method="post" data-busy-text="Confirming…">
+        <form asp-controller="Booking" asp-action="Submit" method="post" data-busy-text="Sending…">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="SessionId" />
             <input type="hidden" asp-for="Email" />
