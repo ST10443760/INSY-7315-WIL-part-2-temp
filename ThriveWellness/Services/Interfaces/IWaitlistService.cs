@@ -22,6 +22,6 @@ namespace ThriveWellness.Services.Interfaces
 
         // Admin-triggered courtesy email to one waitlisted client - see
         // INotificationService.SendWaitlistCourtesyEmailAsync.
-        Task NotifyAsync(int waitlistId);
+        Task<bool> NotifyAsync(int waitlistId);
     }
 }

@@ -272,16 +272,29 @@ namespace ThriveWellness.Services.Implementations
         // Sends the one-off "you're getting close, a spot may open soon"
         // courtesy email for a specific waitlist entry - distinct from the
         // automatic email PromoteEntryAsync sends once they're actually off
-        // the list.
-        public async Task NotifyAsync(int waitlistId)
+        // the list. Returns whether the email went out: a send failure is
+        // logged and reported back to the admin instead of becoming an error
+        // page.
+        public async Task<bool> NotifyAsync(int waitlistId)
         {
             var entry = await _waitlistRepository.GetByIdAsync(waitlistId);
             if (entry == null)
             {
-                return;
+                return false;
             }
 
-            await _notificationService.SendWaitlistCourtesyEmailAsync(entry);
+            try
+            {
+                await _notificationService.SendWaitlistCourtesyEmailAsync(entry);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    "The waitlist courtesy email for waitlist entry {WaitlistId} could not be sent ({ExceptionType}: {ExceptionMessage}).",
+                    waitlistId, ex.GetType().Name, ex.Message);
+                return false;
+            }
         }
     }
 }
