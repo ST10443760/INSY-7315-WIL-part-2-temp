@@ -1468,16 +1468,213 @@ body.thrive-menu-open {
   text-align: left;
 }
 
-/* Client dashboard: past classes as a plain list under the upcoming cards. */
-.thrive-past-bookings {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-6);
+/* ==========================================================================
+   Client dashboard: greeting, summary tiles, then one white card per
+   section, each a simple list that stacks on narrow screens.
+   ========================================================================== */
+
+.thrive-dashboard {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+  max-width: 960px;
 }
 
-.thrive-past-bookings li {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
+.thrive-dashboard__greeting h1 {
+  margin: 0;
+}
+
+.thrive-dashboard__greeting p {
+  margin: var(--space-1) 0 0;
+}
+
+/* Kept for the Rewards section: takes no space while it's empty. */
+.thrive-dashboard__rewards:empty {
+  display: none;
+}
+
+.thrive-dashboard__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.thrive-dashboard__tiles .thrive-tile {
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+}
+
+.thrive-dashboard__tile-value {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--color-maroon);
+}
+
+.thrive-dashboard__section {
+  background: var(--color-white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.thrive-dashboard__heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-maroon);
+  margin: 0 0 var(--space-2);
+}
+
+.thrive-dashboard__empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-3) 0 var(--space-2);
+}
+
+.thrive-dashboard__empty p {
+  margin: 0 0 var(--space-3);
+}
+
+.thrive-dash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.thrive-dash-item {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.thrive-dash-item:first-child {
+  border-top: none;
+}
+
+.thrive-dash-item--past {
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+}
+
+.thrive-dash-item__when,
+.thrive-dash-item__what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.thrive-dash-item__date,
+.thrive-dash-item__title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-dash-item__time,
+.thrive-dash-item__sub {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.thrive-dash-item__actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* Booking and payment status chips (public side; the admin pages have
+   their own pill colours). */
+.thrive-status {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.75rem;
+  border-radius: var(--radius-pill);
+  padding: 0.3rem 0.75rem;
+  white-space: nowrap;
+  justify-self: start;
+}
+
+.thrive-status--paid {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.thrive-status--pending {
+  background: var(--color-pale-rose);
+  color: var(--color-pale-rose-text);
+}
+
+.thrive-status--cancelled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.thrive-status--refund {
+  background: var(--color-beige);
+  color: var(--color-maroon);
+  border: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .thrive-dash-item,
+  .thrive-dash-item--past {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .thrive-dash-item__what {
+    grid-column: 1;
+  }
+
+  .thrive-dash-item .thrive-status {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .thrive-dash-item__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .thrive-dash-item__actions:empty {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .thrive-dashboard {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+
+  .thrive-dashboard__tiles {
+    gap: var(--space-2);
+  }
+
+  .thrive-dashboard__tiles .thrive-tile {
+    padding: var(--space-2);
+  }
+
+  .thrive-dashboard__tile-value {
+    font-size: 1.2rem;
+  }
+
+  .thrive-dashboard__section {
+    padding: var(--space-3);
+  }
+
+  .thrive-dash-item__actions .thrive-btn {
+    flex: 1 1 0;
+    min-height: var(--touch-target);
+  }
 }
 
 /* Client sign-in page: the explanation line, the Google button and the
@@ -1550,7 +1747,8 @@ body.thrive-menu-open {
    ========================================================================== */
 
 .thrive-checkout-page {
-  padding: var(--space-6) 0;
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
 }
 
 .thrive-checkout-page__header {
@@ -1787,7 +1985,8 @@ body.thrive-menu-open {
 
 @media (max-width: 480px) {
   .thrive-checkout-page {
-    padding: var(--space-4) 0;
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
   }
 
   .thrive-checkout__panel {
