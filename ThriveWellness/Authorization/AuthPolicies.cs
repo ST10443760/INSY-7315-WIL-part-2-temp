@@ -13,14 +13,29 @@ namespace ThriveWellness.Authorization
     public static class AuthPolicies
     {
         public const string AdminOnly = "AdminOnly";
+        public const string ClientOnly = "ClientOnly";
 
         public const string AdminRole = "Admin";
+        public const string ClientRole = "Client";
+
+        // The signed-in client's Clients.ClientId, as a claim on the cookie.
+        public const string ClientIdClaim = "ClientId";
+
+        // Short-lived cookie that only holds Google's result between the
+        // /signin-google callback and AccountController.GoogleCallback,
+        // which swaps it for the real sign-in cookie.
+        public const string ExternalScheme = "External";
 
         public static void Configure(AuthorizationOptions options)
         {
             options.AddPolicy(AdminOnly, policy => policy
                 .RequireAuthenticatedUser()
                 .RequireClaim(ClaimTypes.Role, AdminRole));
+
+            options.AddPolicy(ClientOnly, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireClaim(ClaimTypes.Role, ClientRole)
+                .RequireClaim(ClientIdClaim));
         }
     }
 }
