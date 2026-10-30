@@ -19,6 +19,7 @@ public class EmailFailureTests
     private readonly ApplicationDbContext _context;
     private readonly Mock<IEmailSender> _emailSender = new();
     private readonly BookingService _bookingService;
+    private readonly NotificationService _notificationService;
 
     public EmailFailureTests()
     {
@@ -69,6 +70,8 @@ public class EmailFailureTests
             new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["AppBaseUrl"] = "https://test.local" }).Build(),
             Options.Create(new PaymentOptions()),
             NullLogger<NotificationService>.Instance);
+
+        _notificationService = notificationService;
 
         _bookingService = new BookingService(
             clientRepository,
@@ -143,5 +146,25 @@ public class EmailFailureTests
         Assert.Equal("Cancelled", (await _context.Bookings.SingleAsync()).Status);
         Assert.Equal(NotificationStatus.Failed,
             (await _context.Notifications.SingleAsync(n => n.Type == "Cancellation")).Status);
+    }
+
+    [Fact]
+    public async Task AdminConfirmsEftPayment_EmailFails_PaymentStillConfirmedAndFailedRowLogged()
+    {
+        var created = await _bookingService.CreateBookingAsync(NewClientRequest());
+        var payment = await _context.Payments.SingleAsync();
+
+        // Wired the same way as Program.cs: the real NotificationService
+        // observing the real PaymentService.
+        var paymentService = new PaymentService(new PaymentRepository(_context), new BookingRepository(_context), NullLogger<PaymentService>.Instance);
+        paymentService.PaymentConfirmed += _notificationService.OnPaymentConfirmed;
+
+        var emailSent = await paymentService.ConfirmPaymentAsync(payment.PaymentId);
+
+        Assert.False(emailSent);
+        Assert.Equal(PaymentStatuses.Confirmed, (await _context.Payments.SingleAsync()).Status);
+        Assert.Equal("Confirmed", (await _context.Bookings.SingleAsync(b => b.BookingId == created.BookingId)).Status);
+        Assert.Equal(NotificationStatus.Failed,
+            (await _context.Notifications.SingleAsync(n => n.Type == "Welcome")).Status);
     }
 }

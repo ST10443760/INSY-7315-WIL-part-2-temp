@@ -82,7 +82,7 @@ public class CheckoutServiceTests
             .Setup(r => r.GetChargeForPaymentAsync(9))
             .ReturnsAsync(() => _savedTransactions.LastOrDefault(t => t.Status != PaymentTransactionStatus.Declined));
 
-        _paymentService = new PaymentService(_paymentRepository.Object, _bookingRepository.Object);
+        _paymentService = new PaymentService(_paymentRepository.Object, _bookingRepository.Object, NullLogger<PaymentService>.Instance);
         _paymentService.PaymentConfirmed += (_, _) => _paymentConfirmedCount++;
     }
 
