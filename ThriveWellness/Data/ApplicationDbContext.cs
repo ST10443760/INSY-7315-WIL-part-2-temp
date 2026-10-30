@@ -27,6 +27,8 @@ namespace ThriveWellness.Data
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<IntakeForm> IntakeForms => Set<IntakeForm>();
         public DbSet<Admin> Admins => Set<Admin>();
+        public DbSet<Badge> Badges => Set<Badge>();
+        public DbSet<ClientBadge> ClientBadges => Set<ClientBadge>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -123,6 +125,44 @@ namespace ThriveWellness.Data
             modelBuilder.Entity<PaymentTransaction>()
                 .Property(t => t.Amount)
                 .HasColumnType("decimal(18,2)");
+
+            // Client 1:many ClientBadge, Badge 1:many ClientBadge. A client
+            // with badges can't be deleted (same rule as their bookings); a
+            // badge definition can, taking its awards with it.
+            modelBuilder.Entity<ClientBadge>()
+                .HasOne<Client>()
+                .WithMany()
+                .HasForeignKey(cb => cb.ClientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ClientBadge>()
+                .HasOne<Badge>()
+                .WithMany()
+                .HasForeignKey(cb => cb.BadgeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Each badge at most once per client - the database backs up
+            // RewardsService's own "never award twice" check.
+            modelBuilder.Entity<ClientBadge>()
+                .HasIndex(cb => new { cb.ClientId, cb.BadgeId })
+                .IsUnique();
+
+            modelBuilder.Entity<Badge>()
+                .HasIndex(b => b.Code)
+                .IsUnique();
+
+            // The badges clients can earn, seeded via migration so the live
+            // database gets them too. What earns each one is in BadgeRules.
+            modelBuilder.Entity<Badge>().HasData(
+                new Badge { BadgeId = 1, Code = BadgeCodes.FirstClass, Name = "First Class", Description = "Attended your first class.", IconKey = "star", SortOrder = 1 },
+                new Badge { BadgeId = 2, Code = BadgeCodes.GettingGoing, Name = "Getting Going", Description = "Attended 5 classes.", IconKey = "leaf", SortOrder = 2 },
+                new Badge { BadgeId = 3, Code = BadgeCodes.Committed, Name = "Committed", Description = "Attended 10 classes.", IconKey = "medal", SortOrder = 3 },
+                new Badge { BadgeId = 4, Code = BadgeCodes.Dedicated, Name = "Dedicated", Description = "Attended 25 classes.", IconKey = "trophy", SortOrder = 4 },
+                new Badge { BadgeId = 5, Code = BadgeCodes.ThreeWeekStreak, Name = "Three Week Streak", Description = "Attended a class in 3 weeks in a row.", IconKey = "flame", SortOrder = 5 },
+                new Badge { BadgeId = 6, Code = BadgeCodes.EightWeekStreak, Name = "Eight Week Streak", Description = "Attended a class in 8 weeks in a row.", IconKey = "bolt", SortOrder = 6 },
+                new Badge { BadgeId = 7, Code = BadgeCodes.BothStudios, Name = "Both Studios", Description = "Attended a class at both of our studios.", IconKey = "pin", SortOrder = 7 },
+                new Badge { BadgeId = 8, Code = BadgeCodes.EarlyBird, Name = "Early Bird", Description = "Attended 3 classes that start before 09:00.", IconKey = "sunrise", SortOrder = 8 }
+            );
 
             // Known studio locations, seeded via migration.
             modelBuilder.Entity<Location>().HasData(
