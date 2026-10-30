@@ -93,10 +93,17 @@
                             <td>@payment.Method</td>
                             <td class="thrive-admin-table__amount">R@(payment.Amount.ToString("N2"))</td>
                             <td>
-                                <form asp-controller="Payment" asp-action="Confirm" asp-route-id="@payment.PaymentId" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="thrive-btn thrive-btn--mauve">Confirm</button>
-                                </form>
+                                @if (PaymentMethods.IsCard(payment.Method))
+                                {
+                                    <span class="thrive-admin-table__muted">Awaiting card payment</span>
+                                }
+                                else
+                                {
+                                    <form asp-controller="Payment" asp-action="Confirm" asp-route-id="@payment.PaymentId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="thrive-btn thrive-btn--mauve">Confirm</button>
+                                    </form>
+                                }
                             </td>
                         </tr>
                     }
