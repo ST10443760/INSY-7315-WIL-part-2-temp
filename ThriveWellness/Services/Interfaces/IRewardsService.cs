@@ -10,5 +10,10 @@ namespace ThriveWellness.Services.Interfaces
         Task<IReadOnlyList<string>> EvaluateAsync(int clientId);
 
         Task<RewardsViewModel> GetRewardsAsync(int clientId);
+
+        // Classes attended, current streak and badges earned for every
+        // client, keyed by client id, for the admin Clients page. Clients
+        // with no bookings or badges simply aren't in it.
+        Task<IReadOnlyDictionary<int, ClientRewardsSummary>> GetSummariesAsync();
     }
 }

@@ -107,21 +107,48 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
+        public async Task<IReadOnlyDictionary<int, ClientRewardsSummary>> GetSummariesAsync()
+        {
+            var now = _timeProvider.GetLocalNow().DateTime;
+            var bookingsByClient = (await AttendanceRows(null).ToListAsync()).GroupBy(b => b.ClientId);
+            var badgeCounts = await _context.ClientBadges
+                .GroupBy(cb => cb.ClientId)
+                .Select(g => new { ClientId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ClientId, x => x.Count);
+
+            var summaries = new Dictionary<int, ClientRewardsSummary>();
+            foreach (var group in bookingsByClient)
+            {
+                var stats = BuildStats(group, now);
+                summaries[group.Key] = new ClientRewardsSummary(stats.AttendedCount, stats.CurrentStreak, badgeCounts.GetValueOrDefault(group.Key));
+            }
+            foreach (var (clientId, count) in badgeCounts.Where(b => !summaries.ContainsKey(b.Key)))
+            {
+                summaries[clientId] = new ClientRewardsSummary(0, 0, count);
+            }
+            return summaries;
+        }
+
         private async Task<RewardsStats> LoadStatsAsync(int clientId)
         {
-            var bookings = await (
+            var bookings = await AttendanceRows(clientId).ToListAsync();
+            return BuildStats(bookings, _timeProvider.GetLocalNow().DateTime);
+        }
+
+        // Every booking (for one client, or everyone) with what the
+        // attendance rule needs.
+        private IQueryable<AttendanceRow> AttendanceRows(int? clientId)
+        {
+            return
                 from booking in _context.Bookings
                 join session in _context.Sessions on booking.SessionId equals session.SessionId
                 join payment in _context.Payments on booking.BookingId equals payment.BookingId into payments
                 from payment in payments.DefaultIfEmpty()
-                where booking.ClientId == clientId
+                where clientId == null || booking.ClientId == clientId
                 select new AttendanceRow(
                     booking.ClientId, booking.Status, booking.NoShow,
                     payment != null ? payment.Status : null,
-                    session.Date, session.Time, session.LocationId)
-            ).ToListAsync();
-
-            return BuildStats(bookings, _timeProvider.GetLocalNow().DateTime);
+                    session.Date, session.Time, session.LocationId);
         }
 
         // One booking with what the attendance rule needs.

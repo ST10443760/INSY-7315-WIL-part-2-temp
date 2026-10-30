@@ -204,6 +204,50 @@ public class RewardsServiceTests
     }
 
     [Fact]
+    public async Task NoShow_IsNotAttendedAndBreaksTheStreak()
+    {
+        AddClass(Today.AddDays(-1));
+        AddClass(Today.AddDays(-8), noShow: true);
+        AddClass(Today.AddDays(-15));
+
+        var rewards = await CreateService().GetRewardsAsync(ClientId);
+
+        Assert.Equal(2, rewards.AttendedCount);
+        Assert.Equal(1, rewards.CurrentStreak);
+        Assert.Equal(1, rewards.LongestStreak);
+    }
+
+    [Fact]
+    public async Task UndoingANoShow_CountsTheClassAgain()
+    {
+        AddClass(Today.AddDays(-1));
+        AddClass(Today.AddDays(-8), noShow: true);
+        var service = CreateService();
+
+        var booking = _context.Bookings.Single(b => b.NoShow);
+        booking.NoShow = false;
+        _context.SaveChanges();
+        var rewards = await service.GetRewardsAsync(ClientId);
+
+        Assert.Equal(2, rewards.AttendedCount);
+        Assert.Equal(2, rewards.CurrentStreak);
+    }
+
+    [Fact]
+    public async Task GetSummariesAsync_CountsAttendedStreakAndBadgesPerClient()
+    {
+        AddClass(Today.AddDays(-1));
+        AddClass(Today.AddDays(-8));
+        AddClass(Today.AddDays(-9), noShow: true);
+        var service = CreateService();
+        await service.EvaluateAsync(ClientId);
+
+        var summaries = await service.GetSummariesAsync();
+
+        Assert.Equal(new ClientRewardsSummary(2, 2, 1), summaries[ClientId]);
+    }
+
+    [Fact]
     public void NextBadgeText_AllClassBadgesEarned_PointsAtTheNextStreak()
     {
         var stats = new RewardsStats { AttendedCount = 30, CurrentStreak = 2 };

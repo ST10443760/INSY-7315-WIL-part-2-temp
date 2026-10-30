@@ -17,6 +17,9 @@ namespace ThriveWellness.Models
         public int EarnedCount => Badges.Count(b => b.Earned);
     }
 
+    // One client's rewards in brief, for the admin Clients page.
+    public record ClientRewardsSummary(int AttendedCount, int CurrentStreak, int BadgeCount);
+
     public class BadgeViewModel
     {
         public string Code { get; set; } = string.Empty;
