@@ -56,7 +56,6 @@
                     <li><a class="thrive-nav__link @(isAbout ? "thrive-nav__link--active" : "")" aria-current="@(isAbout ? "page" : null)" asp-controller="Home" asp-action="About">ABOUT</a></li>
                     @if (User.IsClient())
                     {
-                        <li><span class="thrive-nav__link thrive-nav__greeting">HI, @User.FirstName().ToUpperInvariant()</span></li>
                         <li><a class="thrive-nav__link @(isDashboard ? "thrive-nav__link--active" : "")" aria-current="@(isDashboard ? "page" : null)" asp-controller="Account" asp-action="Dashboard">DASHBOARD</a></li>
                         <li>
                             @* Sign out is a POST with an anti-forgery token, so it's
