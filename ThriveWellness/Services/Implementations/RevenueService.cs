@@ -56,7 +56,7 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
-        public async Task<RevenueReport> GetReportAsync(RevenueRange range)
+        public async Task<RevenueReport> GetReportAsync(RevenueRange range, RevenueGrouping grouping = RevenueGrouping.Weekly)
         {
             var rows = await (
                 from payment in _context.Payments
@@ -71,10 +71,10 @@ namespace ThriveWellness.Services.Implementations
                     location.Name, session.Date)
             ).ToListAsync();
 
-            return Build(rows, range);
+            return Build(rows, range, grouping);
         }
 
-        public static RevenueReport Build(IEnumerable<RevenuePaymentRow> rows, RevenueRange range)
+        public static RevenueReport Build(IEnumerable<RevenuePaymentRow> rows, RevenueRange range, RevenueGrouping grouping = RevenueGrouping.Weekly)
         {
             var inRange = rows
                 .Where(r => (range.From == null || r.ClassDate.Date >= range.From.Value)
@@ -113,6 +113,8 @@ namespace ThriveWellness.Services.Implementations
                 TotalRefunded = refunded.Sum(r => r.Amount),
                 RefundedCount = refunded.Count,
                 ByMonth = ByMonth(paid, net),
+                Grouping = grouping,
+                Series = BuildSeries(paid, range, grouping),
                 ByMethod = Breakdown(paid, net, r => MethodLabel(r.Method)),
                 ByPaymentType = Breakdown(paid, net, r => PaymentTypeLabel(r.PaymentType)),
                 ByVenue = Breakdown(paid, net, r => r.LocationName),
@@ -123,6 +125,50 @@ namespace ThriveWellness.Services.Implementations
 
         // One row per month from the first paid month to the last, months
         // with nothing paid included as zero so the chart has no gaps.
+        // The graph's time series: net revenue (paid payments, by class date)
+        // per Monday-to-Sunday week (ScheduleWeek.StartOfWeek, the same weeks
+        // as the schedule) or per calendar month. Covers the whole range -
+        // from its From date, or the first paid class for All time, to its To
+        // date or the last paid class - with every period in between
+        // included, at zero if nothing was paid, so dips are shown honestly.
+        // Empty when nothing was paid in the range. The amounts add up to
+        // the page's net revenue.
+        public static IReadOnlyList<RevenuePoint> BuildSeries(IEnumerable<RevenuePaymentRow> paid, RevenueRange range, RevenueGrouping grouping)
+        {
+            var rows = paid.ToList();
+            if (rows.Count == 0)
+            {
+                return Array.Empty<RevenuePoint>();
+            }
+
+            DateTime PeriodOf(DateTime date) => grouping == RevenueGrouping.Monthly
+                ? new DateTime(date.Year, date.Month, 1)
+                : ScheduleWeek.StartOfWeek(date);
+
+            var totals = rows
+                .GroupBy(r => PeriodOf(r.ClassDate))
+                .ToDictionary(g => g.Key, g => g.Sum(r => r.Amount));
+
+            var first = PeriodOf(range.From ?? rows.Min(r => r.ClassDate));
+            var last = PeriodOf(range.To ?? rows.Max(r => r.ClassDate));
+
+            var points = new List<RevenuePoint>();
+            for (var period = first; period <= last; period = grouping == RevenueGrouping.Monthly ? period.AddMonths(1) : period.AddDays(7))
+            {
+                var amount = totals.TryGetValue(period, out var total) ? total : 0m;
+                points.Add(grouping == RevenueGrouping.Monthly
+                    ? new RevenuePoint(period,
+                        period.ToString("MMM yy", CultureInfo.InvariantCulture),
+                        period.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+                        amount)
+                    : new RevenuePoint(period,
+                        period.ToString("d MMM", CultureInfo.InvariantCulture),
+                        "Week of " + period.ToString("d MMM yyyy", CultureInfo.InvariantCulture),
+                        amount));
+            }
+            return points;
+        }
+
         private static IReadOnlyList<RevenueBreakdownRow> ByMonth(List<RevenuePaymentRow> paid, decimal net)
         {
             if (paid.Count == 0)

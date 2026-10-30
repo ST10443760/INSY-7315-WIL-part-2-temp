@@ -13,6 +13,18 @@ namespace ThriveWellness.Models
     // open-ended (All time has neither).
     public record RevenueRange(RevenuePreset Preset, DateTime? From, DateTime? To);
 
+    // How the revenue graph groups payments over time.
+    public enum RevenueGrouping
+    {
+        Weekly,
+        Monthly
+    }
+
+    // One period on the revenue graph: a Monday-to-Sunday week or a calendar
+    // month, with the net revenue paid for classes in it (zero for a
+    // period with nothing paid).
+    public record RevenuePoint(DateTime PeriodStart, string Label, string LongLabel, decimal Amount);
+
     // One payment, flattened with what the report groups by. ClassDate is
     // the date of the class the payment is for, which is the date the
     // report uses for every payment (EFT and cash have no separate paid-on
@@ -43,6 +55,11 @@ namespace ThriveWellness.Models
         public int RefundedCount { get; set; }
 
         public IReadOnlyList<RevenueBreakdownRow> ByMonth { get; set; } = Array.Empty<RevenueBreakdownRow>();
+
+        // The graph: net revenue per week or month across the range, empty
+        // when nothing was paid in it.
+        public RevenueGrouping Grouping { get; set; } = RevenueGrouping.Weekly;
+        public IReadOnlyList<RevenuePoint> Series { get; set; } = Array.Empty<RevenuePoint>();
         public IReadOnlyList<RevenueBreakdownRow> ByMethod { get; set; } = Array.Empty<RevenueBreakdownRow>();
         public IReadOnlyList<RevenueBreakdownRow> ByPaymentType { get; set; } = Array.Empty<RevenueBreakdownRow>();
         public IReadOnlyList<RevenueBreakdownRow> ByVenue { get; set; } = Array.Empty<RevenueBreakdownRow>();

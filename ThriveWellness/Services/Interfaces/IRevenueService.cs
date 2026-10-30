@@ -8,6 +8,7 @@ namespace ThriveWellness.Services.Interfaces
         // custom from/to dates into the range to report on.
         RevenueRange ResolveRange(string? preset, DateTime? from, DateTime? to);
 
-        Task<RevenueReport> GetReportAsync(RevenueRange range);
+        // grouping only affects the graph's time series.
+        Task<RevenueReport> GetReportAsync(RevenueRange range, RevenueGrouping grouping = RevenueGrouping.Weekly);
     }
 }
