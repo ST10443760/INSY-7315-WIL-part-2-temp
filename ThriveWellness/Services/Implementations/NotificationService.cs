@@ -120,8 +120,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>See you soon!</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Payment confirmed: you're booked in", html);
-            await WriteNotificationRecordAsync(booking.BookingId, "Welcome");
+            await SendAndRecordAsync(booking.BookingId, "Welcome", client.Email, "Payment confirmed: you're booked in", html);
         }
 
         // Sent the moment a booking is created (before payment), covering
@@ -161,8 +160,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Booking received: complete your payment to secure your spot", html);
-            await WriteNotificationRecordAsync(booking.BookingId, "Confirmation");
+            await SendAndRecordAsync(booking.BookingId, "Confirmation", client.Email, "Booking received: complete your payment to secure your spot", html);
         }
 
         // Builds the confirmation email's payment block: the amount owing
@@ -243,8 +241,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>See you then!</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Reminder: your class is tomorrow", html);
-            await WriteNotificationRecordAsync(booking.BookingId, "Reminder");
+            await SendAndRecordAsync(booking.BookingId, "Reminder", client.Email, "Reminder: your class is tomorrow", html);
         }
 
         // Morning-of "here's exactly where to go" email, sent only to new
@@ -273,8 +270,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>We're looking forward to seeing you!</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Today's class: where to find us", html);
-            await WriteNotificationRecordAsync(booking.BookingId, "Location");
+            await SendAndRecordAsync(booking.BookingId, "Location", client.Email, "Today's class: where to find us", html);
         }
 
         // Sent whenever a waitlist entry is turned into a real booking -
@@ -312,8 +308,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "You're off the waitlist!", html);
-            await WriteNotificationRecordAsync(booking.BookingId, "WaitlistPromotion");
+            await SendAndRecordAsync(booking.BookingId, "WaitlistPromotion", client.Email, "You're off the waitlist!", html);
         }
 
         // The one-off "you're close" email WaitlistService.NotifyAsync
@@ -344,7 +339,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>We'll email you again if a spot opens up for you.</p>
                 """;
 
-            // No WriteNotificationRecordAsync here - that helper keys its
+            // No SendAndRecordAsync here - that helper keys its
             // record off a BookingId, and this entry doesn't have one yet.
             await _emailSender.SendEmailAsync(client.Email, "You're on the waitlist - a spot may be opening up", html);
         }
@@ -377,20 +372,38 @@ namespace ThriveWellness.Services.Implementations
                 our schedule page.</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Your Thrive Wellness booking has been cancelled", html);
-            await WriteNotificationRecordAsync(booking.BookingId, "Cancellation");
+            await SendAndRecordAsync(booking.BookingId, "Cancellation", client.Email, "Your Thrive Wellness booking has been cancelled", html);
         }
 
-        // Logs that a given email type went out for a booking, so
-        // ScheduledNotificationService's "has this already been sent" checks
-        // have something to query against.
-        private async Task WriteNotificationRecordAsync(int bookingId, string type)
+        // Sends one booking email and logs it in Notifications either way: as
+        // Sent, which is what ScheduledNotificationService's "has this
+        // already been sent" checks look for, or as Failed, so the admin
+        // Emails page shows it and the next scheduled run tries again. A
+        // failure is still rethrown - each caller decides whether it's fatal
+        // (for a booking, it never is: see BookingService).
+        private async Task SendAndRecordAsync(int bookingId, string type, string toEmail, string subject, string html)
+        {
+            try
+            {
+                await _emailSender.SendEmailAsync(toEmail, subject, html);
+            }
+            catch
+            {
+                await WriteNotificationRecordAsync(bookingId, type, NotificationStatus.Failed);
+                throw;
+            }
+
+            await WriteNotificationRecordAsync(bookingId, type, NotificationStatus.Sent);
+        }
+
+        private async Task WriteNotificationRecordAsync(int bookingId, string type, string status)
         {
             _context.Notifications.Add(new Notification
             {
                 BookingId = bookingId,
                 Type = type,
-                SentAt = DateTime.UtcNow
+                SentAt = DateTime.UtcNow,
+                Status = status
             });
             await _context.SaveChangesAsync();
         }
