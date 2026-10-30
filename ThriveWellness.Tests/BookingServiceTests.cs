@@ -562,4 +562,57 @@ public class BookingServiceTests
         Assert.True(result.Success);
         Assert.Equal(PaymentStatuses.RefundDue, payment.Status);
     }
+
+    // Admin no-shows.
+
+    [Fact]
+    public async Task SetNoShowAsync_PastClass_MarksAndUndoes()
+    {
+        var booking = ClientBooking(sessionStart: DateTime.Now.AddDays(-1));
+        var service = CreateService();
+
+        var marked = await service.SetNoShowAsync(30, true);
+        Assert.True(marked.Success);
+        Assert.True(booking.NoShow);
+        Assert.Equal(SignedInClientId, marked.ClientId);
+        Assert.Equal(4, marked.SessionId);
+
+        var undone = await service.SetNoShowAsync(30, false);
+        Assert.True(undone.Success);
+        Assert.False(booking.NoShow);
+        _bookingRepository.Verify(r => r.UpdateAsync(booking), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task SetNoShowAsync_ClassNotStarted_IsRefused()
+    {
+        var booking = ClientBooking(sessionStart: DateTime.Now.AddHours(2));
+
+        var result = await CreateService().SetNoShowAsync(30, true);
+
+        Assert.False(result.Success);
+        Assert.Equal(4, result.SessionId);
+        Assert.False(booking.NoShow);
+        _bookingRepository.Verify(r => r.UpdateAsync(It.IsAny<Booking>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetNoShowAsync_CancelledBooking_IsRefused()
+    {
+        var booking = ClientBooking(status: "Cancelled", sessionStart: DateTime.Now.AddDays(-1));
+
+        var result = await CreateService().SetNoShowAsync(30, true);
+
+        Assert.False(result.Success);
+        Assert.False(booking.NoShow);
+    }
+
+    [Fact]
+    public async Task SetNoShowAsync_UnknownBooking_HasNoSession()
+    {
+        var result = await CreateService().SetNoShowAsync(999, true);
+
+        Assert.False(result.Success);
+        Assert.Null(result.SessionId);
+    }
 }

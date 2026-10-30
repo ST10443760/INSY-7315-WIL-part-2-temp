@@ -10,6 +10,7 @@ namespace ThriveWellness.Services.Interfaces
         Task<CancelBookingResult> CancelByAdminAsync(int bookingId);
         Task<CancelBookingPreview> GetClientCancellationAsync(int bookingId, int clientId);
         Task<CancelBookingResult> CancelByClientAsync(int bookingId, int clientId);
+        Task<NoShowResult> SetNoShowAsync(int bookingId, bool noShow);
         Task<Booking?> GetByIdAsync(int bookingId);
         Task<IReadOnlyList<ClientBookingViewModel>> GetClientBookingsAsync(int clientId);
     }

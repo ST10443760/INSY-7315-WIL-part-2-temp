@@ -308,6 +308,43 @@ namespace ThriveWellness.Services.Implementations
             return await CancelAsync(booking, notifyClient: false);
         }
 
+        // Admin, after a class: marks (or unmarks) a booking as a no-show. Only
+        // for a class that has started and a booking that wasn't cancelled -
+        // there's nothing to miss otherwise. A no-show isn't attended (see
+        // Attendance), so the caller re-checks the client's rewards.
+        public async Task<NoShowResult> SetNoShowAsync(int bookingId, bool noShow)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return new NoShowResult { Success = false, ErrorMessage = "Booking not found." };
+            }
+
+            var result = new NoShowResult { ClientId = booking.ClientId, SessionId = booking.SessionId };
+
+            if (booking.Status == "Cancelled")
+            {
+                result.ErrorMessage = "A cancelled booking can't be marked as a no-show.";
+                return result;
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            if (session == null || session.Date.Date + session.Time > _timeProvider.GetLocalNow().DateTime)
+            {
+                result.ErrorMessage = "Only bookings for a class that has already started can be marked as a no-show.";
+                return result;
+            }
+
+            if (booking.NoShow != noShow)
+            {
+                booking.NoShow = noShow;
+                await _bookingRepository.UpdateAsync(booking);
+            }
+
+            result.Success = true;
+            return result;
+        }
+
         // Clients can cancel any time before their class starts.
         private string? ClientCannotCancelReason(Booking booking, Session? session)
         {
