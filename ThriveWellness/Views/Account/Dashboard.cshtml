@@ -92,7 +92,7 @@
         <div class="thrive-tile">
             <partial name="_Icon" model="@("card")" />
             <span class="thrive-tile__label">Total spent</span>
-            <span class="thrive-dashboard__tile-value">R@(Model.TotalSpent.ToString("N2"))</span>
+            <span class="thrive-dashboard__tile-value">@Money.Format(Model.TotalSpent)</span>
         </div>
     </div>
 
@@ -182,7 +182,7 @@
                 {
                     <li class="thrive-dash-item">
                         <div class="thrive-dash-item__when">
-                            <span class="thrive-dash-item__date">R@(payment.Amount.ToString("N2"))</span>
+                            <span class="thrive-dash-item__date">@Money.Format(payment.Amount)</span>
                             @if (payment.PaidAt.HasValue)
                             {
                                 <span class="thrive-dash-item__time">@payment.PaidAt.Value.ToString("d MMM yyyy")</span>

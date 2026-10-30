@@ -4,7 +4,7 @@
     ViewData["Title"] = "Checkout";
     ViewData["ThriveBodyBeige"] = true;
     var summary = Model.Summary;
-    var amountText = $"R{summary.Amount:N2}";
+    var amountText = Money.Format(summary.Amount);
 }
 
 <section class="thrive-container thrive-checkout-page">

@@ -13,7 +13,7 @@
             <span class="thrive-subtitle-italic">You're booked in. A confirmation email is on its way.</span>
         </div>
 
-        <p class="thrive-receipt__amount">R@(Model.Amount.ToString("N2")) <span>@Model.Currency</span></p>
+        <p class="thrive-receipt__amount">@Money.Format(Model.Amount) <span>@Model.Currency</span></p>
 
         @if (Model.PaymentStatus == PaymentStatuses.Refunded)
         {

@@ -7,7 +7,7 @@
     var isCard = PaymentMethods.IsCard(Model.Method);
     var isPaid = Model.PaymentStatus == PaymentStatuses.Confirmed;
     var canPayByCard = isCard && Model.PaymentStatus == PaymentStatuses.Pending && Model.Status != "Cancelled";
-    var amountText = Model.AmountDue.HasValue ? $"R{Model.AmountDue.Value}" : "the class fee";
+    var amountText = Model.AmountDue.HasValue ? Money.Format(Model.AmountDue.Value) : "the class fee";
 }
 
 <section class="thrive-container thrive-booking-page">
@@ -42,7 +42,7 @@
             {
                 <div class="thrive-detail-row">
                     <span class="thrive-detail-row__label"><partial name="_Icon" model="@("tag")" />Amount Due</span>
-                    <span class="thrive-detail-row__value">R@(Model.AmountDue.Value)</span>
+                    <span class="thrive-detail-row__value">@Money.Format(Model.AmountDue.Value)</span>
                 </div>
             }
         </div>

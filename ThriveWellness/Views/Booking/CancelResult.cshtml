@@ -25,13 +25,13 @@
         @if (Model.Success && Model.Refund.Outcome == RefundOutcome.CardRefunded)
         {
             <div class="thrive-banner thrive-banner--success" role="status">
-                Your card payment of R@(Model.Refund.Amount.ToString("N2")) will be refunded.
+                Your card payment of @Money.Format(Model.Refund.Amount) will be refunded.
             </div>
         }
         else if (Model.Success && Model.Refund.Outcome == RefundOutcome.RefundDue)
         {
             <div class="thrive-banner thrive-banner--notice" role="status">
-                You paid R@(Model.Refund.Amount.ToString("N2")) by EFT or cash. The studio will arrange your refund.
+                You paid @Money.Format(Model.Refund.Amount) by EFT or cash. The studio will arrange your refund.
             </div>
         }
 

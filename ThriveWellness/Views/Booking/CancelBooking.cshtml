@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Cancel Booking";
     ViewData["ThriveBodyBeige"] = true;
-    var amountText = $"R{Model.Refund.Amount:N2}";
+    var amountText = Money.Format(Model.Refund.Amount);
 }
 
 <section class="thrive-container thrive-booking-page">

@@ -91,7 +91,7 @@
                                 <span class="thrive-admin-table__muted">@payment.SessionTime.ToString(@"hh\:mm")</span>
                             </td>
                             <td>@payment.Method</td>
-                            <td class="thrive-admin-table__amount">R@(payment.Amount.ToString("N2"))</td>
+                            <td class="thrive-admin-table__amount">@Money.Format(payment.Amount)</td>
                             <td>
                                 @if (payment.BookingStatus == "Cancelled")
                                 {
