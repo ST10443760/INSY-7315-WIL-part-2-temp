@@ -12,5 +12,9 @@ namespace ThriveWellness.Services.Interfaces
         // blank cells) from this.
         Task<IReadOnlyList<CalendarDayViewModel>> GetCalendarAsync(int year, int month);
         Task<IReadOnlyList<WaitlistOverviewRowViewModel>> GetWaitlistOverviewAsync();
+
+        // The latest 50 emails logged in Notifications, newest first,
+        // optionally filtered to one Notification.Type.
+        Task<IReadOnlyList<EmailLogRowViewModel>> GetRecentEmailsAsync(string? type);
     }
 }

@@ -17,6 +17,7 @@ namespace ThriveWellness.Services.Implementations
         private const int UpcomingWindowDays = 7;
         private const int PendingPaymentsPreviewCount = 5;
         private const int RecentBookingsCount = 10;
+        private const int EmailLogCount = 50;
 
         private readonly ApplicationDbContext _context;
         private readonly IPaymentRepository _paymentRepository;
@@ -143,6 +144,37 @@ namespace ThriveWellness.Services.Implementations
                     ClientEmail = client.Email,
                     DateAdded = entry.DateAdded
                 }).ToListAsync();
+        }
+
+        // The latest EmailLogCount rows from the Notifications log, newest
+        // first, optionally narrowed to one Type - powers the admin Emails
+        // page. A null or empty type means every type.
+        public async Task<IReadOnlyList<EmailLogRowViewModel>> GetRecentEmailsAsync(string? type)
+        {
+            var query =
+                from notification in _context.Notifications
+                join booking in _context.Bookings on notification.BookingId equals booking.BookingId
+                join client in _context.Clients on booking.ClientId equals client.ClientId
+                select new { notification, client };
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                query = query.Where(x => x.notification.Type == type);
+            }
+
+            return await query
+                .OrderByDescending(x => x.notification.SentAt)
+                .ThenByDescending(x => x.notification.NotificationId)
+                .Take(EmailLogCount)
+                .Select(x => new EmailLogRowViewModel
+                {
+                    NotificationId = x.notification.NotificationId,
+                    SentAt = x.notification.SentAt,
+                    RecipientName = x.client.FullName,
+                    RecipientEmail = x.client.Email,
+                    Type = x.notification.Type
+                })
+                .ToListAsync();
         }
 
         // Shared projection used by GetDashboardAsync, GetSessionOverviewsAsync
