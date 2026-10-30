@@ -16,7 +16,7 @@
             else
             {
                 <h1 class="thrive-h2-serif-italic">Welcome back</h1>
-                <span class="thrive-subtitle-italic">We've pre-filled your details from your last booking.</span>
+                <span class="thrive-subtitle-italic">We've pre-filled your details from your account.</span>
             }
         </div>
 
@@ -28,56 +28,37 @@
 
         <form asp-controller="Booking" asp-action="Submit" method="post" data-busy-text="Sending…">
             @Html.AntiForgeryToken()
+            @* Only the session id travels with the form. Who is booking comes
+               from the sign-in cookie, and the session summary, email and
+               first-booking state are worked out again on the server. *@
             <input type="hidden" asp-for="SessionId" />
-            <input type="hidden" asp-for="Email" />
-            <input type="hidden" asp-for="IsNewClient" />
-            <input type="hidden" asp-for="SessionType" />
-            <input type="hidden" asp-for="SessionDate" />
-            <input type="hidden" asp-for="SessionTime" />
-            <input type="hidden" asp-for="LocationName" />
 
             <div class="thrive-field">
-                @* Plain label/id here, not asp-for: the hidden asp-for="Email"
-                   input above already owns id="Email" and carries the real
-                   submitted value - this input is just a read-only display. *@
+                @* Read-only: this is the client's Google account address, not
+                   a detail to edit here. *@
                 <label class="thrive-label" for="EmailDisplay">Email</label>
                 <input id="EmailDisplay" class="thrive-input" value="@Model.Email" readonly />
+            </div>
+
+            @* Name and phone are pre-filled from the client's account and
+               editable - any change is saved back to their record. *@
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="FullName"></label>
+                <input asp-for="FullName" class="thrive-input" autocomplete="name" placeholder="e.g. Jessica Miller" />
+                <span asp-validation-for="FullName" class="thrive-field-error"></span>
+            </div>
+
+            <div class="thrive-field">
+                <label class="thrive-label" asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="thrive-input" inputmode="tel" autocomplete="tel" placeholder="e.g. +27 92 359 2376" />
+                <span asp-validation-for="PhoneNumber" class="thrive-field-error"></span>
             </div>
 
             @if (Model.IsNewClient)
             {
                 <div class="thrive-field">
-                    <label class="thrive-label" asp-for="FullName"></label>
-                    <input asp-for="FullName" class="thrive-input" placeholder="e.g. Jessica Miller" />
-                    <span asp-validation-for="FullName" class="thrive-field-error"></span>
-                </div>
-
-                <div class="thrive-field">
-                    <label class="thrive-label" asp-for="PhoneNumber"></label>
-                    <input asp-for="PhoneNumber" class="thrive-input" inputmode="tel" autocomplete="tel" placeholder="e.g. +27 92 359 2376" />
-                    <span asp-validation-for="PhoneNumber" class="thrive-field-error"></span>
-                </div>
-
-                <div class="thrive-field">
                     <label class="thrive-label" asp-for="MedicalNotes">Medical Conditions or Injuries</label>
                     <textarea asp-for="MedicalNotes" class="thrive-textarea" placeholder="Please state any previous injuries, pregnancies or clinical conditions so your instructor can prepare modifications…"></textarea>
-                </div>
-            }
-            else
-            {
-                <div class="thrive-field">
-                    <label class="thrive-label" asp-for="FullName"></label>
-                    <input asp-for="FullName" class="thrive-input" readonly />
-                </div>
-
-                @* Editable, not readonly: a returning client confirms or edits
-                   their pre-filled details here (see the Task 1 journey).
-                   Email above stays readonly - it's the identifier a
-                   returning client is looked up by, not a detail to edit. *@
-                <div class="thrive-field">
-                    <label class="thrive-label" asp-for="PhoneNumber"></label>
-                    <input asp-for="PhoneNumber" class="thrive-input" inputmode="tel" autocomplete="tel" placeholder="e.g. +27 92 359 2376" />
-                    <span asp-validation-for="PhoneNumber" class="thrive-field-error"></span>
                 </div>
             }
 
