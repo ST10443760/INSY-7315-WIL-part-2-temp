@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
 
 // MVC controller: the admin payments list and the "mark as confirmed"
-// action. [Authorize] means every action here requires the admin sign-in
+// action. The AdminOnly policy means every action here requires the admin sign-in
 // cookie from AccountController.Login - there's no payment-specific
 // permission, just "signed in or not".
-[Authorize]
+[Authorize(Policy = AuthPolicies.AdminOnly)]
 public class PaymentController : Controller
 {
     private readonly IPaymentRepository _paymentRepository;
