@@ -409,6 +409,7 @@ namespace ThriveWellness.Services.Implementations
                     LocationName = location.Name,
                     LocationAddress = location.Address,
                     Status = booking.Status,
+                    NoShow = booking.NoShow,
                     PaymentId = payment != null ? payment.PaymentId : null,
                     PaymentMethod = payment != null ? payment.Method : null,
                     PaymentStatus = payment != null ? payment.Status : null,

@@ -5,7 +5,7 @@
     ViewData["ThriveBodyBeige"] = true;
 
     string ChipClass(ClientBookingViewModel booking) =>
-        booking.IsCancelled ? "thrive-status--cancelled" : booking.IsPaid ? "thrive-status--paid" : "thrive-status--pending";
+        booking.IsCancelled || booking.NoShow ? "thrive-status--cancelled" : booking.IsPaid ? "thrive-status--paid" : "thrive-status--pending";
 }
 
 <section class="thrive-container thrive-dashboard">

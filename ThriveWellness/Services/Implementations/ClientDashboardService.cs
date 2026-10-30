@@ -75,8 +75,8 @@ namespace ThriveWellness.Services.Implementations
         // - upcoming means the class hasn't started yet (date and time), so a
         //   class later today is still upcoming; cancelled ones stay listed
         //   with a Cancelled chip but don't count in the tile;
-        // - attended means the class has started, wasn't cancelled and was
-        //   paid for;
+        // - attended is the shared Attendance rule (started, not cancelled,
+        //   paid, not a no-show), the same one rewards use;
         // - total spent is every confirmed payment - pending ones aren't paid
         //   yet, and refunded ones are given back;
         // - the payments list shows what's been paid or refunded, newest
@@ -105,7 +105,7 @@ namespace ThriveWellness.Services.Implementations
             {
                 FirstName = firstName,
                 UpcomingCount = upcoming.Count(b => !b.IsCancelled),
-                AttendedCount = past.Count(b => !b.IsCancelled && b.IsPaid),
+                AttendedCount = past.Count(b => b.IsAttended(now)),
                 TotalSpent = paymentList.Where(p => p.Status == PaymentStatuses.Confirmed).Sum(p => p.Amount),
                 Upcoming = upcoming,
                 Past = past,

@@ -161,6 +161,18 @@ public class ClientDashboardServiceTests
     }
 
     [Fact]
+    public void Build_Attended_LeavesOutNoShows()
+    {
+        var noShow = Booking(1, Now.Date.AddDays(-1), TimeSpan.FromHours(9));
+        noShow.NoShow = true;
+
+        var dashboard = Build(new[] { noShow, Booking(2, Now.Date.AddDays(-2), TimeSpan.FromHours(9)) });
+
+        Assert.Equal(1, dashboard.AttendedCount);
+        Assert.Equal("No-show", noShow.StatusLabel);
+    }
+
+    [Fact]
     public void ConfirmedBookingWithoutAPaymentRow_CountsAsPaid()
     {
         var booking = Booking(1, Now.Date.AddDays(-1), TimeSpan.FromHours(9), paymentStatus: null);

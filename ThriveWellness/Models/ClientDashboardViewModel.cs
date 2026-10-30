@@ -1,3 +1,5 @@
+using ThriveWellness.Services;
+
 namespace ThriveWellness.Models
 {
     // View model for the signed-in client's dashboard: summary tiles, their
@@ -38,17 +40,17 @@ namespace ThriveWellness.Models
         public string? PaymentStatus { get; set; }
         public decimal? Amount { get; set; }
         public string CancellationToken { get; set; } = string.Empty;
+        public bool NoShow { get; set; }
 
         public DateTime StartsAt => SessionDate.Date + SessionTime;
         public bool IsCancelled => Status == "Cancelled";
-        // A booking only becomes Confirmed once its payment is, so a
-        // Confirmed booking with no payment row (older data) is paid too.
-        public bool IsPaid =>
-            PaymentStatus == PaymentStatuses.Confirmed || (PaymentStatus == null && Status == "Confirmed");
+        public bool IsPaid => Attendance.IsPaid(Status, PaymentStatus);
 
-        // The chip shown on the dashboard: Cancelled, Paid or Awaiting
-        // payment.
-        public string StatusLabel => IsCancelled ? "Cancelled" : IsPaid ? "Paid" : "Awaiting payment";
+        // The chip shown on the dashboard: Cancelled, No-show, Paid or
+        // Awaiting payment.
+        public string StatusLabel => IsCancelled ? "Cancelled" : NoShow ? "No-show" : IsPaid ? "Paid" : "Awaiting payment";
+
+        public bool IsAttended(DateTime now) => Attendance.IsAttended(Status, NoShow, PaymentStatus, StartsAt, now);
 
         public bool CanPayByCard =>
             !IsCancelled && PaymentStatus == PaymentStatuses.Pending && PaymentMethods.IsCard(PaymentMethod);
