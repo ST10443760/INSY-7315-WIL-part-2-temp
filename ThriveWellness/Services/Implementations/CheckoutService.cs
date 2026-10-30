@@ -79,7 +79,7 @@ namespace ThriveWellness.Services.Implementations
                 // A charge that went through earlier but whose confirmation
                 // didn't finish (the app stopped in between) must never be
                 // charged again - finish confirming it instead.
-                var earlierCharge = await _transactionRepository.GetSucceededForPaymentAsync(payment.PaymentId);
+                var earlierCharge = await _transactionRepository.GetChargeForPaymentAsync(payment.PaymentId);
                 if (earlierCharge != null)
                 {
                     await ConfirmAsync(payment.PaymentId, bookingId);
@@ -167,7 +167,7 @@ namespace ThriveWellness.Services.Implementations
                 return new ReceiptResult { Status = ReceiptStatus.NotOwner };
             }
 
-            var charge = await _transactionRepository.GetSucceededForPaymentAsync(paymentId);
+            var charge = await _transactionRepository.GetChargeForPaymentAsync(paymentId);
             if (charge == null)
             {
                 return new ReceiptResult { Status = ReceiptStatus.NotPaid };

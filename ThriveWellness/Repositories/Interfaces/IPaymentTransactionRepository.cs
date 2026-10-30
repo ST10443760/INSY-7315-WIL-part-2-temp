@@ -13,7 +13,8 @@ namespace ThriveWellness.Repositories.Interfaces
         Task<IReadOnlyList<PaymentTransaction>> GetByPaymentIdAsync(int paymentId);
 
         // The charge that paid this payment, if any - the one a receipt
-        // shows.
-        Task<PaymentTransaction?> GetSucceededForPaymentAsync(int paymentId);
+        // shows. Still returned once it's been refunded (its Status then
+        // says so); declined attempts never are.
+        Task<PaymentTransaction?> GetChargeForPaymentAsync(int paymentId);
     }
 }

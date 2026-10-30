@@ -79,8 +79,8 @@ public class CheckoutServiceTests
             .Callback<PaymentTransaction>(t => _savedTransactions.Add(t))
             .Returns(Task.CompletedTask);
         _transactionRepository
-            .Setup(r => r.GetSucceededForPaymentAsync(9))
-            .ReturnsAsync(() => _savedTransactions.LastOrDefault(t => t.Status == PaymentTransactionStatus.Succeeded));
+            .Setup(r => r.GetChargeForPaymentAsync(9))
+            .ReturnsAsync(() => _savedTransactions.LastOrDefault(t => t.Status != PaymentTransactionStatus.Declined));
 
         _paymentService = new PaymentService(_paymentRepository.Object, _bookingRepository.Object);
         _paymentService.PaymentConfirmed += (_, _) => _paymentConfirmedCount++;

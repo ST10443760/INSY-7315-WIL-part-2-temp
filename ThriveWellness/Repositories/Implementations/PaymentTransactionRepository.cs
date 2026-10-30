@@ -36,10 +36,10 @@ namespace ThriveWellness.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<PaymentTransaction?> GetSucceededForPaymentAsync(int paymentId)
+        public async Task<PaymentTransaction?> GetChargeForPaymentAsync(int paymentId)
         {
             return await _context.PaymentTransactions
-                .Where(t => t.PaymentId == paymentId && t.Status == PaymentTransactionStatus.Succeeded)
+                .Where(t => t.PaymentId == paymentId && t.Status != PaymentTransactionStatus.Declined)
                 .OrderByDescending(t => t.CreatedAt)
                 .FirstOrDefaultAsync();
         }
