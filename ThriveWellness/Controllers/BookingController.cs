@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
+using ThriveWellness.Services;
 using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
@@ -40,10 +41,15 @@ public class BookingController : Controller
     // Lists every session - open, full and closed - so a full class still
     // shows up with a "Join Waitlist" card instead of just disappearing.
     // location/date are optional server-side filters from the schedule's
-    // tabs and date picker.
-    public async Task<IActionResult> Schedule(string? location, DateTime? date)
+    // tabs and date picker. week (?week=YYYY-MM-DD) picks the Monday-to-
+    // Sunday week to show - see ScheduleWeek for the snapping and clamping
+    // rules. A picked date takes the page to that date's week.
+    public async Task<IActionResult> Schedule(string? location, DateTime? date, DateTime? week)
     {
-        var sessions = await _sessionService.GetScheduleAsync(location, date);
+        var lastSessionDate = await _sessionService.GetLastUpcomingSessionDateAsync();
+        var scheduleWeek = ScheduleWeek.Resolve(date ?? week, DateTime.Today, lastSessionDate);
+
+        var sessions = await _sessionService.GetScheduleAsync(location, date, scheduleWeek.Start);
         var locations = await _locationRepository.GetAllAsync();
 
         var viewModel = new ScheduleViewModel
@@ -51,7 +57,8 @@ public class BookingController : Controller
             Sessions = sessions,
             Locations = locations,
             SelectedLocation = location,
-            SelectedDate = date
+            SelectedDate = date,
+            Week = scheduleWeek
         };
 
         return View(viewModel);
