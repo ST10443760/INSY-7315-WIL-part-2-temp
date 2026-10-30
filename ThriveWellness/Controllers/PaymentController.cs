@@ -15,11 +15,19 @@ public class PaymentController : Controller
 {
     private readonly IPaymentRepository _paymentRepository;
     private readonly IPaymentService _paymentService;
+    private readonly IBookingRepository _bookingRepository;
+    private readonly IRewardsService _rewardsService;
 
-    public PaymentController(IPaymentRepository paymentRepository, IPaymentService paymentService)
+    public PaymentController(
+        IPaymentRepository paymentRepository,
+        IPaymentService paymentService,
+        IBookingRepository bookingRepository,
+        IRewardsService rewardsService)
     {
         _paymentRepository = paymentRepository;
         _paymentService = paymentService;
+        _bookingRepository = bookingRepository;
+        _rewardsService = rewardsService;
     }
 
     // status: null/"all" for everything, or "Pending"/"Confirmed" to filter -
@@ -41,8 +49,23 @@ public class PaymentController : Controller
     public async Task<IActionResult> Confirm(int id, string? status)
     {
         await _paymentService.ConfirmPaymentAsync(id);
+
+        // Paying for a class that has already happened can complete it as
+        // attended, so check the client's badges.
+        await EvaluateRewardsForPaymentAsync(id);
+
         // Sends the admin back to whichever tab they confirmed this from,
         // instead of always resetting to "All".
         return RedirectToAction(nameof(Index), new { status });
+    }
+
+    private async Task EvaluateRewardsForPaymentAsync(int paymentId)
+    {
+        var payment = await _paymentRepository.GetByIdAsync(paymentId);
+        var booking = payment != null ? await _bookingRepository.GetByIdAsync(payment.BookingId) : null;
+        if (booking != null)
+        {
+            await _rewardsService.EvaluateAsync(booking.ClientId);
+        }
     }
 }
