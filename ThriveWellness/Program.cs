@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ThriveWellness.Authorization;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Implementations;
@@ -113,7 +115,29 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        // Signed in, but not allowed (for example a client opening an
+        // admin page): a plain explanation instead of a bare 403.
+        options.AccessDeniedPath = "/Account/AccessDenied";
+
+        // Admin cookies issued before roles existed carry only a Name
+        // claim. Only the admin login ever issued cookies back then, so a
+        // role-less cookie can only be an admin's: give it the Admin role
+        // and re-issue it, so an admin who was already signed in stays
+        // signed in. Every cookie issued from now on carries a role.
+        options.Events.OnValidatePrincipal = context =>
+        {
+            if (context.Principal?.Identity is ClaimsIdentity identity
+                && identity.IsAuthenticated
+                && !identity.HasClaim(c => c.Type == ClaimTypes.Role))
+            {
+                identity.AddClaim(new Claim(ClaimTypes.Role, AuthPolicies.AdminRole));
+                context.ShouldRenew = true;
+            }
+            return Task.CompletedTask;
+        };
     });
+
+builder.Services.AddAuthorization(AuthPolicies.Configure);
 
 var app = builder.Build();
 
