@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThriveWellness.Authorization;
 using ThriveWellness.Models;
@@ -8,18 +10,154 @@ using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
 
-// MVC controller: the admin login/logout pages. Delegates the actual
-// username/password check to AuthService and otherwise just deals with
-// ASP.NET Core's cookie authentication - issuing the sign-in cookie on
-// success, clearing it on logout.
+// MVC controller: sign-in and sign-out for both kinds of user. The admin
+// signs in with a username and password (AuthService); clients sign in with
+// Google (ClientAccountService decides which client row that is). Both end
+// up with the same cookie, told apart by its Role claim - see AuthPolicies.
 public class AccountController : Controller
 {
     private readonly IAuthService _authService;
+    private readonly IClientAccountService _clientAccountService;
+    private readonly IBookingService _bookingService;
+    private readonly IAuthenticationSchemeProvider _schemeProvider;
+    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(IAuthService authService)
+    public AccountController(
+        IAuthService authService,
+        IClientAccountService clientAccountService,
+        IBookingService bookingService,
+        IAuthenticationSchemeProvider schemeProvider,
+        ILogger<AccountController> logger)
     {
         _authService = authService;
+        _clientAccountService = clientAccountService;
+        _bookingService = bookingService;
+        _schemeProvider = schemeProvider;
+        _logger = logger;
     }
+
+    // The client sign-in page. returnUrl is only ever honoured when it's a
+    // local URL (Url.IsLocalUrl), so a crafted link can't bounce someone to
+    // another site after signing in.
+    [HttpGet]
+    public async Task<IActionResult> ClientLogin(string? returnUrl, string? error)
+    {
+        var safeReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
+        if (User.IsClient())
+        {
+            return LocalRedirectOrDashboard(safeReturnUrl);
+        }
+
+        var model = new ClientLoginViewModel
+        {
+            ReturnUrl = safeReturnUrl,
+            GoogleAvailable = await IsGoogleConfiguredAsync(),
+            ErrorMessage = error == "google"
+                ? "Google sign-in didn't finish. Please try again."
+                : TempData["ClientLoginError"] as string
+        };
+
+        return View(model);
+    }
+
+    // Starts the Google round trip. A POST with an anti-forgery token, so a
+    // third-party page can't start a sign-in on someone's behalf. Google
+    // returns to /signin-google (handled by the Google middleware), which
+    // stores the result in the short-lived External cookie and then sends
+    // the browser to GoogleCallback below.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GoogleSignIn(string? returnUrl)
+    {
+        if (!await IsGoogleConfiguredAsync())
+        {
+            return RedirectToAction(nameof(ClientLogin));
+        }
+
+        var safeReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = Url.Action(nameof(GoogleCallback), new { returnUrl = safeReturnUrl })
+        };
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    }
+
+    // Turns Google's answer into a signed-in client: reads the profile off
+    // the External cookie, lets ClientAccountService find, link or create
+    // the client row, then swaps the External cookie for the normal sign-in
+    // cookie with the client's claims.
+    [HttpGet]
+    public async Task<IActionResult> GoogleCallback(string? returnUrl)
+    {
+        var external = await HttpContext.AuthenticateAsync(AuthPolicies.ExternalScheme);
+        await HttpContext.SignOutAsync(AuthPolicies.ExternalScheme);
+
+        if (!external.Succeeded || external.Principal == null)
+        {
+            return RedirectToAction(nameof(ClientLogin), new { error = "google" });
+        }
+
+        var googleUser = external.Principal;
+        var profile = new GoogleProfile
+        {
+            Subject = googleUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty,
+            Email = googleUser.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
+            EmailVerified = string.Equals(googleUser.FindFirstValue("email_verified"), "true", StringComparison.OrdinalIgnoreCase),
+            Name = googleUser.FindFirstValue(ClaimTypes.Name) ?? string.Empty
+        };
+
+        var result = await _clientAccountService.SignInWithGoogleAsync(profile);
+        if (!result.Success || result.Client == null)
+        {
+            TempData["ClientLoginError"] = result.ErrorMessage;
+            return RedirectToAction(nameof(ClientLogin), new { returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null });
+        }
+
+        var client = result.Client;
+        var identity = new ClaimsIdentity(
+            ClientClaims.For(client.ClientId, client.FullName, client.Email),
+            CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+
+        _logger.LogInformation("Client {ClientId} signed in with Google.", client.ClientId);
+
+        return LocalRedirectOrDashboard(Url.IsLocalUrl(returnUrl) ? returnUrl : null);
+    }
+
+    // The signed-in client's own page: their upcoming and past bookings.
+    [HttpGet]
+    [Authorize(Policy = AuthPolicies.ClientOnly)]
+    public async Task<IActionResult> Dashboard()
+    {
+        var bookings = await _bookingService.GetClientBookingsAsync(User.GetClientId()!.Value);
+        var today = DateTime.Today;
+
+        var model = new ClientDashboardViewModel
+        {
+            FullName = User.Identity?.Name ?? string.Empty,
+            Upcoming = bookings.Where(b => b.SessionDate.Date >= today).OrderBy(b => b.SessionDate).ThenBy(b => b.SessionTime).ToList(),
+            Past = bookings.Where(b => b.SessionDate.Date < today).ToList()
+        };
+
+        return View(model);
+    }
+
+    // Client sign-out. A POST with an anti-forgery token, so another site
+    // can't sign someone out by embedding a link.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ClientSignOut()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Index", "Home");
+    }
+
+    private async Task<bool> IsGoogleConfiguredAsync() =>
+        await _schemeProvider.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) != null;
+
+    private IActionResult LocalRedirectOrDashboard(string? safeReturnUrl) =>
+        safeReturnUrl != null ? LocalRedirect(safeReturnUrl) : RedirectToAction(nameof(Dashboard));
 
     [HttpGet]
     public IActionResult Login()
