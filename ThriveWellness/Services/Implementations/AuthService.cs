@@ -12,10 +12,12 @@ namespace ThriveWellness.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly ApplicationDbContext _context;
+        private readonly TimeProvider _timeProvider;
 
-        public AuthService(ApplicationDbContext context)
+        public AuthService(ApplicationDbContext context, TimeProvider timeProvider)
         {
             _context = context;
+            _timeProvider = timeProvider;
         }
 
         // Verifies a login attempt: looks the admin up by username, then
