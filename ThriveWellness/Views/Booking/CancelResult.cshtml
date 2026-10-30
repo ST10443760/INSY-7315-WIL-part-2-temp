@@ -22,6 +22,23 @@
             }
         </div>
 
-        <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
+        @if (Model.Success && Model.Refund.Outcome == RefundOutcome.CardRefunded)
+        {
+            <div class="thrive-banner thrive-banner--success" role="status">
+                Your card payment of R@(Model.Refund.Amount.ToString("N2")) will be refunded.
+            </div>
+        }
+        else if (Model.Success && Model.Refund.Outcome == RefundOutcome.RefundDue)
+        {
+            <div class="thrive-banner thrive-banner--notice" role="status">
+                You paid R@(Model.Refund.Amount.ToString("N2")) by EFT or cash. The studio will arrange your refund.
+            </div>
+        }
+
+        @if (User.IsClient())
+        {
+            <a class="thrive-btn thrive-btn--rose thrive-btn--block thrive-cancel-keep" asp-controller="Account" asp-action="Dashboard">Go to my dashboard</a>
+        }
+        <a class="thrive-btn thrive-btn--mauve thrive-btn--block thrive-cancel-keep" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
     </div>
 </section>

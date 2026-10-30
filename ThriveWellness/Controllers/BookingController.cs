@@ -369,6 +369,37 @@ public class BookingController : Controller
         return View("CancelResult", result);
     }
 
+    // The signed-in client's "cancel this booking?" page, reached from the
+    // Cancel button on their dashboard. Shows the class and what will happen
+    // to their payment; nothing changes until they confirm with the POST
+    // below.
+    [HttpGet("Booking/CancelBooking/{bookingId:int}")]
+    [Authorize(Policy = AuthPolicies.ClientOnly)]
+    public async Task<IActionResult> CancelBooking(int bookingId)
+    {
+        var preview = await _bookingService.GetClientCancellationAsync(bookingId, User.GetClientId()!.Value);
+        return preview.Status switch
+        {
+            CancelPreviewStatus.NotFound => NotFound(),
+            CancelPreviewStatus.NotOwner => Forbid(),
+            _ => View(preview)
+        };
+    }
+
+    [HttpPost("Booking/CancelBooking/{bookingId:int}")]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = AuthPolicies.ClientOnly)]
+    public async Task<IActionResult> CancelBookingConfirmed(int bookingId)
+    {
+        var result = await _bookingService.CancelByClientAsync(bookingId, User.GetClientId()!.Value);
+        if (result.NotOwner)
+        {
+            return Forbid();
+        }
+
+        return View("CancelResult", result);
+    }
+
     // Minimal admin-initiated cancel/reschedule stub (FR-12): just enough to
     // trigger SendCancellationEmailAsync. There's no admin bookings list to
     // link this from yet - that's a separate feature - so for now this is

@@ -189,6 +189,8 @@ public class AdminAuthorizationTests
     [InlineData(nameof(BookingController), nameof(BookingController.JoinWaitlist))]
     [InlineData(nameof(BookingController), nameof(BookingController.JoinWaitlistSubmit))]
     [InlineData(nameof(AccountController), nameof(AccountController.Dashboard))]
+    [InlineData(nameof(BookingController), nameof(BookingController.CancelBooking))]
+    [InlineData(nameof(BookingController), nameof(BookingController.CancelBookingConfirmed))]
     [InlineData(nameof(CheckoutController), nameof(CheckoutController.Pay))]
     [InlineData(nameof(CheckoutController), nameof(CheckoutController.Receipt))]
     public async Task ClientAction_IsOnlyAllowedForASignedInClient(string controllerName, string actionName)

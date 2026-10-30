@@ -1,0 +1,67 @@
+@model ThriveWellness.Models.CancelBookingPreview
+
+@{
+    ViewData["Title"] = "Cancel Booking";
+    ViewData["ThriveBodyBeige"] = true;
+    var amountText = $"R{Model.Refund.Amount:N2}";
+}
+
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            <div class="thrive-result-icon thrive-result-icon--error"><partial name="_Icon" model="@("alert-circle")" /></div>
+            <h1 class="thrive-h2-heading">Cancel this booking?</h1>
+            <span class="thrive-subtitle-italic">You can cancel any time before your class starts.</span>
+        </div>
+
+        <div class="thrive-detail-card">
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("people")" />Class</span>
+                <span class="thrive-detail-row__value">@Model.SessionType.ToDisplayLabel()</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("calendar")" />Date &amp; Time</span>
+                <span class="thrive-detail-row__value">@Model.SessionDate.ToString("dddd, d MMMM yyyy") | @Model.SessionTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("pin")" />Location</span>
+                <span class="thrive-detail-row__value">@Model.LocationName, @Model.LocationAddress</span>
+            </div>
+        </div>
+
+        @if (Model.Status == CancelPreviewStatus.NotAllowed)
+        {
+            <div class="thrive-banner thrive-banner--notice" role="status">@Model.Message</div>
+            <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Account" asp-action="Dashboard">Back to my dashboard</a>
+        }
+        else
+        {
+            <div class="thrive-cancel-summary">
+                <p><strong>What happens next</strong></p>
+                <ul>
+                    <li>Your spot is released, and the next person on the waitlist is offered it.</li>
+                    @switch (Model.Refund.Outcome)
+                    {
+                        case RefundOutcome.CardRefunded:
+                            <li>Your card payment of @amountText will be refunded to the same card.</li>
+                            break;
+                        case RefundOutcome.RefundDue:
+                            <li>You paid @amountText by EFT or cash. The studio will arrange your refund.</li>
+                            break;
+                        default:
+                            <li>Nothing has been paid for this class, so there's nothing to refund.</li>
+                            break;
+                    }
+                    <li>This can't be undone, but you're welcome to book again if there's space.</li>
+                </ul>
+            </div>
+
+            <form asp-controller="Booking" asp-action="CancelBookingConfirmed" asp-route-bookingId="@Model.BookingId" method="post" data-busy-text="Cancelling…">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="thrive-btn thrive-btn--danger-outline thrive-btn--block">Yes, cancel my booking</button>
+            </form>
+
+            <a class="thrive-btn thrive-btn--mauve thrive-btn--block thrive-cancel-keep" asp-controller="Account" asp-action="Dashboard">Keep my booking</a>
+        }
+    </div>
+</section>
