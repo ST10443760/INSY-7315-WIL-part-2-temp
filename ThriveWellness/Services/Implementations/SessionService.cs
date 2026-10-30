@@ -30,9 +30,14 @@ namespace ThriveWellness.Services.Implementations
             return _sessionRepository.GetByIdAsync(id);
         }
 
-        public Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date)
+        public Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date, DateTime? weekStart = null)
         {
-            return _sessionRepository.GetScheduleAsync(locationAddress, date);
+            return _sessionRepository.GetScheduleAsync(locationAddress, date, weekStart);
+        }
+
+        public Task<DateTime?> GetLastUpcomingSessionDateAsync()
+        {
+            return _sessionRepository.GetLastUpcomingSessionDateAsync();
         }
 
         public Task<int> GetBookedCountAsync(int sessionId)
