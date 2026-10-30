@@ -1,5 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using ThriveWellness.Authorization;
 using ThriveWellness.Data;
@@ -101,12 +105,35 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminSeeder, AdminSeeder>();
 builder.Services.AddHostedService<ScheduledNotificationHostedService>();
 
-// Cookie auth is the only scheme - there's one admin account and no API
-// clients needing a token-based scheme instead. HttpOnly stops the cookie
-// being read from JavaScript (mitigating session theft via XSS); the 30
-// minute sliding expiry means an active admin stays signed in, but an idle
-// tab doesn't stay signed in indefinitely.
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddScoped<IClientAccountService, ClientAccountService>();
+
+// Google sign-in for clients is optional configuration: on Render it comes
+// from Authentication__Google__ClientId / Authentication__Google__ClientSecret.
+// When either is missing the Google scheme simply isn't registered - the
+// app still starts, and the client sign-in page hides its button and says
+// sign-in isn't available (see AccountController.ClientLogin).
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+var googleConfigured = !string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret);
+
+// Render terminates HTTPS at its proxy and forwards plain HTTP, saying what
+// the original scheme was in X-Forwarded-Proto. Trusting those headers is
+// what makes Request.Scheme "https" here, so the redirect URI sent to Google
+// is https://.../signin-google and matches the one registered with Google.
+// Render's proxy addresses aren't fixed, hence clearing the known lists.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// One sign-in cookie for both the admin and clients, told apart by their
+// Role claim (see AuthPolicies). HttpOnly stops the cookie being read from
+// JavaScript (mitigating session theft via XSS); the 30 minute sliding
+// expiry means an active user stays signed in, but an idle tab doesn't stay
+// signed in indefinitely.
+var authenticationBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
@@ -135,7 +162,60 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             }
             return Task.CompletedTask;
         };
+
+        // LoginPath is the admin login. Pages that need a signed-in client
+        // (booking, the waitlist, the client dashboard) send people to the
+        // client sign-in page instead, carrying a local returnUrl so they
+        // land back on the same page afterwards.
+        options.Events.OnRedirectToLogin = context =>
+        {
+            var requiresClient = context.HttpContext.GetEndpoint()?.Metadata
+                .GetOrderedMetadata<IAuthorizeData>()
+                .Any(a => a.Policy == AuthPolicies.ClientOnly) == true;
+
+            if (requiresClient)
+            {
+                var request = context.Request;
+                var returnUrl = request.PathBase + request.Path + request.QueryString;
+                context.RedirectUri = $"{request.PathBase}/Account/ClientLogin?returnUrl={Uri.EscapeDataString(returnUrl)}";
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
+    })
+    .AddCookie(AuthPolicies.ExternalScheme, options =>
+    {
+        options.Cookie.Name = ".ThriveWellness.External";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
     });
+
+if (googleConfigured)
+{
+    authenticationBuilder.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+    {
+        options.ClientId = googleClientId!;
+        options.ClientSecret = googleClientSecret!;
+        options.SignInScheme = AuthPolicies.ExternalScheme;
+        options.CallbackPath = "/signin-google";
+        // Default scopes only (openid, profile, email). email_verified isn't
+        // mapped to a claim by default, and ClientAccountService refuses
+        // unverified addresses, so map it explicitly.
+        options.ClaimActions.MapJsonKey("email_verified", "email_verified");
+
+        // A cancelled consent screen or any other failure coming back from
+        // Google returns to the sign-in page with a message instead of an
+        // unhandled exception.
+        options.Events.OnRemoteFailure = context =>
+        {
+            context.Response.Redirect("/Account/ClientLogin?error=google");
+            context.HandleResponse();
+            return Task.CompletedTask;
+        };
+    });
+}
 
 builder.Services.AddAuthorization(AuthPolicies.Configure);
 
@@ -157,6 +237,11 @@ await StartupSeeding.RunWithRetryAsync(async () =>
     var adminSeeder = scope.ServiceProvider.GetRequiredService<IAdminSeeder>();
     await adminSeeder.SeedAsync();
 }, app.Logger);
+
+// First, so everything after it (HTTPS redirection, authentication and the
+// Google redirect URI) sees the original https scheme Render's proxy
+// received - see the ForwardedHeadersOptions above.
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
