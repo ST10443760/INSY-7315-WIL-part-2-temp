@@ -341,7 +341,7 @@ namespace ThriveWellness.Services.Implementations
                     <li><strong>Time:</strong> {session?.Time.ToString(@"hh\:mm")}</li>
                     <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
                 </ul>
-                <p>We'll email you again if a spot is confirmed for you.</p>
+                <p>We'll email you again if a spot opens up for you.</p>
                 """;
 
             // No WriteNotificationRecordAsync here - that helper keys its
