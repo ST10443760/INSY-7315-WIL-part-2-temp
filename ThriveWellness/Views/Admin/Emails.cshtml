@@ -8,7 +8,7 @@
 
 <div class="thrive-admin-page-header">
     <h1>Emails</h1>
-    <span class="thrive-admin-page-header__subtitle">The latest 50 emails sent to clients.</span>
+    <span class="thrive-admin-page-header__subtitle">The latest 50 emails to clients, including any that failed to send.</span>
 </div>
 
 <div class="thrive-admin-filter-tabs">
@@ -54,7 +54,7 @@
                                 <span class="thrive-admin-table__muted">@email.RecipientEmail</span>
                             </td>
                             <td>@email.TypeLabel</td>
-                            <td><span class="thrive-pill thrive-pill--confirmed">@email.Status</span></td>
+                            <td><span class="thrive-pill @(email.Status == NotificationStatus.Failed ? "thrive-pill--cancelled" : "thrive-pill--confirmed")">@email.Status</span></td>
                         </tr>
                     }
                 </tbody>
