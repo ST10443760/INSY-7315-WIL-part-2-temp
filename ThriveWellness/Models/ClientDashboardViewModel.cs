@@ -22,6 +22,9 @@ namespace ThriveWellness.Models
         public IReadOnlyList<ClientBookingViewModel> Past { get; set; } = Array.Empty<ClientBookingViewModel>();
         public IReadOnlyList<ClientPaymentViewModel> Payments { get; set; } = Array.Empty<ClientPaymentViewModel>();
         public IReadOnlyList<ClientWaitlistViewModel> Waitlist { get; set; } = Array.Empty<ClientWaitlistViewModel>();
+
+        // Streak and badges, filled in by the controller from RewardsService.
+        public RewardsViewModel Rewards { get; set; } = new();
     }
 
     // One of the client's own bookings, flattened with its session, studio

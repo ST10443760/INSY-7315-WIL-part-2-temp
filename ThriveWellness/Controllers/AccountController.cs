@@ -19,6 +19,7 @@ public class AccountController : Controller
     private readonly IAuthService _authService;
     private readonly IClientAccountService _clientAccountService;
     private readonly IClientDashboardService _dashboardService;
+    private readonly IRewardsService _rewardsService;
     private readonly IAuthenticationSchemeProvider _schemeProvider;
     private readonly ILogger<AccountController> _logger;
 
@@ -26,12 +27,14 @@ public class AccountController : Controller
         IAuthService authService,
         IClientAccountService clientAccountService,
         IClientDashboardService dashboardService,
+        IRewardsService rewardsService,
         IAuthenticationSchemeProvider schemeProvider,
         ILogger<AccountController> logger)
     {
         _authService = authService;
         _clientAccountService = clientAccountService;
         _dashboardService = dashboardService;
+        _rewardsService = rewardsService;
         _schemeProvider = schemeProvider;
         _logger = logger;
     }
@@ -125,13 +128,18 @@ public class AccountController : Controller
         return LocalRedirectOrDashboard(Url.IsLocalUrl(returnUrl) ? returnUrl : null);
     }
 
-    // The signed-in client's own page: summary tiles, upcoming and past
-    // bookings, payments and receipts, and their waitlists.
+    // The signed-in client's own page: summary tiles, rewards, upcoming and
+    // past bookings, payments and receipts, and their waitlists. Badges are
+    // checked first, so a class that has just finished shows up right away.
     [HttpGet]
     [Authorize(Policy = AuthPolicies.ClientOnly)]
     public async Task<IActionResult> Dashboard()
     {
-        var model = await _dashboardService.GetDashboardAsync(User.GetClientId()!.Value, User.FirstName());
+        var clientId = User.GetClientId()!.Value;
+        await _rewardsService.EvaluateAsync(clientId);
+
+        var model = await _dashboardService.GetDashboardAsync(clientId, User.FirstName());
+        model.Rewards = await _rewardsService.GetRewardsAsync(clientId);
         return View(model);
     }
 
