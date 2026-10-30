@@ -14,8 +14,69 @@
         <p class="thrive-text-muted">Your classes, payments and waitlists in one place.</p>
     </header>
 
-    @* Reserved for the Rewards section. Deliberately empty for now. *@
-    <div class="thrive-dashboard__rewards" data-rewards-slot></div>
+    @{ var rewards = Model.Rewards; }
+    <section class="thrive-dashboard__section thrive-rewards" aria-labelledby="rewards-heading">
+        <h2 class="thrive-dashboard__heading" id="rewards-heading">Rewards</h2>
+
+        @if (!rewards.HasAttended)
+        {
+            <div class="thrive-dashboard__empty">
+                <p>Your rewards start with your first class. Come along, and your streak and first badge will show up here.</p>
+                <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">View class schedule</a>
+            </div>
+        }
+        else
+        {
+            <div class="thrive-rewards__summary">
+                <div class="thrive-streak-card">
+                    <partial name="_BadgeIcon" model="@("flame")" />
+                    <div>
+                        <p class="thrive-streak-card__value">@rewards.CurrentStreak @(rewards.CurrentStreak == 1 ? "week" : "weeks") <span>current streak</span></p>
+                        <p class="thrive-streak-card__sub">Longest: @rewards.LongestStreak @(rewards.LongestStreak == 1 ? "week" : "weeks")</p>
+                        <p class="thrive-streak-card__note">@rewards.Encouragement</p>
+                    </div>
+                </div>
+                <p class="thrive-rewards__next">
+                    <strong>@rewards.EarnedCount of @rewards.Badges.Count badges earned.</strong>
+                    @if (rewards.NextBadgeText != null)
+                    {
+                        <span>Next: @rewards.NextBadgeText.</span>
+                    }
+                    else
+                    {
+                        <span>You've earned every badge - amazing.</span>
+                    }
+                </p>
+            </div>
+        }
+
+        <ul class="thrive-badge-grid">
+            @foreach (var badge in rewards.Badges)
+            {
+                <li class="thrive-badge @(badge.Earned ? "thrive-badge--earned" : "thrive-badge--locked")">
+                    <partial name="_BadgeIcon" model="@badge.IconKey" />
+                    <span class="thrive-badge__name">@badge.Name</span>
+                    <span class="thrive-badge__desc">@badge.Description</span>
+                    @if (badge.Earned)
+                    {
+                        <span class="thrive-badge__state">
+                            Earned @badge.AwardedAt!.Value.ToString("d MMM yyyy")
+                            @if (badge.IsNew)
+                            {
+                                <span class="thrive-badge__new">New</span>
+                            }
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="thrive-badge__state thrive-badge__state--locked">
+                            <partial name="_Icon" model="@("lock")" />Locked
+                        </span>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
 
     <div class="thrive-dashboard__tiles">
         <div class="thrive-tile">
