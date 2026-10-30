@@ -34,12 +34,16 @@ public class AdminController : Controller
     }
 
     // Money received, for a preset range (preset = month, 30days, year or
-    // all) or custom from/to dates; All time by default.
+    // all) or custom from/to dates; All time by default. group = monthly
+    // switches the graph from weekly (the default) to monthly.
     [HttpGet]
-    public async Task<IActionResult> Revenue(string? preset, DateTime? from, DateTime? to)
+    public async Task<IActionResult> Revenue(string? preset, DateTime? from, DateTime? to, string? group)
     {
         var range = _revenueService.ResolveRange(preset, from, to);
-        return View(await _revenueService.GetReportAsync(range));
+        var grouping = string.Equals(group, "monthly", StringComparison.OrdinalIgnoreCase)
+            ? RevenueGrouping.Monthly
+            : RevenueGrouping.Weekly;
+        return View(await _revenueService.GetReportAsync(range, grouping));
     }
 
     // The spend-per-client table for the same range, as a CSV download.

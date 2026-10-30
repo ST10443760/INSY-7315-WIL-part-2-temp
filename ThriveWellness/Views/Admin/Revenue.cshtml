@@ -15,17 +15,29 @@
         RevenuePreset.Custom => $"{range.From?.ToString("d MMM yyyy") ?? "The start"} to {range.To?.ToString("d MMM yyyy") ?? "today"}",
         _ => "All time"
     };
-    var maxMonth = Model.ByMonth.Count == 0 ? 0m : Model.ByMonth.Max(m => m.Amount);
-
     string Share(decimal share) => $"{Math.Round(share * 100, 1).ToString("0.#", CultureInfo.InvariantCulture)}%";
 
-    // The same range on the CSV link as on the page.
+    // The same range on the CSV link (and the graph toggle) as on the page.
     var csvRoute = new Dictionary<string, string?>
     {
         ["preset"] = range.Preset switch { RevenuePreset.ThisMonth => "month", RevenuePreset.Last30Days => "30days", RevenuePreset.ThisYear => "year", _ => null },
         ["from"] = range.Preset == RevenuePreset.Custom ? fromValue : null,
         ["to"] = range.Preset == RevenuePreset.Custom ? toValue : null
     };
+
+    // The graph's grouping travels with the range links and the date form,
+    // and the toggle keeps the range.
+    var monthly = Model.Grouping == RevenueGrouping.Monthly;
+    var group = monthly ? "monthly" : null;
+    var weeklyRoute = new Dictionary<string, string?>(csvRoute);
+    var monthlyRoute = new Dictionary<string, string?>(csvRoute) { ["group"] = "monthly" };
+
+    var series = Model.Series;
+    var period = monthly ? "month" : "week";
+    var highest = series.Count == 0 ? null : series.OrderByDescending(p => p.Amount).First();
+    var chartLabel = highest == null
+        ? $"Net revenue by {period}, {rangeLabel}: nothing paid."
+        : $"Net revenue by {period}, {rangeLabel}: total {Money.Format(series.Sum(p => p.Amount))} over {series.Count} {period}{(series.Count == 1 ? "" : "s")}; highest {highest.LongLabel} at {Money.Format(highest.Amount)}.";
 }
 
 <div class="thrive-admin-page-header">
@@ -34,10 +46,10 @@
 </div>
 
 <div class="thrive-admin-filter-tabs">
-    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.ThisMonth ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="month">This month</a>
-    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.Last30Days ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="30days">Last 30 days</a>
-    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.ThisYear ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="year">This year</a>
-    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.AllTime ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="all">All time</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.ThisMonth ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="month" asp-route-group="@group">This month</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.Last30Days ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="30days" asp-route-group="@group">Last 30 days</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.ThisYear ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="year" asp-route-group="@group">This year</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.AllTime ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="all" asp-route-group="@group">All time</a>
 </div>
 
 <form method="get" asp-action="Revenue" class="thrive-revenue-range">
@@ -49,6 +61,10 @@
         <label class="thrive-label" for="revenueTo">To</label>
         <input type="date" id="revenueTo" name="to" class="thrive-input" value="@(range.Preset == RevenuePreset.Custom ? toValue : null)" />
     </div>
+    @if (monthly)
+    {
+        <input type="hidden" name="group" value="monthly" />
+    }
     <button type="submit" class="thrive-btn thrive-btn--mauve">Apply dates</button>
 </form>
 
@@ -80,6 +96,33 @@
     payments that are awaiting payment or due a refund are left out. Dates are class dates.
 </p>
 
+<div class="thrive-chart-header">
+    <h2 class="thrive-admin-section-heading">Net revenue over time</h2>
+    <div class="thrive-chart-toggle" role="group" aria-label="Group the graph by">
+        <a class="thrive-chart-toggle__option @(!monthly ? "thrive-chart-toggle__option--active" : "")" aria-current="@(!monthly ? "true" : null)" asp-action="Revenue" asp-all-route-data="weeklyRoute">Weekly</a>
+        <a class="thrive-chart-toggle__option @(monthly ? "thrive-chart-toggle__option--active" : "")" aria-current="@(monthly ? "true" : null)" asp-action="Revenue" asp-all-route-data="monthlyRoute">Monthly</a>
+    </div>
+</div>
+
+<div class="thrive-admin-card thrive-chart" data-chart>
+    @if (series.Count == 0)
+    {
+        <p class="thrive-admin-empty">No paid payments in this range yet, so there's nothing to graph. Try a wider date range.</p>
+    }
+    else
+    {
+        @* Drawn twice at different sizes; CSS shows the one that suits the
+           screen so the text never shrinks too small to read. *@
+        <partial name="_RevenueChart" model="@((RevenueChart.Build(series, 800, 300, 8), "wide", chartLabel))" />
+        <partial name="_RevenueChart" model="@((RevenueChart.Build(series, 340, 240, 4), "narrow", chartLabel))" />
+        <div class="thrive-chart__tooltip" data-chart-tooltip role="status" aria-live="polite" hidden></div>
+        @if (series.Count == 1)
+        {
+            <p class="thrive-revenue-note">Only one @period in this range has payments, so it shows as a single point.</p>
+        }
+    }
+</div>
+
 <h2 class="thrive-admin-section-heading">By month</h2>
 <div class="thrive-admin-card">
     @if (!Model.ByMonth.Any())
@@ -91,25 +134,16 @@
         <div class="thrive-admin-table-wrap">
             <table class="thrive-admin-table thrive-revenue-table">
                 <thead>
-                    <tr><th>Month</th><th>Amount</th><th>Payments</th><th>Share</th><th><span class="thrive-visually-hidden">Chart</span></th></tr>
+                    <tr><th>Month</th><th>Amount</th><th>Payments</th><th>Share</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var month in Model.ByMonth)
                     {
-                        var width = maxMonth == 0 ? 0 : Math.Round(month.Amount / maxMonth * 100, 1);
                         <tr>
                             <td>@month.Label</td>
                             <td class="thrive-admin-table__amount">@Money.Format(month.Amount)</td>
                             <td>@month.Count</td>
                             <td>@Share(month.Share)</td>
-                            <td class="thrive-revenue-bar-cell">
-                                @* Bar length relative to the best month. Decorative: the
-                                   amount is in the row as text. *@
-                                <svg class="thrive-revenue-bar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                                    <rect x="0" y="0" width="100" height="10" class="thrive-revenue-bar__track" />
-                                    <rect x="0" y="0" width="@width.ToString(CultureInfo.InvariantCulture)" height="10" class="thrive-revenue-bar__fill" />
-                                </svg>
-                            </td>
                         </tr>
                     }
                 </tbody>

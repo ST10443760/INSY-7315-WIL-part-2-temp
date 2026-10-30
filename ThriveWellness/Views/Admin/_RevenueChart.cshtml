@@ -1,0 +1,41 @@
+@model (RevenueChart.Geometry Chart, string Variant, string AriaLabel)
+@* One size of the revenue line graph (the page draws a wide and a narrow
+   one and CSS shows the one that fits, so labels stay readable). Every
+   value is also in the tables below, so nothing here is chart-only. *@
+@{
+    var chart = Model.Chart;
+    string N(double value) => RevenueChart.Num(value);
+}
+<svg class="thrive-chart__svg thrive-chart__svg--@Model.Variant" viewBox="0 0 @chart.Width @chart.Height"
+     role="img" aria-label="@Model.AriaLabel" focusable="false">
+    @* Each tick and label sits in a <g> so Razor reads <text> as SVG, not
+       as its own <text> tag. *@
+    @foreach (var tick in chart.YTicks)
+    {
+        <g>
+            <line class="thrive-chart__grid @(tick.Label == "R0" ? "thrive-chart__grid--zero" : "")"
+                  x1="@N(chart.PlotLeft)" x2="@N(chart.PlotRight)" y1="@N(tick.Y)" y2="@N(tick.Y)" />
+            <text class="thrive-chart__axis" x="@N(chart.PlotLeft - 8)" y="@N(tick.Y + 4)" text-anchor="end">@tick.Label</text>
+        </g>
+    }
+
+    @if (chart.AreaPath.Length > 0)
+    {
+        <path class="thrive-chart__area" d="@chart.AreaPath" />
+        <path class="thrive-chart__line" d="@chart.LinePath" />
+    }
+
+    @foreach (var label in chart.XLabels)
+    {
+        <g>
+            <text class="thrive-chart__axis" x="@N(label.X)" y="@(chart.Height - 10)" text-anchor="middle">@label.Label</text>
+        </g>
+    }
+
+    @foreach (var point in chart.Points)
+    {
+        <circle class="thrive-chart__point" cx="@N(point.X)" cy="@N(point.Y)" r="5" tabindex="0"
+                data-chart-point data-period="@point.LongLabel" data-amount="@Money.Format(point.Amount)"
+                aria-label="@point.LongLabel: @Money.Format(point.Amount)" />
+    }
+</svg>
