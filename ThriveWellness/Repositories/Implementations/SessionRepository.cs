@@ -27,7 +27,17 @@ namespace ThriveWellness.Repositories.Implementations
             return await _context.Sessions.FirstOrDefaultAsync(s => s.SessionId == id);
         }
 
-        public async Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date)
+        // The date of the latest today-or-later session, or null if there
+        // are none - the schedule's Next button stops at that week.
+        public async Task<DateTime?> GetLastUpcomingSessionDateAsync()
+        {
+            var today = DateTime.Today;
+            return await _context.Sessions
+                .Where(s => s.Date >= today)
+                .MaxAsync(s => (DateTime?)s.Date);
+        }
+
+        public async Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date, DateTime? weekStart = null)
         {
             // Public schedule only ever shows today-or-later sessions - past
             // sessions stay in the database (and still show in admin views,
@@ -51,6 +61,16 @@ namespace ThriveWellness.Repositories.Implementations
             {
                 var day = date.Value.Date;
                 query = query.Where(x => x.session.Date.Date == day);
+            }
+
+            // The Monday-to-Sunday week the schedule page is browsing (see
+            // ScheduleWeek) - the end is exclusive, so the whole of Sunday
+            // is included.
+            if (weekStart.HasValue)
+            {
+                var from = weekStart.Value.Date;
+                var to = from.AddDays(7);
+                query = query.Where(x => x.session.Date >= from && x.session.Date < to);
             }
 
             var ordered = query.OrderBy(x => x.session.Date).ThenBy(x => x.session.Time);

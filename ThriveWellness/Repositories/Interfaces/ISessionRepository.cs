@@ -10,8 +10,12 @@ namespace ThriveWellness.Repositories.Interfaces
         Task<Session?> GetByIdAsync(int id);
 
         // All sessions (open, full and closed) with real booked counts, for
-        // the public schedule page. Optional server-side filters.
-        Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date);
+        // the public schedule page. Optional server-side filters, including
+        // the Monday a week starts on.
+        Task<IEnumerable<SessionListItemViewModel>> GetScheduleAsync(string? locationAddress, DateTime? date, DateTime? weekStart = null);
+
+        // The latest today-or-later session date, or null if none.
+        Task<DateTime?> GetLastUpcomingSessionDateAsync();
 
         // Active (non-cancelled) bookings against one session - used to
         // block/redirect a booking attempt on a session that's already full.
