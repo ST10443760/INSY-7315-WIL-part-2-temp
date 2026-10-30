@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Models;
 using ThriveWellness.Services.Interfaces;
 
@@ -11,7 +12,7 @@ namespace ThriveWellness.Controllers;
 // letting it become an unhandled 500 - that's how the "name/address
 // required" and "location has sessions tied to it" rules actually reach the
 // admin's screen.
-[Authorize]
+[Authorize(Policy = AuthPolicies.AdminOnly)]
 public class LocationController : Controller
 {
     private readonly ILocationService _locationService;
