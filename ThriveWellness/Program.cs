@@ -85,6 +85,7 @@ builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepo
 // IPaymentGateway here instead; nothing that charges a card changes.
 builder.Services.AddScoped<IPaymentGateway, SimulatedCardGateway>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddScoped<IRefundService, RefundService>();
 builder.Services.AddScoped<IClientDashboardService, ClientDashboardService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
