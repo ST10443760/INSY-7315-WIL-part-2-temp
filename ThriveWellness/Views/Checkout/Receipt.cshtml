@@ -1,0 +1,60 @@
+@model ThriveWellness.Models.ReceiptViewModel
+
+@{
+    ViewData["Title"] = "Receipt";
+    ViewData["ThriveBodyBeige"] = true;
+}
+
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card thrive-receipt">
+        <div class="thrive-booking-card__header">
+            <div class="thrive-result-icon"><partial name="_Icon" model="@("check-circle")" /></div>
+            <h1 class="thrive-h2-heading">Payment confirmed</h1>
+            <span class="thrive-subtitle-italic">You're booked in. A confirmation email is on its way.</span>
+        </div>
+
+        <p class="thrive-receipt__amount">R@(Model.Amount.ToString("N2")) <span>@Model.Currency</span></p>
+
+        <div class="thrive-detail-card">
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("calendar")" />Paid on</span>
+                <span class="thrive-detail-row__value">@Model.PaidAt.ToString("d MMMM yyyy")</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("card")" />Card</span>
+                <span class="thrive-detail-row__value">@Model.Brand ending in @Model.Last4</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("tag")" />Reference</span>
+                <span class="thrive-detail-row__value thrive-receipt__reference">@Model.GatewayReference</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("people")" />Class</span>
+                <span class="thrive-detail-row__value">@Model.SessionType.ToDisplayLabel()</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("clock")" />Date &amp; Time</span>
+                <span class="thrive-detail-row__value">@Model.SessionDate.ToString("dddd, d MMMM yyyy") | @Model.SessionTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("pin")" />Location</span>
+                <span class="thrive-detail-row__value">@Model.LocationName, @Model.LocationAddress</span>
+            </div>
+            <div class="thrive-detail-row">
+                <span class="thrive-detail-row__label"><partial name="_Icon" model="@("list")" />Booking</span>
+                <span class="thrive-detail-row__value">#@Model.BookingId</span>
+            </div>
+        </div>
+
+        <p class="thrive-booking-caption">Thrive Wellness Pilates &middot; keep this receipt for your records.</p>
+
+        <div class="thrive-receipt__actions thrive-no-print">
+            <button type="button" class="thrive-btn thrive-btn--outline" data-print>Print receipt</button>
+            <a class="thrive-btn thrive-btn--mauve" asp-controller="Account" asp-action="Dashboard">Go to my dashboard</a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/checkout.js" asp-append-version="true"></script>
+}
