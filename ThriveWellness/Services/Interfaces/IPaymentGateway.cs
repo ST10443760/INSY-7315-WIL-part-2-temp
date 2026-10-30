@@ -8,6 +8,11 @@ namespace ThriveWellness.Services.Interfaces
     // line in Program.cs, nothing else.
     public interface IPaymentGateway
     {
+        // True when no real money can move (a provider's sandbox, or the
+        // simulated gateway). The checkout shows a small "Test mode" label
+        // and the test card numbers only while this is true.
+        bool IsTestMode { get; }
+
         // Charges the card. A declined or invalid card is a normal result
         // (Success = false with a failure code and message), not an
         // exception.

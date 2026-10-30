@@ -34,6 +34,9 @@ namespace ThriveWellness.Services.Implementations
             _processingDelay = processingDelay;
         }
 
+        // Always: there is no real bank behind this gateway.
+        public bool IsTestMode => true;
+
         public async Task<GatewayChargeResult> ChargeAsync(GatewayChargeRequest request, CancellationToken cancellationToken = default)
         {
             if (_processingDelay > TimeSpan.Zero)
