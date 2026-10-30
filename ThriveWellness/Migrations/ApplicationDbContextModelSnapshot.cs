@@ -102,6 +102,9 @@ namespace ThriveWellness.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("GoogleSubject")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsNew")
                         .HasColumnType("boolean");
 
@@ -114,6 +117,10 @@ namespace ThriveWellness.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("ClientId");
+
+                    b.HasIndex("GoogleSubject")
+                        .IsUnique()
+                        .HasFilter("\"GoogleSubject\" IS NOT NULL");
 
                     b.ToTable("Clients");
                 });
