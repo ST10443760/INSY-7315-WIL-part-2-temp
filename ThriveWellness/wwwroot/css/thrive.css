@@ -92,6 +92,18 @@ a {
   color: var(--color-maroon);
 }
 
+/* A form button (e.g. Sign out, which has to be a POST) that reads as an
+   ordinary link. */
+.thrive-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-maroon);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 h1,
 h2,
 h3 {
