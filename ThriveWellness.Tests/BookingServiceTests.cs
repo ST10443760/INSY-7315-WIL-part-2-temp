@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
@@ -39,7 +40,8 @@ public class BookingServiceTests
             _waitlistService.Object,
             _paymentRepository.Object,
             _notificationService.Object,
-            context ?? NewInMemoryContext());
+            context ?? NewInMemoryContext(),
+            NullLogger<BookingService>.Instance);
     }
 
     private static Session OpenSession(int capacity = 10) => new()

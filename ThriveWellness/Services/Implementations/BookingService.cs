@@ -23,6 +23,7 @@ namespace ThriveWellness.Services.Implementations
         private readonly IPaymentRepository _paymentRepository;
         private readonly INotificationService _notificationService;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<BookingService> _logger;
 
         public BookingService(
             IClientRepository clientRepository,
@@ -31,7 +32,8 @@ namespace ThriveWellness.Services.Implementations
             IWaitlistService waitlistService,
             IPaymentRepository paymentRepository,
             INotificationService notificationService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            ILogger<BookingService> logger)
         {
             _clientRepository = clientRepository;
             _bookingRepository = bookingRepository;
@@ -40,6 +42,7 @@ namespace ThriveWellness.Services.Implementations
             _paymentRepository = paymentRepository;
             _notificationService = notificationService;
             _context = context;
+            _logger = logger;
         }
 
         // Looks up a client by email so the booking form can decide whether
@@ -178,7 +181,19 @@ namespace ThriveWellness.Services.Implementations
                 await _context.SaveChangesAsync();
             }
 
-            await _notificationService.SendConfirmationEmailAsync(booking);
+            // The booking, payment and intake form are already saved, so an
+            // email failure must never turn into an error page or a lost
+            // booking: NotificationService logs it as a Failed notification
+            // (visible on the admin Emails page), and the client still lands
+            // on the normal Booking received page.
+            try
+            {
+                await _notificationService.SendConfirmationEmailAsync(booking);
+            }
+            catch (Exception ex)
+            {
+                LogEmailFailure(ex, "booking received", booking.BookingId);
+            }
 
             return new BookingCreateResult
             {
@@ -242,10 +257,29 @@ namespace ThriveWellness.Services.Implementations
 
             if (notifyClient)
             {
-                await _notificationService.SendCancellationEmailAsync(booking);
+                // The cancellation itself already stands; a failed email is
+                // logged (and recorded as Failed) rather than shown as an
+                // error.
+                try
+                {
+                    await _notificationService.SendCancellationEmailAsync(booking);
+                }
+                catch (Exception ex)
+                {
+                    LogEmailFailure(ex, "cancellation", booking.BookingId);
+                }
             }
 
             return new CancelBookingResult { Success = true };
+        }
+
+        // Exception type and message only - SendGrid's error text never
+        // contains the API key, and nothing from configuration is logged.
+        private void LogEmailFailure(Exception ex, string emailKind, int bookingId)
+        {
+            _logger.LogWarning(
+                "The {EmailKind} email for booking {BookingId} could not be sent ({ExceptionType}: {ExceptionMessage}). The booking itself was saved.",
+                emailKind, bookingId, ex.GetType().Name, ex.Message);
         }
 
         public Task<Booking?> GetByIdAsync(int bookingId)
