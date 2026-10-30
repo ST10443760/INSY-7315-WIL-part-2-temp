@@ -36,22 +36,20 @@
             </div>
         </div>
 
-        <div asp-validation-summary="All" class="thrive-validation-summary"></div>
-
+        @* Joins as the signed-in client: their name and address are shown
+           for reference only, and only the session id is posted. *@
         <form asp-controller="Booking" asp-action="JoinWaitlistSubmit" method="post" data-busy-text="Joining…">
             @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="SessionId" />
+            <input type="hidden" name="sessionId" value="@Model.SessionId" />
 
             <div class="thrive-field">
-                <label class="thrive-label" asp-for="FullName">Full Name</label>
-                <input asp-for="FullName" class="thrive-input" placeholder="Enter your full name" />
-                <span asp-validation-for="FullName" class="thrive-field-error"></span>
+                <label class="thrive-label" for="WaitlistName">Full Name</label>
+                <input id="WaitlistName" class="thrive-input" value="@Model.FullName" readonly />
             </div>
 
             <div class="thrive-field">
-                <label class="thrive-label" asp-for="Email">Email Address</label>
-                <input asp-for="Email" class="thrive-input" placeholder="Enter your email address" />
-                <span asp-validation-for="Email" class="thrive-field-error"></span>
+                <label class="thrive-label" for="WaitlistEmail">Email Address</label>
+                <input id="WaitlistEmail" class="thrive-input" value="@Model.Email" readonly />
             </div>
 
             <button type="submit" class="thrive-btn thrive-btn--mauve thrive-btn--block">Join Waitlist</button>
