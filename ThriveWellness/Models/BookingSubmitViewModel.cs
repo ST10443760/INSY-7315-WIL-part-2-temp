@@ -3,15 +3,16 @@ using System.ComponentModel.DataAnnotations;
 namespace ThriveWellness.Models
 {
     // View model (with data annotations for MVC's built-in validation) for
-    // the booking flow's second step - the full form, shown once
-    // CheckClientStatusAsync has determined new vs. returning (IsNewClient).
+    // the booking details form, pre-filled from the signed-in client's
+    // account. IsNewClient (a first booking) drives whether the intake and
+    // consent fields appear.
     public class BookingSubmitViewModel
     {
         [Required]
         public int SessionId { get; set; }
 
-        [Required]
-        [EmailAddress]
+        // Display-only: the client's account email, filled in by the
+        // controller. Never posted back or trusted.
         public string Email { get; set; } = string.Empty;
 
         [Required]

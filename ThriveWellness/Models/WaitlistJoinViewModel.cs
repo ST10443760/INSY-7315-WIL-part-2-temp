@@ -4,18 +4,15 @@ namespace ThriveWellness.Models
 {
     // The direct "join the waitlist without booking" entry point for a
     // session that's already full or closed - lighter-weight than the full
-    // booking flow, no payment fields.
+    // booking flow, no payment fields. Needs a signed-in client.
     public class WaitlistJoinViewModel
     {
         [Required]
         public int SessionId { get; set; }
 
-        [Required]
-        [StringLength(200)]
+        // Display-only: the signed-in client's name and email, shown for
+        // reference. The waitlist entry attaches to their client id.
         public string FullName { get; set; } = string.Empty;
-
-        [Required]
-        [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
         // Display-only, repopulated by the controller on every render.
