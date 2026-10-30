@@ -66,7 +66,7 @@
                             }
                             @if (!booking.IsCancelled)
                             {
-                                <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-controller="Booking" asp-action="Cancel" asp-route-token="@booking.CancellationToken" onclick="return confirm('Cancel this booking?');">Cancel</a>
+                                <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-controller="Booking" asp-action="CancelBooking" asp-route-bookingId="@booking.BookingId">Cancel</a>
                             }
                         </div>
                     </li>
