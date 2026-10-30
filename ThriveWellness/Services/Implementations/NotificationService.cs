@@ -126,7 +126,10 @@ namespace ThriveWellness.Services.Implementations
         // Sent the moment a booking is created (before payment), covering
         // the class details, the amount owing and how to pay, and the FR-18
         // cancellation link - this is often the only email a client gets
-        // before turning up, so it has to be self-contained.
+        // before turning up, so it has to be self-contained. Nothing is paid
+        // yet at this point, so the wording only ever says the booking was
+        // received and the spot is being held - never that it's confirmed.
+        // The payment email (SendWelcomeEmailAsync) is the one that does.
         public async Task SendConfirmationEmailAsync(Booking booking)
         {
             var client = await _clientRepository.GetByIdAsync(booking.ClientId);
@@ -144,7 +147,8 @@ namespace ThriveWellness.Services.Implementations
 
             var html = $"""
                 <p>Hi {client.FullName},</p>
-                <p>Your booking is in. Here are the details:</p>
+                <p>Thanks - we've received your booking. Your spot is being held for you pending payment.
+                Here are the details:</p>
                 <ul>
                     <li><strong>Class:</strong> {session?.SessionType}</li>
                     <li><strong>Date:</strong> {session?.Date.ToString("yyyy-MM-dd")}</li>
@@ -152,10 +156,11 @@ namespace ThriveWellness.Services.Implementations
                     <li><strong>Venue:</strong> {location?.Name} - {location?.Address}</li>
                 </ul>
                 {paymentDetails}
+                <p>Once the studio has received your payment, we'll send you another email to let you know.</p>
                 <p>Need to cancel? <a href="{cancelUrl}">Cancel this booking</a>.</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Your Thrive Wellness booking is confirmed", html);
+            await _emailSender.SendEmailAsync(client.Email, "Booking received: complete your payment to secure your spot", html);
             await WriteNotificationRecordAsync(booking.BookingId, "Confirmation");
         }
 
