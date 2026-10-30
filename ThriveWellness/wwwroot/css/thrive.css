@@ -867,7 +867,198 @@ h3 {
   margin: 0;
 }
 
+/* Visitors: a real button for Sign in, at the end of the bar. */
+.thrive-nav__signin {
+  padding: 0.55rem 1.2rem;
+  font-size: 0.9rem;
+}
+
+/* Signed-in profile menu (wide screens). The panel opens below the round
+   button, right-aligned to it so it never runs off the right edge, and is
+   never wider than the screen. */
+.thrive-profile {
+  position: relative;
+}
+
+.thrive-profile__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.thrive-profile__trigger:hover,
+.thrive-profile__trigger[aria-expanded="true"] {
+  border-color: var(--color-dusty-rose);
+}
+
+.thrive-profile__trigger:focus-visible,
+.thrive-profile__item:focus-visible {
+  outline: 2px solid var(--color-maroon);
+  outline-offset: 2px;
+}
+
+/* Items run edge to edge, so their outline is drawn inside them. */
+.thrive-profile__item:focus-visible {
+  outline-offset: -2px;
+}
+
+.thrive-profile__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-maroon);
+  color: var(--color-white);
+  font-weight: 700;
+}
+
+.thrive-profile__chevron .thrive-icon {
+  width: 1em;
+  height: 1em;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+}
+
+.thrive-profile__trigger[aria-expanded="true"] .thrive-profile__chevron .thrive-icon {
+  transform: rotate(180deg);
+}
+
+.thrive-profile__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 120;
+  min-width: 240px;
+  max-width: calc(100vw - 2 * var(--space-3));
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  box-shadow: var(--shadow-card-hover);
+  padding: var(--space-2) 0;
+}
+
+.thrive-profile__menu[hidden] {
+  display: none;
+}
+
+.thrive-profile__who {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.thrive-profile__who-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-profile__who-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.thrive-profile__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.thrive-profile__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.thrive-profile__item:hover,
+.thrive-profile__item:focus-visible {
+  background: var(--color-pale-rose);
+  color: var(--color-maroon);
+}
+
+.thrive-profile__item--active {
+  color: var(--color-maroon);
+  font-weight: 600;
+}
+
+.thrive-profile__item--signout {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-1);
+}
+
+/* The mobile panel's account section - only shown in the open mobile
+   menu (see the max-width: 768px block below). */
+.thrive-nav__account {
+  display: none;
+}
+
+/* Below 1024px the bar has less room; keep just the initial. */
+@media (max-width: 1024px) {
+  .thrive-profile__first-name {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
+  .thrive-profile {
+    display: none;
+  }
+
+  .thrive-nav__signin-item {
+    width: 100%;
+    padding-top: var(--space-2);
+  }
+
+  .thrive-nav__signin {
+    width: 100%;
+  }
+
+  .thrive-nav__account {
+    display: block;
+    width: 100%;
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .thrive-nav__account-name {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--color-maroon);
+  }
+
+  .thrive-nav__account-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
   .thrive-nav-toggle {
     display: inline-flex;
     /* Stays clickable above the backdrop (z-index: 90) while the menu is
