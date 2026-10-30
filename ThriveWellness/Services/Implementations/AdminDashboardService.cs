@@ -181,6 +181,27 @@ namespace ThriveWellness.Services.Implementations
                 .ToListAsync();
         }
 
+        public async Task<IReadOnlyList<SessionAttendeeViewModel>> GetAttendeesAsync(int sessionId)
+        {
+            return await (
+                from booking in _context.Bookings
+                join client in _context.Clients on booking.ClientId equals client.ClientId
+                join payment in _context.Payments on booking.BookingId equals payment.BookingId into payments
+                from payment in payments.DefaultIfEmpty()
+                where booking.SessionId == sessionId
+                orderby booking.Status == "Cancelled", client.FullName
+                select new SessionAttendeeViewModel
+                {
+                    BookingId = booking.BookingId,
+                    ClientName = client.FullName,
+                    ClientEmail = client.Email,
+                    BookingStatus = booking.Status,
+                    PaymentStatus = payment != null ? payment.Status : null,
+                    PaymentMethod = payment != null ? payment.Method : null,
+                    NoShow = booking.NoShow
+                }).ToListAsync();
+        }
+
         // Shared projection used by GetDashboardAsync, GetSessionOverviewsAsync
         // and GetCalendarAsync, so the booked-count calculation below only
         // has to agree with BookingService/WaitlistService's own capacity

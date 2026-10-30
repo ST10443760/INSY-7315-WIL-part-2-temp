@@ -16,5 +16,9 @@ namespace ThriveWellness.Services.Interfaces
         // The latest 50 emails logged in Notifications, newest first,
         // optionally filtered to one Notification.Type.
         Task<IReadOnlyList<EmailLogRowViewModel>> GetRecentEmailsAsync(string? type);
+
+        // Everyone booked on one session (cancelled bookings included, at
+        // the end), with their payment and no-show state.
+        Task<IReadOnlyList<SessionAttendeeViewModel>> GetAttendeesAsync(int sessionId);
     }
 }
