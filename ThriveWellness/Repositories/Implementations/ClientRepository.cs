@@ -26,6 +26,23 @@ namespace ThriveWellness.Repositories.Implementations
             return await _context.Clients.FirstOrDefaultAsync(c => c.Email == email);
         }
 
+        public async Task<Client?> GetByGoogleSubjectAsync(string googleSubject)
+        {
+            return await _context.Clients.FirstOrDefaultAsync(c => c.GoogleSubject == googleSubject);
+        }
+
+        // Case-insensitive, since an address typed into the old booking
+        // form ("Jane@Example.com") must still match the lowercase one
+        // Google returns. Oldest row first if there were ever duplicates.
+        public async Task<Client?> GetByEmailIgnoringCaseAsync(string email)
+        {
+            var lowered = email.Trim().ToLower();
+            return await _context.Clients
+                .Where(c => c.Email.ToLower() == lowered)
+                .OrderBy(c => c.ClientId)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task AddAsync(Client client)
         {
             _context.Clients.Add(client);

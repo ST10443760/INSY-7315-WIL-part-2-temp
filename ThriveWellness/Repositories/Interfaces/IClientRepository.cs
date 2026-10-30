@@ -8,6 +8,8 @@ namespace ThriveWellness.Repositories.Interfaces
     {
         Task<Client?> GetByIdAsync(int id);
         Task<Client?> GetByEmailAsync(string email);
+        Task<Client?> GetByGoogleSubjectAsync(string googleSubject);
+        Task<Client?> GetByEmailIgnoringCaseAsync(string email);
         Task AddAsync(Client client);
         Task UpdateAsync(Client client);
 
