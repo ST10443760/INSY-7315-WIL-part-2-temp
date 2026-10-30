@@ -41,8 +41,15 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var success = await _authService.Login(model.Username, model.Password);
-        if (!success)
+        var result = await _authService.Login(model.Username, model.Password);
+        if (result == LoginResult.LockedOut)
+        {
+            // Same wording whether or not the username exists - unknown
+            // usernames lock out on the same rule (see AuthService.Login).
+            ModelState.AddModelError(string.Empty, "Too many attempts, try again later.");
+            return View(model);
+        }
+        if (result != LoginResult.Success)
         {
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
             return View(model);
