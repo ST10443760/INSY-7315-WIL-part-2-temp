@@ -13,13 +13,15 @@ namespace ThriveWellness.Tests;
 // its protection fails here rather than in production.
 public class AdminAuthorizationTests
 {
-    // The only controllers with pages anyone may open. Every other controller
-    // is an admin controller and must require AdminOnly as a whole.
+    // The only controllers with pages anyone (or any signed-in client) may
+    // open. Every other controller is an admin controller and must require
+    // AdminOnly as a whole.
     private static readonly HashSet<Type> PublicControllers = new()
     {
         typeof(HomeController),
         typeof(BookingController),
-        typeof(AccountController)
+        typeof(AccountController),
+        typeof(CheckoutController)
     };
 
     // Admin-only actions that live inside an otherwise public controller.
@@ -187,6 +189,8 @@ public class AdminAuthorizationTests
     [InlineData(nameof(BookingController), nameof(BookingController.JoinWaitlist))]
     [InlineData(nameof(BookingController), nameof(BookingController.JoinWaitlistSubmit))]
     [InlineData(nameof(AccountController), nameof(AccountController.Dashboard))]
+    [InlineData(nameof(CheckoutController), nameof(CheckoutController.Pay))]
+    [InlineData(nameof(CheckoutController), nameof(CheckoutController.Receipt))]
     public async Task ClientAction_IsOnlyAllowedForASignedInClient(string controllerName, string actionName)
     {
         var (controller, action) = Resolve(controllerName, actionName);
