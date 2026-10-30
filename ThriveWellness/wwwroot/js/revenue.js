@@ -1,5 +1,6 @@
-// Revenue page: sorts the spend-per-client table when a column heading is
-// clicked (again to reverse), and filters it as the search box is typed in.
+// Revenue page: tooltips on the net revenue graph's points, and the
+// spend-per-client table - sorted when a column heading is clicked (again
+// to reverse), filtered as the search box is typed in.
 // The table arrives already sorted by total spent, so without JavaScript it
 // still reads correctly.
 (function () {
@@ -33,6 +34,49 @@
                     other.setAttribute("aria-sort", "none");
                 });
                 th.setAttribute("aria-sort", ascending ? "ascending" : "descending");
+            });
+        });
+    });
+
+    // Revenue graph: hovering or focusing (Tab) a point shows the period and
+    // its net amount in a tooltip above it; leaving it, or Escape, hides it.
+    document.querySelectorAll("[data-chart]").forEach(function (chart) {
+        var tooltip = chart.querySelector("[data-chart-tooltip]");
+        if (!tooltip) {
+            return;
+        }
+
+        function show(point) {
+            tooltip.textContent = "";
+            var period = document.createElement("strong");
+            period.textContent = point.getAttribute("data-period");
+            tooltip.appendChild(period);
+            tooltip.appendChild(document.createTextNode(point.getAttribute("data-amount")));
+            tooltip.hidden = false;
+
+            var box = chart.getBoundingClientRect();
+            var dot = point.getBoundingClientRect();
+            var x = dot.left + dot.width / 2 - box.left;
+            // Keep the tooltip inside the card at either end of the line.
+            var half = tooltip.offsetWidth / 2;
+            x = Math.min(Math.max(x, half + 4), box.width - half - 4);
+            tooltip.style.left = x + "px";
+            tooltip.style.top = (dot.top - box.top) + "px";
+        }
+
+        function hide() {
+            tooltip.hidden = true;
+        }
+
+        chart.querySelectorAll("[data-chart-point]").forEach(function (point) {
+            point.addEventListener("mouseenter", function () { show(point); });
+            point.addEventListener("focus", function () { show(point); });
+            point.addEventListener("mouseleave", hide);
+            point.addEventListener("blur", hide);
+            point.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    hide();
+                }
             });
         });
     });
