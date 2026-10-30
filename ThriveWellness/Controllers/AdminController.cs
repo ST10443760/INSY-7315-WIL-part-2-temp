@@ -84,6 +84,18 @@ public class AdminController : Controller
         return View(entries);
     }
 
+    // The email log: the latest 50 Notifications rows, optionally filtered
+    // to one type. An unknown type is treated as "all" rather than showing
+    // an empty page for a mistyped URL.
+    public async Task<IActionResult> Emails(string? type)
+    {
+        var filterType = type != null && EmailTypes.All.Contains(type) ? type : null;
+
+        var emails = await _dashboardService.GetRecentEmailsAsync(filterType);
+        ViewData["SelectedType"] = filterType ?? "all";
+        return View(emails);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     // Sends the one-off "you're getting close" courtesy email for a single
