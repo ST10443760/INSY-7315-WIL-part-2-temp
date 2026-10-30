@@ -49,6 +49,115 @@ namespace ThriveWellness.Migrations
                     b.ToTable("Admins");
                 });
 
+            modelBuilder.Entity("ThriveWellness.Models.Badge", b =>
+                {
+                    b.Property<int>("BadgeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BadgeId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IconKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("BadgeId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Badges");
+
+                    b.HasData(
+                        new
+                        {
+                            BadgeId = 1,
+                            Code = "first-class",
+                            Description = "Attended your first class.",
+                            IconKey = "star",
+                            Name = "First Class",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            BadgeId = 2,
+                            Code = "getting-going",
+                            Description = "Attended 5 classes.",
+                            IconKey = "leaf",
+                            Name = "Getting Going",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            BadgeId = 3,
+                            Code = "committed",
+                            Description = "Attended 10 classes.",
+                            IconKey = "medal",
+                            Name = "Committed",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            BadgeId = 4,
+                            Code = "dedicated",
+                            Description = "Attended 25 classes.",
+                            IconKey = "trophy",
+                            Name = "Dedicated",
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            BadgeId = 5,
+                            Code = "three-week-streak",
+                            Description = "Attended a class in 3 weeks in a row.",
+                            IconKey = "flame",
+                            Name = "Three Week Streak",
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            BadgeId = 6,
+                            Code = "eight-week-streak",
+                            Description = "Attended a class in 8 weeks in a row.",
+                            IconKey = "bolt",
+                            Name = "Eight Week Streak",
+                            SortOrder = 6
+                        },
+                        new
+                        {
+                            BadgeId = 7,
+                            Code = "both-studios",
+                            Description = "Attended a class at both of our studios.",
+                            IconKey = "pin",
+                            Name = "Both Studios",
+                            SortOrder = 7
+                        },
+                        new
+                        {
+                            BadgeId = 8,
+                            Code = "early-bird",
+                            Description = "Attended 3 classes that start before 09:00.",
+                            IconKey = "sunrise",
+                            Name = "Early Bird",
+                            SortOrder = 8
+                        });
+                });
+
             modelBuilder.Entity("ThriveWellness.Models.Booking", b =>
                 {
                     b.Property<int>("BookingId")
@@ -66,6 +175,9 @@ namespace ThriveWellness.Migrations
 
                     b.Property<int>("ClientId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("NoShow")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("SessionId")
                         .HasColumnType("integer");
@@ -123,6 +235,33 @@ namespace ThriveWellness.Migrations
                         .HasFilter("\"GoogleSubject\" IS NOT NULL");
 
                     b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("ThriveWellness.Models.ClientBadge", b =>
+                {
+                    b.Property<int>("ClientBadgeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ClientBadgeId"));
+
+                    b.Property<DateTime>("AwardedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("BadgeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ClientBadgeId");
+
+                    b.HasIndex("BadgeId");
+
+                    b.HasIndex("ClientId", "BadgeId")
+                        .IsUnique();
+
+                    b.ToTable("ClientBadges");
                 });
 
             modelBuilder.Entity("ThriveWellness.Models.IntakeForm", b =>
@@ -378,6 +517,21 @@ namespace ThriveWellness.Migrations
                     b.HasOne("ThriveWellness.Models.Session", null)
                         .WithMany()
                         .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ThriveWellness.Models.ClientBadge", b =>
+                {
+                    b.HasOne("ThriveWellness.Models.Badge", null)
+                        .WithMany()
+                        .HasForeignKey("BadgeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThriveWellness.Models.Client", null)
+                        .WithMany()
+                        .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
