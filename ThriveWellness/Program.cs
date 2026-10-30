@@ -84,6 +84,7 @@ builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepo
 // moving to PayFast or Stripe means registering their implementation of
 // IPaymentGateway here instead; nothing that charges a card changes.
 builder.Services.AddScoped<IPaymentGateway, SimulatedCardGateway>();
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // PaymentService is the Observer-pattern subject (Task 1 doc, Section 9.3).
