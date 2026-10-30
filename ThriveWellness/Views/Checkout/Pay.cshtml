@@ -1,0 +1,143 @@
+@model ThriveWellness.Models.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+    ViewData["ThriveBodyBeige"] = true;
+    var summary = Model.Summary;
+    var amountText = $"R{summary.Amount:N2}";
+}
+
+<section class="thrive-container thrive-checkout-page">
+    <div class="thrive-checkout-page__header">
+        <h1 class="thrive-h2-serif-italic">Checkout</h1>
+        <span class="thrive-subtitle-italic">Pay for your class securely by card.</span>
+    </div>
+
+    <div class="thrive-checkout">
+        <aside class="thrive-checkout__panel thrive-checkout__summary" aria-labelledby="order-summary-heading">
+            <h2 class="thrive-checkout__heading" id="order-summary-heading">Order summary</h2>
+
+            <div class="thrive-detail-card">
+                <div class="thrive-detail-row">
+                    <span class="thrive-detail-row__label"><partial name="_Icon" model="@("people")" />Class</span>
+                    <span class="thrive-detail-row__value">@summary.SessionType.ToDisplayLabel()</span>
+                </div>
+                <div class="thrive-detail-row">
+                    <span class="thrive-detail-row__label"><partial name="_Icon" model="@("calendar")" />Date</span>
+                    <span class="thrive-detail-row__value">@summary.SessionDate.ToString("dddd, d MMMM yyyy")</span>
+                </div>
+                <div class="thrive-detail-row">
+                    <span class="thrive-detail-row__label"><partial name="_Icon" model="@("clock")" />Time</span>
+                    <span class="thrive-detail-row__value">@summary.SessionTime.ToString(@"hh\:mm")</span>
+                </div>
+                <div class="thrive-detail-row">
+                    <span class="thrive-detail-row__label"><partial name="_Icon" model="@("pin")" />Location</span>
+                    <span class="thrive-detail-row__value">@summary.LocationName, @summary.LocationAddress</span>
+                </div>
+                <div class="thrive-detail-row">
+                    <span class="thrive-detail-row__label"><partial name="_Icon" model="@("tag")" />Plan</span>
+                    <span class="thrive-detail-row__value">@(summary.PaymentType == "monthly" ? "Monthly" : "Per class")</span>
+                </div>
+            </div>
+
+            <div class="thrive-checkout__total">
+                <span>Total</span>
+                <span class="thrive-checkout__amount">@amountText</span>
+            </div>
+            <p class="thrive-checkout__note">Booking @summary.BookingId &middot; charged in South African rand (ZAR)</p>
+        </aside>
+
+        <div class="thrive-checkout__panel thrive-checkout__pay">
+            <div class="thrive-checkout__pay-header">
+                <h2 class="thrive-checkout__heading">Card details</h2>
+                @if (Model.IsTestMode)
+                {
+                    <span class="thrive-test-mode">Test mode</span>
+                }
+            </div>
+
+            @if (Model.UnavailableMessage != null)
+            {
+                <div class="thrive-banner thrive-banner--notice" role="status">@Model.UnavailableMessage</div>
+                <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Account" asp-action="Dashboard">Go to my dashboard</a>
+            }
+            else
+            {
+                @if (Model.ErrorMessage != null)
+                {
+                    <div class="thrive-banner thrive-banner--error" role="alert">
+                        @Model.ErrorMessage Please check your details or try another card.
+                    </div>
+                }
+
+                @* The number, expiry and CVC inputs deliberately have no value
+                   attribute: whatever was typed is never written back into
+                   the page, even after a declined card. *@
+                <form asp-controller="Checkout" asp-action="Pay" asp-route-bookingId="@summary.BookingId" method="post" class="thrive-card-form" data-checkout-form>
+                    @Html.AntiForgeryToken()
+
+                    <div class="thrive-field">
+                        <label class="thrive-label" for="CardholderName">Name on card</label>
+                        <input id="CardholderName" name="CardholderName" class="thrive-input" value="@Model.CardholderName"
+                               autocomplete="cc-name" required maxlength="100" />
+                    </div>
+
+                    <div class="thrive-field">
+                        <label class="thrive-label" for="CardNumber">Card number</label>
+                        <div class="thrive-card-number">
+                            <input id="CardNumber" name="CardNumber" class="thrive-input" inputmode="numeric"
+                                   autocomplete="cc-number" placeholder="1234 1234 1234 1234" required maxlength="23"
+                                   spellcheck="false" data-card-number aria-describedby="card-brand" />
+                            <span class="thrive-card-number__brand" id="card-brand" data-card-brand aria-live="polite"></span>
+                        </div>
+                    </div>
+
+                    <div class="thrive-card-form__row">
+                        <div class="thrive-field">
+                            <label class="thrive-label" for="Expiry">Expiry</label>
+                            <input id="Expiry" name="Expiry" class="thrive-input" inputmode="numeric"
+                                   autocomplete="cc-exp" placeholder="MM/YY" required maxlength="7" data-card-expiry />
+                        </div>
+                        <div class="thrive-field">
+                            <label class="thrive-label" for="Cvc">CVC</label>
+                            <input id="Cvc" name="Cvc" class="thrive-input" inputmode="numeric"
+                                   autocomplete="cc-csc" placeholder="123" required maxlength="4" data-card-cvc />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="thrive-btn thrive-btn--rose thrive-btn--block thrive-pay-btn" data-pay-button>
+                        <partial name="_Icon" model="@("lock")" />
+                        <span data-pay-label>Pay @amountText</span>
+                    </button>
+                </form>
+
+                <div class="thrive-secure-row">
+                    <span class="thrive-secure-row__text"><partial name="_Icon" model="@("lock")" />Secure payment</span>
+                    <span class="thrive-card-logos" aria-label="Accepted cards: Visa, Mastercard, American Express">
+                        <svg viewBox="0 0 48 30" aria-hidden="true" focusable="false"><rect width="48" height="30" rx="4" fill="#ffffff" stroke="#e7dcd2" /><text x="24" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-style="italic" font-weight="700" fill="#1a1f71">VISA</text></svg>
+                        <svg viewBox="0 0 48 30" aria-hidden="true" focusable="false"><rect width="48" height="30" rx="4" fill="#ffffff" stroke="#e7dcd2" /><circle cx="20" cy="15" r="8" fill="#eb001b" /><circle cx="28" cy="15" r="8" fill="#f79e1b" fill-opacity="0.9" /></svg>
+                        <svg viewBox="0 0 48 30" aria-hidden="true" focusable="false"><rect width="48" height="30" rx="4" fill="#2e77bc" /><text x="24" y="19" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#ffffff">AMEX</text></svg>
+                    </span>
+                </div>
+
+                @if (Model.IsTestMode)
+                {
+                    <details class="thrive-test-cards">
+                        <summary>Test card numbers</summary>
+                        <p>No real money is charged. Use any future expiry date and any 3-digit CVC.</p>
+                        <ul>
+                            <li><button type="button" data-test-card="4242424242424242">4242 4242 4242 4242</button> <span>Visa, succeeds</span></li>
+                            <li><button type="button" data-test-card="5555555555554444">5555 5555 5555 4444</button> <span>Mastercard, succeeds</span></li>
+                            <li><button type="button" data-test-card="4000000000000002">4000 0000 0000 0002</button> <span>Declined</span></li>
+                            <li><button type="button" data-test-card="4000000000009995">4000 0000 0000 9995</button> <span>Insufficient funds</span></li>
+                        </ul>
+                    </details>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/checkout.js" asp-append-version="true"></script>
+}
