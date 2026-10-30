@@ -18,19 +18,25 @@ public class SessionController : Controller
     private readonly IWaitlistRepository _waitlistRepository;
     private readonly IClientRepository _clientRepository;
     private readonly IAdminDashboardService _dashboardService;
+    private readonly IBookingService _bookingService;
+    private readonly IRewardsService _rewardsService;
 
     public SessionController(
         ISessionService sessionService,
         ILocationRepository locationRepository,
         IWaitlistRepository waitlistRepository,
         IClientRepository clientRepository,
-        IAdminDashboardService dashboardService)
+        IAdminDashboardService dashboardService,
+        IBookingService bookingService,
+        IRewardsService rewardsService)
     {
         _sessionService = sessionService;
         _locationRepository = locationRepository;
         _waitlistRepository = waitlistRepository;
         _clientRepository = clientRepository;
         _dashboardService = dashboardService;
+        _bookingService = bookingService;
+        _rewardsService = rewardsService;
     }
 
     public async Task<IActionResult> Index()
@@ -214,5 +220,54 @@ public class SessionController : Controller
         ViewData["SessionTime"] = session.Time;
 
         return View(viewModel);
+    }
+
+    // Everyone booked on one session. Once the class has started, each
+    // booking gets a Mark no-show / Undo no-show button.
+    [HttpGet]
+    public async Task<IActionResult> Attendees(int id)
+    {
+        var session = await _sessionService.GetByIdAsync(id);
+        if (session == null)
+        {
+            return NotFound();
+        }
+
+        ViewData["SessionId"] = session.SessionId;
+        ViewData["SessionType"] = session.SessionType;
+        ViewData["SessionDate"] = session.Date;
+        ViewData["SessionTime"] = session.Time;
+        ViewData["HasStarted"] = session.Date.Date + session.Time <= DateTime.Now;
+
+        return View(await _dashboardService.GetAttendeesAsync(id));
+    }
+
+    // Marks (noShow = true) or unmarks a booking as a no-show, then
+    // re-checks the client's badges. A no-show isn't attended, so it never
+    // earns a badge - but badges already earned are kept (see
+    // RewardsService).
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetNoShow(int id, bool noShow)
+    {
+        var result = await _bookingService.SetNoShowAsync(id, noShow);
+        if (result.SessionId == null)
+        {
+            return NotFound();
+        }
+
+        if (result.Success)
+        {
+            await _rewardsService.EvaluateAsync(result.ClientId!.Value);
+            TempData["AttendeesBannerType"] = "success";
+            TempData["AttendeesBannerMessage"] = noShow ? "Marked as a no-show." : "No-show removed.";
+        }
+        else
+        {
+            TempData["AttendeesBannerType"] = "error";
+            TempData["AttendeesBannerMessage"] = result.ErrorMessage;
+        }
+
+        return RedirectToAction(nameof(Attendees), new { id = result.SessionId });
     }
 }

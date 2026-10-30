@@ -1,0 +1,91 @@
+@model IReadOnlyList<ThriveWellness.Models.SessionAttendeeViewModel>
+
+@{
+    ViewData["Title"] = "Attendees";
+    Layout = "_AdminLayout";
+    var sessionType = (string)ViewData["SessionType"]!;
+    var sessionDate = (DateTime)ViewData["SessionDate"]!;
+    var sessionTime = (TimeSpan)ViewData["SessionTime"]!;
+    var hasStarted = (bool)ViewData["HasStarted"]!;
+}
+
+<div class="thrive-admin-page-header">
+    <h1>Attendees</h1>
+    <span class="thrive-admin-page-header__subtitle">
+        @sessionType.ToDisplayLabel() on @sessionDate.ToString("d MMM yyyy") at @sessionTime.ToString(@"hh\:mm")
+    </span>
+</div>
+
+@if (TempData["AttendeesBannerMessage"] is string bannerMessage)
+{
+    var bannerType = TempData["AttendeesBannerType"] as string ?? "success";
+    <div class="thrive-banner thrive-banner--@bannerType" role="status">@bannerMessage</div>
+}
+
+@if (!hasStarted)
+{
+    <p class="thrive-admin-table__muted">No-shows can be marked once the class has started.</p>
+}
+
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">No one has booked this session.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Booking</th>
+                        <th>Payment</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var attendee in Model)
+                    {
+                        <tr>
+                            <td>@attendee.ClientName</td>
+                            <td>@attendee.ClientEmail</td>
+                            <td>
+                                <span class="thrive-pill @(attendee.BookingStatus switch { "Confirmed" => "thrive-pill--confirmed", "Cancelled" => "thrive-pill--cancelled", _ => "thrive-pill--pending" })">@attendee.BookingStatus</span>
+                            </td>
+                            <td>
+                                @(attendee.PaymentStatus ?? "None")
+                                @if (!string.IsNullOrEmpty(attendee.PaymentMethod))
+                                {
+                                    <br />
+                                    <span class="thrive-admin-table__muted">@attendee.PaymentMethod</span>
+                                }
+                            </td>
+                            <td>
+                                @if (attendee.NoShow)
+                                {
+                                    <span class="thrive-pill thrive-pill--no-show">No-show</span>
+                                }
+                                @if (hasStarted && !attendee.IsCancelled)
+                                {
+                                    <form asp-action="SetNoShow" asp-route-id="@attendee.BookingId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="noShow" value="@(attendee.NoShow ? "false" : "true")" />
+                                        <button type="submit" class="thrive-btn thrive-btn--outline thrive-btn--sm">@(attendee.NoShow ? "Undo no-show" : "Mark no-show")</button>
+                                    </form>
+                                }
+                                else if (!attendee.NoShow)
+                                {
+                                    <span class="thrive-admin-table__muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<p class="thrive-admin-back-link"><a class="thrive-btn thrive-btn--outline" asp-action="Index">&larr; Back to sessions</a></p>

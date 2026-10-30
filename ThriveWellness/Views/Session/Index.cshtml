@@ -68,6 +68,7 @@
                                             <button type="submit" class="thrive-btn thrive-btn--outline thrive-btn--sm">Mark Open</button>
                                         </form>
                                     }
+                                    <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Attendees" asp-route-id="@session.SessionId">Attendees</a>
                                     <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Waitlist" asp-route-id="@session.SessionId">Waitlist</a>
                                     <form asp-action="Delete" asp-route-id="@session.SessionId" method="post">
                                         @Html.AntiForgeryToken()
