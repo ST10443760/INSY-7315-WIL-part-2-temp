@@ -1298,6 +1298,46 @@ body.thrive-menu-open {
   padding: var(--space-6) var(--space-4);
 }
 
+/* Week browsing on the schedule: Previous / date range / Next in one row;
+   on narrow screens the range moves onto its own line above the buttons. */
+.thrive-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.thrive-week-nav__range {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+.thrive-week-nav__label {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-week-nav__today {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.thrive-week-nav__disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .thrive-week-nav__range {
+    order: -1;
+    flex-basis: 100%;
+  }
+}
+
 /* ==========================================================================
    Small-screen refinements (down to 360px)
    Everything above already reflows at 768/600px; these are the spots that
