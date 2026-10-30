@@ -69,6 +69,16 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Admin");
     }
 
+    // Where the cookie scheme sends someone who is signed in but not allowed
+    // in - a client opening an admin page, for example. Deliberately says
+    // nothing about what the page was.
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        Response.StatusCode = StatusCodes.Status403Forbidden;
+        return View();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     // Clears the sign-in cookie - this is the entire logout flow, since

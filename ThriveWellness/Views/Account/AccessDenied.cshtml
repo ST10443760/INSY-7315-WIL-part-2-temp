@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Not Available";
+    ViewData["ThriveBodyBeige"] = true;
+}
+
+<section class="thrive-container thrive-booking-page">
+    <div class="thrive-booking-card">
+        <div class="thrive-booking-card__header">
+            <div class="thrive-result-icon"><partial name="_Icon" model="@("lock")" /></div>
+            <h1 class="thrive-h2-heading">This page isn't available</h1>
+            <span class="thrive-subtitle-italic">You're signed in, but your account can't open this page.</span>
+        </div>
+
+        <a class="thrive-btn thrive-btn--mauve thrive-btn--block" asp-controller="Booking" asp-action="Schedule">Back to Schedule</a>
+
+        <form asp-controller="Account" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <p class="thrive-booking-caption">
+                Wrong account?
+                <button type="submit" class="thrive-link-button">Sign out</button>
+            </p>
+        </form>
+    </div>
+</section>
