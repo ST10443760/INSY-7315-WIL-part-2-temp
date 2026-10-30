@@ -65,7 +65,12 @@ namespace ThriveWellness.Repositories.Implementations
                 Amount = x.payment.Amount,
                 Method = x.payment.Method,
                 PaymentType = x.payment.PaymentType,
-                Status = x.payment.Status
+                Status = x.payment.Status,
+                GatewayReference = _context.PaymentTransactions
+                    .Where(t => t.PaymentId == x.payment.PaymentId && t.Status != PaymentTransactionStatus.Declined)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .Select(t => t.GatewayReference)
+                    .FirstOrDefault()
             }).ToListAsync();
         }
 

@@ -15,5 +15,9 @@ namespace ThriveWellness.Models
         public string Method { get; set; } = string.Empty;
         public string PaymentType { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+
+        // The card charge's gateway reference, for card payments that went
+        // through; null for EFT, cash and unpaid card bookings.
+        public string? GatewayReference { get; set; }
     }
 }
