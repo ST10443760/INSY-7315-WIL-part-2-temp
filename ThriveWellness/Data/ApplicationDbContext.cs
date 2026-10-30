@@ -22,6 +22,7 @@ namespace ThriveWellness.Data
         public DbSet<Session> Sessions => Set<Session>();
         public DbSet<Booking> Bookings => Set<Booking>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
         public DbSet<Waitlist> Waitlists => Set<Waitlist>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<IntakeForm> IntakeForms => Set<IntakeForm>();
@@ -67,6 +68,13 @@ namespace ThriveWellness.Data
                 .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Payment 1:many PaymentTransaction (a decline, then a retry)
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasOne<Payment>()
+                .WithMany()
+                .HasForeignKey(t => t.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Booking 1:0..1 IntakeForm
             modelBuilder.Entity<IntakeForm>()
                 .HasOne<Booking>()
@@ -110,6 +118,10 @@ namespace ThriveWellness.Data
 
             modelBuilder.Entity<Payment>()
                 .Property(p => p.Amount)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .Property(t => t.Amount)
                 .HasColumnType("decimal(18,2)");
 
             // Known studio locations, seeded via migration.
