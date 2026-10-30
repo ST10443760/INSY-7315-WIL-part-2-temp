@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Models;
 using ThriveWellness.Services.Interfaces;
 
@@ -11,7 +12,7 @@ namespace ThriveWellness.Controllers;
 // read-only except the last two actions, so it leans on
 // AdminDashboardService for its queries rather than touching repositories
 // directly.
-[Authorize]
+[Authorize(Policy = AuthPolicies.AdminOnly)]
 public class AdminController : Controller
 {
     private readonly IAdminDashboardService _dashboardService;
