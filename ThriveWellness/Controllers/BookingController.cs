@@ -247,6 +247,7 @@ public class BookingController : Controller
             LocationAddress = location?.Address ?? string.Empty,
             Status = booking.Status,
             Method = payment?.Method ?? string.Empty,
+            AmountDue = payment?.Amount,
             CancellationToken = booking.CancellationToken
         };
 

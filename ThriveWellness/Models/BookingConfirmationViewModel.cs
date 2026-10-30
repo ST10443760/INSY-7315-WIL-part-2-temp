@@ -14,6 +14,9 @@ namespace ThriveWellness.Models
         public string LocationAddress { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string Method { get; set; } = string.Empty;
+        // Null when the booking somehow has no Payment row - the page then
+        // just leaves the amount out of its next-step text.
+        public decimal? AmountDue { get; set; }
         public string CancellationToken { get; set; } = string.Empty;
     }
 }
