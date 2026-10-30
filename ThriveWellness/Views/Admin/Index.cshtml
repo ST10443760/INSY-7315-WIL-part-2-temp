@@ -93,7 +93,11 @@
                             <td>@payment.Method</td>
                             <td class="thrive-admin-table__amount">R@(payment.Amount.ToString("N2"))</td>
                             <td>
-                                @if (PaymentMethods.IsCard(payment.Method))
+                                @if (payment.BookingStatus == "Cancelled")
+                                {
+                                    <span class="thrive-pill thrive-pill--cancelled">Booking cancelled</span>
+                                }
+                                else if (PaymentMethods.IsCard(payment.Method))
                                 {
                                     <span class="thrive-admin-table__muted">Awaiting card payment</span>
                                 }
@@ -191,7 +195,17 @@
                                 <span class="thrive-admin-table__muted">@booking.LocationName</span>
                             </td>
                             <td>@booking.SessionDate.ToString("d MMM yyyy")</td>
-                            <td><span class="thrive-pill @statusPill">@booking.Status</span></td>
+                            <td>
+                                <span class="thrive-pill @statusPill">@booking.Status</span>
+                                @if (booking.PaymentStatus == PaymentStatuses.RefundDue)
+                                {
+                                    <span class="thrive-pill thrive-pill--refund-due">Refund due</span>
+                                }
+                                else if (booking.PaymentStatus == PaymentStatuses.Refunded)
+                                {
+                                    <span class="thrive-pill thrive-pill--refunded">Refunded</span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>

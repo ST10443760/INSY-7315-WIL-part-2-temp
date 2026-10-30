@@ -11,5 +11,9 @@ namespace ThriveWellness.Models
         public DateTime SessionDate { get; set; }
         public string LocationName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+
+        // The booking's payment status, so a cancelled booking's refund
+        // (Refund due or Refunded) shows next to it. Null if it has none.
+        public string? PaymentStatus { get; set; }
     }
 }
