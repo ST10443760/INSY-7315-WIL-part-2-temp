@@ -7,9 +7,9 @@ using ThriveWellness.Services.Interfaces;
 namespace ThriveWellness.Controllers;
 
 // MVC controller: the admin payments list and the "mark as confirmed"
-// action. The AdminOnly policy means every action here requires the admin sign-in
-// cookie from AccountController.Login - there's no payment-specific
-// permission, just "signed in or not".
+// action. The AdminOnly policy means every action here requires the admin
+// sign-in from AccountController.Login (a signed-in client is refused) -
+// there's no payment-specific permission beyond being the admin.
 [Authorize(Policy = AuthPolicies.AdminOnly)]
 public class PaymentController : Controller
 {
