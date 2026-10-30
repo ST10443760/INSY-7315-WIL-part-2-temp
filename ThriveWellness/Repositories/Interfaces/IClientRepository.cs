@@ -7,7 +7,6 @@ namespace ThriveWellness.Repositories.Interfaces
     public interface IClientRepository
     {
         Task<Client?> GetByIdAsync(int id);
-        Task<Client?> GetByEmailAsync(string email);
         Task<Client?> GetByGoogleSubjectAsync(string googleSubject);
         Task<Client?> GetByEmailIgnoringCaseAsync(string email);
         Task AddAsync(Client client);

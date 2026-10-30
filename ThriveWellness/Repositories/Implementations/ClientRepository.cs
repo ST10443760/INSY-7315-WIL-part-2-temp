@@ -21,11 +21,6 @@ namespace ThriveWellness.Repositories.Implementations
             return await _context.Clients.FirstOrDefaultAsync(c => c.ClientId == id);
         }
 
-        public async Task<Client?> GetByEmailAsync(string email)
-        {
-            return await _context.Clients.FirstOrDefaultAsync(c => c.Email == email);
-        }
-
         public async Task<Client?> GetByGoogleSubjectAsync(string googleSubject)
         {
             return await _context.Clients.FirstOrDefaultAsync(c => c.GoogleSubject == googleSubject);
