@@ -89,6 +89,14 @@
                             Waitlist
                         </a>
                     </li>
+                    <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Emails" ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Emails" ? "page" : null)"
+                           asp-controller="Admin" asp-action="Emails">
+                            <partial name="_Icon" model="@("envelope")" />
+                            Emails
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
