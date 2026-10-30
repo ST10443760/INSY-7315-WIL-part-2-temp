@@ -95,6 +95,12 @@ namespace ThriveWellness.Data
                 .HasForeignKey(n => n.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Every row logged before Status existed was a successful send,
+            // so the column defaults to Sent for them.
+            modelBuilder.Entity<Notification>()
+                .Property(n => n.Status)
+                .HasDefaultValue(NotificationStatus.Sent);
+
             modelBuilder.Entity<Payment>()
                 .Property(p => p.Amount)
                 .HasColumnType("decimal(18,2)");
