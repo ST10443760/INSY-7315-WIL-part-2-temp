@@ -9,10 +9,27 @@
     const string AdminDisplayName = "Saudah";
 }
 
-<div class="thrive-admin-page-header">
-    <h1>Welcome back, @AdminDisplayName!</h1>
-    <span class="thrive-admin-page-header__subtitle">Here's what's happening at Thrive Pilates.</span>
+<div class="thrive-admin-page-header thrive-admin-page-header--row">
+    <div>
+        <h1>Welcome back, @AdminDisplayName!</h1>
+        <span class="thrive-admin-page-header__subtitle">Here's what's happening at Thrive Pilates.</span>
+    </div>
+    @* Runs the same day-before reminder sweep as the hourly background job,
+       once, on demand - see AdminController.SendRemindersNow. *@
+    <form asp-action="SendRemindersNow" method="post" data-busy-text="Sending…">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="thrive-btn thrive-btn--mauve">
+            <partial name="_Icon" model="@("envelope")" />
+            Send reminders now
+        </button>
+    </form>
 </div>
+
+@if (TempData["DashboardBannerMessage"] is string bannerMessage)
+{
+    var bannerType = TempData["DashboardBannerType"] as string ?? "notice";
+    <div class="thrive-banner thrive-banner--@bannerType">@bannerMessage</div>
+}
 
 <div class="thrive-admin-stats">
     <div class="thrive-admin-stat-card">
