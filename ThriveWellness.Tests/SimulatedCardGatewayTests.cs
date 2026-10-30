@@ -164,6 +164,26 @@ public class SimulatedCardGatewayTests
     }
 
     [Fact]
+    public async Task RefundAsync_EarlierCharge_IsRefundedWithItsOwnReference()
+    {
+        var gateway = CreateGateway();
+        var charge = await gateway.ChargeAsync(Request("4242424242424242"));
+
+        var refund = await gateway.RefundAsync(charge.GatewayReference, 120m);
+
+        Assert.True(refund.Success);
+        Assert.Matches("^TW-RF[A-Z0-9]{8}$", refund.RefundReference);
+    }
+
+    [Fact]
+    public async Task RefundAsync_NoChargeReference_IsRejected()
+    {
+        var refund = await CreateGateway().RefundAsync(string.Empty, 120m);
+
+        Assert.False(refund.Success);
+    }
+
+    [Fact]
     public void CardDetails_ToString_NeverShowsTheCard()
     {
         var card = Request("4242424242424242").Card;

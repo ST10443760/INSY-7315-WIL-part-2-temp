@@ -17,5 +17,9 @@ namespace ThriveWellness.Services.Interfaces
         // (Success = false with a failure code and message), not an
         // exception.
         Task<GatewayChargeResult> ChargeAsync(GatewayChargeRequest request, CancellationToken cancellationToken = default);
+
+        // Gives back an earlier charge, identified by the reference the
+        // provider returned for it.
+        Task<GatewayRefundResult> RefundAsync(string gatewayReference, decimal amount, CancellationToken cancellationToken = default);
     }
 }

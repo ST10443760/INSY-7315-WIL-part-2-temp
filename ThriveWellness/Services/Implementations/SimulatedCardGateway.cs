@@ -84,6 +84,26 @@ namespace ThriveWellness.Services.Implementations
             };
         }
 
+        // Any charge this gateway made can be refunded in full; there's no
+        // bank to say otherwise.
+        public Task<GatewayRefundResult> RefundAsync(string gatewayReference, decimal amount, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(gatewayReference) || amount <= 0)
+            {
+                return Task.FromResult(new GatewayRefundResult
+                {
+                    Success = false,
+                    FailureMessage = "There is no charge to refund."
+                });
+            }
+
+            return Task.FromResult(new GatewayRefundResult
+            {
+                Success = true,
+                RefundReference = "TW-RF" + RandomNumberGenerator.GetString(ReferenceAlphabet, 8)
+            });
+        }
+
         // Visa starts with 4; Mastercard with 51-55 or 2221-2720; American
         // Express with 34 or 37. Anything else is just "Card".
         public static string DetectBrand(string number)
