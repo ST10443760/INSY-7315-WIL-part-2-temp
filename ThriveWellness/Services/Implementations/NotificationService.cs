@@ -107,6 +107,7 @@ namespace ThriveWellness.Services.Implementations
 
             var html = $"""
                 <p>Hi {client.FullName},</p>
+                <p>We've received your payment, so your spot is confirmed and you're booked in.</p>
                 <p>Welcome to Thrive Wellness! Here are the details for your first class:</p>
                 <ul>
                     <li><strong>Class:</strong> {session?.SessionType}</li>
@@ -119,7 +120,7 @@ namespace ThriveWellness.Services.Implementations
                 <p>See you soon!</p>
                 """;
 
-            await _emailSender.SendEmailAsync(client.Email, "Welcome to Thrive Wellness", html);
+            await _emailSender.SendEmailAsync(client.Email, "Payment confirmed: you're booked in", html);
             await WriteNotificationRecordAsync(booking.BookingId, "Welcome");
         }
 
