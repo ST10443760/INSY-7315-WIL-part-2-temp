@@ -15,7 +15,7 @@
     </header>
 
     @{ var rewards = Model.Rewards; }
-    <section class="thrive-dashboard__section thrive-rewards" aria-labelledby="rewards-heading">
+    <section class="thrive-dashboard__section thrive-rewards" id="rewards" aria-labelledby="rewards-heading">
         <h2 class="thrive-dashboard__heading" id="rewards-heading">Rewards</h2>
 
         @if (!rewards.HasAttended)
