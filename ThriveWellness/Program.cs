@@ -54,6 +54,10 @@ builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection("Pay
 // can't safely be Singleton while it holds a reference to a Scoped
 // DbContext, and doesn't need to be Transient since nothing here keeps
 // per-call state between methods.
+// The real clock, behind .NET's TimeProvider abstraction so AuthService's
+// lockout timing can be tested with a fake clock instead of waiting 15
+// minutes. Singleton: it holds no state.
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
