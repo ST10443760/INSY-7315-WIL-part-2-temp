@@ -177,4 +177,36 @@ public class AdminAuthorizationTests
 
         Assert.True(await IsAllowedAsync(Admin, controller, action));
     }
+
+    // Booking, the waitlist and the client dashboard need a signed-in
+    // client - not the admin, and not an anonymous visitor.
+    [Theory]
+    [InlineData(nameof(BookingController), nameof(BookingController.Book))]
+    [InlineData(nameof(BookingController), nameof(BookingController.Submit))]
+    [InlineData(nameof(BookingController), nameof(BookingController.Confirmation))]
+    [InlineData(nameof(BookingController), nameof(BookingController.JoinWaitlist))]
+    [InlineData(nameof(BookingController), nameof(BookingController.JoinWaitlistSubmit))]
+    [InlineData(nameof(AccountController), nameof(AccountController.Dashboard))]
+    public async Task ClientAction_IsOnlyAllowedForASignedInClient(string controllerName, string actionName)
+    {
+        var (controller, action) = Resolve(controllerName, actionName);
+
+        Assert.True(await IsAllowedAsync(Client, controller, action));
+        Assert.False(await IsAllowedAsync(Admin, controller, action));
+        Assert.False(await IsAllowedAsync(Anonymous, controller, action));
+    }
+
+    // The schedule, sign-in pages and the emailed cancellation link must
+    // keep working for people who aren't signed in.
+    [Theory]
+    [InlineData(nameof(BookingController), nameof(BookingController.Schedule))]
+    [InlineData(nameof(BookingController), nameof(BookingController.Cancel))]
+    [InlineData(nameof(AccountController), nameof(AccountController.ClientLogin))]
+    [InlineData(nameof(AccountController), nameof(AccountController.Login))]
+    public async Task PublicAction_IsOpenToAnonymousVisitors(string controllerName, string actionName)
+    {
+        var (controller, action) = Resolve(controllerName, actionName);
+
+        Assert.True(await IsAllowedAsync(Anonymous, controller, action));
+    }
 }
