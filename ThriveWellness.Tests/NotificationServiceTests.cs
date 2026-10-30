@@ -208,6 +208,55 @@ public class NotificationServiceTests
     }
 
     [Fact]
+    public async Task SendConfirmationEmailAsync_SentBeforePayment_NeverSaysConfirmed()
+    {
+        // The first email goes out before anything is paid, so neither the
+        // subject nor the body may tell the client they're confirmed or
+        // booked in - only the payment email can.
+        var booking = FakeBooking();
+        var payment = FakePayment("per-class", PaymentPricing.PerClassPrice);
+        SetUpLookupsFor(booking, payment);
+
+        string? sentSubject = null;
+        string? sentHtml = null;
+        _emailSender
+            .Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string, string>((_, subject, html) => { sentSubject = subject; sentHtml = html; })
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        await service.SendConfirmationEmailAsync(booking);
+
+        Assert.Equal("Booking received: complete your payment to secure your spot", sentSubject);
+        Assert.DoesNotContain("confirmed", sentSubject, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("confirmed", sentHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("booked in", sentHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("secured", sentHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("received your booking", sentHtml);
+        Assert.Contains("pending payment", sentHtml);
+    }
+
+    [Fact]
+    public async Task SendWelcomeEmailAsync_SentAfterPayment_SaysConfirmedAndBookedIn()
+    {
+        var booking = FakeBooking();
+        SetUpLookupsFor(booking, FakePayment("per-class", PaymentPricing.PerClassPrice));
+
+        string? sentSubject = null;
+        string? sentHtml = null;
+        _emailSender
+            .Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string, string>((_, subject, html) => { sentSubject = subject; sentHtml = html; })
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService();
+        await service.SendWelcomeEmailAsync(booking);
+
+        Assert.Equal("Payment confirmed: you're booked in", sentSubject);
+        Assert.Contains("confirmed", sentHtml, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task SendWaitlistNotificationAsync_IncludesTheSamePaymentDetailsBlockAsAConfirmationEmail()
     {
         // Part 2/3 of the "Add to class" feature: whether a client is
