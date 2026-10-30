@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ThriveWellness.Data;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
@@ -285,6 +286,33 @@ namespace ThriveWellness.Services.Implementations
         public Task<Booking?> GetByIdAsync(int bookingId)
         {
             return _bookingRepository.GetByIdAsync(bookingId);
+        }
+
+        // Every booking belonging to one client, newest session first, for
+        // their dashboard. Left-joins Payments since a booking's payment row
+        // is expected but shouldn't hide the booking if it were missing.
+        public async Task<IReadOnlyList<ClientBookingViewModel>> GetClientBookingsAsync(int clientId)
+        {
+            return await (
+                from booking in _context.Bookings
+                join session in _context.Sessions on booking.SessionId equals session.SessionId
+                join location in _context.Locations on session.LocationId equals location.LocationId
+                join payment in _context.Payments on booking.BookingId equals payment.BookingId into payments
+                from payment in payments.DefaultIfEmpty()
+                where booking.ClientId == clientId
+                orderby session.Date descending, session.Time descending
+                select new ClientBookingViewModel
+                {
+                    BookingId = booking.BookingId,
+                    SessionType = session.SessionType,
+                    SessionDate = session.Date,
+                    SessionTime = session.Time,
+                    LocationAddress = location.Address,
+                    Status = booking.Status,
+                    PaymentStatus = payment != null ? payment.Status : null,
+                    Amount = payment != null ? payment.Amount : null,
+                    CancellationToken = booking.CancellationToken
+                }).ToListAsync();
         }
     }
 }
