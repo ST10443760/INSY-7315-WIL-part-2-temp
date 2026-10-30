@@ -716,3 +716,154 @@ body.thrive-admin-body {
 .thrive-admin-sort--active {
   text-decoration-thickness: 2px;
 }
+
+/* ==========================================================================
+   Revenue
+   ========================================================================== */
+
+.thrive-revenue-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.thrive-revenue-range .thrive-field {
+  margin-bottom: 0;
+  flex: 0 1 200px;
+}
+
+.thrive-revenue-note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: 0 0 var(--space-4);
+}
+
+.thrive-revenue-bar-cell {
+  width: 35%;
+  min-width: 120px;
+}
+
+.thrive-revenue-bar {
+  display: block;
+  width: 100%;
+  height: 12px;
+}
+
+.thrive-revenue-bar__track {
+  fill: var(--color-beige);
+}
+
+.thrive-revenue-bar__fill {
+  fill: var(--color-mauve);
+}
+
+.thrive-revenue-breakdowns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.thrive-revenue-breakdowns .thrive-admin-card {
+  margin: 0;
+  padding: var(--space-3);
+}
+
+.thrive-revenue-card-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-maroon);
+  margin: 0 0 var(--space-2);
+}
+
+.thrive-revenue-table td,
+.thrive-revenue-table th {
+  padding: var(--space-2);
+}
+
+.thrive-top-clients {
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.thrive-top-clients__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  counter-reset: top-client;
+}
+
+.thrive-top-clients__list li {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-beige);
+  border-radius: var(--radius-input);
+  padding: var(--space-3);
+  counter-increment: top-client;
+}
+
+.thrive-top-clients__name::before {
+  content: "#" counter(top-client) " ";
+  color: var(--color-text-muted);
+}
+
+.thrive-top-clients__name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-top-clients__amount {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.thrive-revenue-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.thrive-revenue-toolbar .thrive-admin-search {
+  margin: 0;
+  flex: 1 1 240px;
+  max-width: 420px;
+}
+
+.thrive-sort-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+th[aria-sort="ascending"] .thrive-sort-button::after {
+  content: " \2191";
+}
+
+th[aria-sort="descending"] .thrive-sort-button::after {
+  content: " \2193";
+}
+
+@media (max-width: 900px) {
+  .thrive-revenue-breakdowns,
+  .thrive-top-clients__list {
+    grid-template-columns: 1fr;
+  }
+}
