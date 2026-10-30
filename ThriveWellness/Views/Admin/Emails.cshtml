@@ -1,0 +1,64 @@
+@model IEnumerable<ThriveWellness.Models.EmailLogRowViewModel>
+
+@{
+    ViewData["Title"] = "Emails";
+    Layout = "_AdminLayout";
+    var selectedType = (string)ViewData["SelectedType"]!;
+}
+
+<div class="thrive-admin-page-header">
+    <h1>Emails</h1>
+    <span class="thrive-admin-page-header__subtitle">The latest 50 emails sent to clients.</span>
+</div>
+
+<div class="thrive-admin-filter-tabs">
+    <a class="thrive-admin-filter-tab @(selectedType == "all" ? "thrive-admin-filter-tab--active" : "")" asp-action="Emails">All</a>
+    @foreach (var type in EmailTypes.All)
+    {
+        <a class="thrive-admin-filter-tab @(selectedType == type ? "thrive-admin-filter-tab--active" : "")" asp-action="Emails" asp-route-type="@type">@EmailTypes.ToLabel(type)</a>
+    }
+</div>
+
+<div class="thrive-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="thrive-admin-empty">No emails to show here.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Recipient</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var email in Model)
+                    {
+                        <tr>
+                            <td>
+                                @* SentAt is stored in UTC (NotificationService uses
+                                   DateTime.UtcNow), so it's labelled as such
+                                   rather than passed off as local time. *@
+                                @email.SentAt.ToString("d MMM yyyy")
+                                <br />
+                                <span class="thrive-admin-table__muted">@email.SentAt.ToString(@"HH\:mm") UTC</span>
+                            </td>
+                            <td>
+                                @email.RecipientName
+                                <br />
+                                <span class="thrive-admin-table__muted">@email.RecipientEmail</span>
+                            </td>
+                            <td>@email.TypeLabel</td>
+                            <td><span class="thrive-pill thrive-pill--confirmed">@email.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
