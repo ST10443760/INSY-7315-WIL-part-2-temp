@@ -1,8 +1,10 @@
+using ThriveWellness.Models;
+
 namespace ThriveWellness.Services.Interfaces
 {
     public interface IScheduledNotificationService
     {
-        Task SendDueRemindersAsync();
+        Task<ReminderRunResult> SendDueRemindersAsync();
         Task SendDueLocationEmailsAsync();
     }
 }
