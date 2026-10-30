@@ -84,6 +84,30 @@ namespace ThriveWellness.Services
             return null;
         }
 
+        // How far along the badge NextBadgeText describes is, for its
+        // progress bar: classes attended (or the current streak) out of what
+        // that badge needs. Null when NextBadgeText is null.
+        public static (int Current, int Target)? NextBadgeProgress(RewardsStats stats, ISet<string> earnedCodes, IReadOnlyDictionary<string, string> badgeNames)
+        {
+            foreach (var (code, classes) in ClassMilestones)
+            {
+                if (!earnedCodes.Contains(code) && badgeNames.ContainsKey(code))
+                {
+                    return (Math.Min(stats.AttendedCount, classes), classes);
+                }
+            }
+
+            foreach (var (code, weeks) in StreakMilestones)
+            {
+                if (!earnedCodes.Contains(code) && badgeNames.ContainsKey(code))
+                {
+                    return (Math.Min(stats.CurrentStreak, weeks), weeks);
+                }
+            }
+
+            return null;
+        }
+
         // The one line under the streak.
         public static string Encouragement(RewardsStats stats)
         {

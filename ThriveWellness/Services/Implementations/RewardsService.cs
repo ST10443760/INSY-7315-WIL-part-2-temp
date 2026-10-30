@@ -86,6 +86,8 @@ namespace ThriveWellness.Services.Implementations
 
             var newSince = DateTime.UtcNow.AddDays(-NewBadgeDays);
             var earnedCodes = badges.Where(b => awards.ContainsKey(b.BadgeId)).Select(b => b.Code).ToHashSet();
+            var badgeNames = badges.ToDictionary(b => b.Code, b => b.Name);
+            var progress = BadgeRules.NextBadgeProgress(stats, earnedCodes, badgeNames);
 
             return new RewardsViewModel
             {
@@ -93,7 +95,9 @@ namespace ThriveWellness.Services.Implementations
                 CurrentStreak = stats.CurrentStreak,
                 LongestStreak = stats.LongestStreak,
                 Encouragement = BadgeRules.Encouragement(stats),
-                NextBadgeText = BadgeRules.NextBadgeText(stats, earnedCodes, badges.ToDictionary(b => b.Code, b => b.Name)),
+                NextBadgeText = BadgeRules.NextBadgeText(stats, earnedCodes, badgeNames),
+                NextBadgeCurrent = progress?.Current ?? 0,
+                NextBadgeTarget = progress?.Target ?? 0,
                 Badges = badges.Select(b => new BadgeViewModel
                 {
                     Code = b.Code,

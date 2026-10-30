@@ -11,6 +11,11 @@ namespace ThriveWellness.Models
 
         // "3 more classes to Committed"; null once there's nothing left.
         public string? NextBadgeText { get; set; }
+
+        // Progress towards that badge, for its bar (for example 8 of 10
+        // classes). Both 0 when there's no next badge.
+        public int NextBadgeCurrent { get; set; }
+        public int NextBadgeTarget { get; set; }
         public IReadOnlyList<BadgeViewModel> Badges { get; set; } = Array.Empty<BadgeViewModel>();
 
         public bool HasAttended => AttendedCount > 0;

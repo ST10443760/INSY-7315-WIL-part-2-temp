@@ -248,6 +248,38 @@ public class RewardsServiceTests
     }
 
     [Fact]
+    public async Task GetRewardsAsync_GivesProgressTowardsTheNextBadge()
+    {
+        AddClass(Today.AddDays(-1));
+        AddClass(Today.AddDays(-8));
+        var service = CreateService();
+        await service.EvaluateAsync(ClientId);
+
+        var rewards = await service.GetRewardsAsync(ClientId);
+
+        Assert.Equal((2, 5), (rewards.NextBadgeCurrent, rewards.NextBadgeTarget));
+    }
+
+    [Fact]
+    public void NextBadgeProgress_AllClassBadgesEarned_UsesTheCurrentStreak()
+    {
+        var stats = new RewardsStats { AttendedCount = 30, CurrentStreak = 2 };
+        var earned = new HashSet<string> { BadgeCodes.FirstClass, BadgeCodes.GettingGoing, BadgeCodes.Committed, BadgeCodes.Dedicated };
+        var names = new Dictionary<string, string> { [BadgeCodes.ThreeWeekStreak] = "Three Week Streak" };
+
+        Assert.Equal((2, 3), BadgeRules.NextBadgeProgress(stats, earned, names));
+    }
+
+    [Fact]
+    public void NextBadgeProgress_EverythingEarned_IsNull()
+    {
+        var stats = new RewardsStats { AttendedCount = 30, CurrentStreak = 9 };
+        var earned = new HashSet<string> { BadgeCodes.FirstClass, BadgeCodes.GettingGoing, BadgeCodes.Committed, BadgeCodes.Dedicated, BadgeCodes.ThreeWeekStreak, BadgeCodes.EightWeekStreak };
+
+        Assert.Null(BadgeRules.NextBadgeProgress(stats, earned, new Dictionary<string, string> { [BadgeCodes.FirstClass] = "First Class" }));
+    }
+
+    [Fact]
     public void NextBadgeText_AllClassBadgesEarned_PointsAtTheNextStreak()
     {
         var stats = new RewardsStats { AttendedCount = 30, CurrentStreak = 2 };
