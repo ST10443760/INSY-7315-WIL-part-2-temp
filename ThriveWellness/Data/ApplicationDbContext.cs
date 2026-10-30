@@ -95,6 +95,13 @@ namespace ThriveWellness.Data
                 .HasForeignKey(n => n.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // One client row per Google account. Filtered so the many
+            // clients who haven't signed in yet (null) don't clash.
+            modelBuilder.Entity<Client>()
+                .HasIndex(c => c.GoogleSubject)
+                .IsUnique()
+                .HasFilter("\"GoogleSubject\" IS NOT NULL");
+
             // Every row logged before Status existed was a successful send,
             // so the column defaults to Sent for them.
             modelBuilder.Entity<Notification>()
