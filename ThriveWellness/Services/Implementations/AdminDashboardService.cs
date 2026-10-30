@@ -172,7 +172,8 @@ namespace ThriveWellness.Services.Implementations
                     SentAt = x.notification.SentAt,
                     RecipientName = x.client.FullName,
                     RecipientEmail = x.client.Email,
-                    Type = x.notification.Type
+                    Type = x.notification.Type,
+                    Status = x.notification.Status
                 })
                 .ToListAsync();
         }

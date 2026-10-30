@@ -11,10 +11,9 @@ namespace ThriveWellness.Models
         public string RecipientEmail { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
 
-        // A Notification row is only ever written after SendEmailAsync
-        // returns without throwing (see NotificationService), so every row
-        // in the log is an email that was handed to SendGrid successfully.
-        public string Status => "Sent";
+        // Notification.Status: "Sent" once SendGrid accepted the email,
+        // "Failed" if it rejected it (see NotificationService).
+        public string Status { get; set; } = NotificationStatus.Sent;
 
         public string TypeLabel => EmailTypes.ToLabel(Type);
     }
