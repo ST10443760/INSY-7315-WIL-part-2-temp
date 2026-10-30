@@ -1,11 +1,8 @@
 ﻿@{
     var controllerName = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var actionName = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-    var isHome = controllerName == "Home" && actionName == "Index";
-    var isAbout = controllerName == "Home" && actionName == "About";
-    var isSchedule = controllerName == "Booking";
-    var isDashboard = controllerName == "Account" && actionName == "Dashboard";
-    var isClientLogin = controllerName == "Account" && actionName == "ClientLogin";
+    var nav = HeaderNav.Build(User, controllerName, actionName);
+    var account = nav.Account;
     var bodyClass = "thrive-body" + (ViewData["ThriveBodyBeige"] as bool? == true ? " thrive-body--beige" : "");
 }
 <!DOCTYPE html>
@@ -51,26 +48,74 @@
                             <partial name="_Icon" model="@("x")" />
                         </button>
                     </li>
-                    <li><a class="thrive-nav__link @(isHome ? "thrive-nav__link--active" : "")" aria-current="@(isHome ? "page" : null)" asp-controller="Home" asp-action="Index">HOME</a></li>
-                    <li><a class="thrive-nav__link @(isSchedule ? "thrive-nav__link--active" : "")" aria-current="@(isSchedule ? "page" : null)" asp-controller="Booking" asp-action="Schedule">SCHEDULE</a></li>
-                    <li><a class="thrive-nav__link @(isAbout ? "thrive-nav__link--active" : "")" aria-current="@(isAbout ? "page" : null)" asp-controller="Home" asp-action="About">ABOUT</a></li>
-                    @if (User.IsClient())
+                    @* Who sees which link is decided in HeaderNav.Build. *@
+                    @foreach (var link in nav.MainLinks)
                     {
-                        <li><a class="thrive-nav__link @(isDashboard ? "thrive-nav__link--active" : "")" aria-current="@(isDashboard ? "page" : null)" asp-controller="Account" asp-action="Dashboard">DASHBOARD</a></li>
-                        <li>
-                            @* Sign out is a POST with an anti-forgery token, so it's
-                               a form button styled to match the other links. *@
-                            <form asp-controller="Account" asp-action="ClientSignOut" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="thrive-nav__link thrive-nav__button">SIGN OUT</button>
-                            </form>
+                        <li><a class="thrive-nav__link @(link.IsActive ? "thrive-nav__link--active" : "")" aria-current="@(link.IsActive ? "page" : null)" asp-controller="@link.Controller" asp-action="@link.Action">@link.Label.ToUpperInvariant()</a></li>
+                    }
+
+                    @if (nav.SignIn != null)
+                    {
+                        <li class="thrive-nav__signin-item">
+                            <a class="thrive-btn thrive-btn--maroon thrive-nav__signin" aria-current="@(nav.SignIn.IsActive ? "page" : null)" asp-controller="@nav.SignIn.Controller" asp-action="@nav.SignIn.Action">@nav.SignIn.Label</a>
                         </li>
                     }
-                    else
+
+                    @if (account != null)
                     {
-                        <li><a class="thrive-nav__link @(isClientLogin ? "thrive-nav__link--active" : "")" aria-current="@(isClientLogin ? "page" : null)" asp-controller="Account" asp-action="ClientLogin">SIGN IN</a></li>
+                        @* Wide screens: a profile button that opens a small menu
+                           (behaviour in thrive.js). Hidden in the mobile panel,
+                           which gets the plain section below instead. *@
+                        <li class="thrive-profile" data-profile-menu>
+                            <button type="button" class="thrive-profile__trigger" id="thrive-profile-trigger"
+                                    aria-haspopup="true" aria-expanded="false" aria-controls="thrive-profile-menu"
+                                    aria-label="Account menu for @account.Name">
+                                <span class="thrive-profile__avatar" aria-hidden="true">@account.Initial</span>
+                                <span class="thrive-profile__first-name" aria-hidden="true">@account.FirstName</span>
+                                <span class="thrive-profile__chevron" aria-hidden="true"><partial name="_Icon" model="@("chevron-down")" /></span>
+                            </button>
+                            <div class="thrive-profile__menu" id="thrive-profile-menu" hidden>
+                                <div class="thrive-profile__who">
+                                    <span class="thrive-profile__who-name">@account.Name</span>
+                                    <span class="thrive-profile__who-sub">@account.Subtitle</span>
+                                </div>
+                                <ul class="thrive-profile__items" role="menu" aria-labelledby="thrive-profile-trigger">
+                                    @foreach (var item in account.Items)
+                                    {
+                                        <li role="none">
+                                            <a role="menuitem" class="thrive-profile__item @(item.IsActive ? "thrive-profile__item--active" : "")" aria-current="@(item.IsActive ? "page" : null)"
+                                               asp-controller="@item.Controller" asp-action="@item.Action" asp-fragment="@item.Fragment">@item.Label</a>
+                                        </li>
+                                    }
+                                    <li role="none">
+                                        @* Sign out is a POST with an anti-forgery token. *@
+                                        <form asp-controller="Account" asp-action="@account.SignOutAction" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" role="menuitem" class="thrive-profile__item thrive-profile__item--signout">Sign out</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        @* Narrow screens: the same links as a plain section of the
+                           mobile panel, headed with the name - no nested dropdown. *@
+                        <li class="thrive-nav__account">
+                            <p class="thrive-nav__account-name">@account.Name</p>
+                            <ul class="thrive-nav__account-links">
+                                @foreach (var item in account.Items)
+                                {
+                                    <li><a class="thrive-nav__link @(item.IsActive ? "thrive-nav__link--active" : "")" aria-current="@(item.IsActive ? "page" : null)" asp-controller="@item.Controller" asp-action="@item.Action" asp-fragment="@item.Fragment">@item.Label.ToUpperInvariant()</a></li>
+                                }
+                                <li>
+                                    <form asp-controller="Account" asp-action="@account.SignOutAction" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="thrive-nav__link thrive-nav__button">SIGN OUT</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
                     }
-                    <li><a class="thrive-nav__link thrive-nav__link--muted" asp-controller="Admin" asp-action="Index">ADMIN</a></li>
                 </ul>
             </nav>
         </div>
@@ -105,6 +150,8 @@
                 <span>&copy; 2026 Thrive Pilates. All rights reserved.</span>
                 <span>
                     <a asp-controller="Home" asp-action="Policy">Class Policy</a>
+                    &middot;
+                    <a asp-controller="Account" asp-action="Login">Staff login</a>
                     &middot;
                     <span>@@thrive_wellness_pilates</span>
                 </span>
