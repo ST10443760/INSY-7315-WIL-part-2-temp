@@ -3,24 +3,62 @@
 @{
     ViewData["Title"] = "Weekly Class Schedule";
     var dateValue = Model.SelectedDate?.ToString("yyyy-MM-dd");
+    var weekValue = Model.Week.Start.ToString("yyyy-MM-dd");
 }
 
 <section class="thrive-container">
     <h1 class="thrive-h2-serif-italic">Weekly Class Schedule</h1>
+
+    @* Week browsing: Previous/Next are clamped by ScheduleWeek (no past
+       weeks, nothing after the last scheduled session), so a missing
+       target renders as a disabled button rather than a dead link. Moving
+       week keeps the location filter but drops a picked date, since that
+       date belongs to the week being left. *@
+    <nav class="thrive-week-nav" aria-label="Choose a week">
+        @if (Model.Week.PreviousStart is DateTime previous)
+        {
+            <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Schedule" asp-route-location="@Model.SelectedLocation" asp-route-week="@previous.ToString("yyyy-MM-dd")">&larr; Previous</a>
+        }
+        else
+        {
+            <span class="thrive-btn thrive-btn--outline thrive-btn--sm thrive-week-nav__disabled" aria-disabled="true">&larr; Previous</span>
+        }
+
+        <div class="thrive-week-nav__range">
+            <span class="thrive-week-nav__label">@Model.Week.RangeLabel()</span>
+            @if (Model.Week.IsThisWeek)
+            {
+                <span class="thrive-week-nav__today">This week</span>
+            }
+            else
+            {
+                <a class="thrive-week-nav__today" asp-action="Schedule" asp-route-location="@Model.SelectedLocation">Back to this week</a>
+            }
+        </div>
+
+        @if (Model.Week.NextStart is DateTime next)
+        {
+            <a class="thrive-btn thrive-btn--outline thrive-btn--sm" asp-action="Schedule" asp-route-location="@Model.SelectedLocation" asp-route-week="@next.ToString("yyyy-MM-dd")">Next &rarr;</a>
+        }
+        else
+        {
+            <span class="thrive-btn thrive-btn--outline thrive-btn--sm thrive-week-nav__disabled" aria-disabled="true">Next &rarr;</span>
+        }
+    </nav>
 
     <div class="thrive-schedule-toolbar">
         <ul class="thrive-tabs">
             <li>
                 <a class="thrive-tabs__link @(string.IsNullOrEmpty(Model.SelectedLocation) ? "thrive-tabs__link--active" : "")"
                    aria-current="@(string.IsNullOrEmpty(Model.SelectedLocation) ? "true" : null)"
-                   asp-action="Schedule" asp-route-location="" asp-route-date="@dateValue">All Locations</a>
+                   asp-action="Schedule" asp-route-location="" asp-route-date="@dateValue" asp-route-week="@weekValue">All Locations</a>
             </li>
             @foreach (var location in Model.Locations)
             {
                 <li>
                     <a class="thrive-tabs__link @(Model.SelectedLocation == location.Address ? "thrive-tabs__link--active" : "")"
                        aria-current="@(Model.SelectedLocation == location.Address ? "true" : null)"
-                       asp-action="Schedule" asp-route-location="@location.Address" asp-route-date="@dateValue">@location.Address</a>
+                       asp-action="Schedule" asp-route-location="@location.Address" asp-route-date="@dateValue" asp-route-week="@weekValue">@location.Address</a>
                 </li>
             }
         </ul>
@@ -33,7 +71,7 @@
             <button type="submit" class="thrive-btn thrive-btn--outline">Filter</button>
             @if (Model.SelectedDate.HasValue)
             {
-                <a class="thrive-date-filter__clear" asp-action="Schedule" asp-route-location="@Model.SelectedLocation">Clear date</a>
+                <a class="thrive-date-filter__clear" asp-action="Schedule" asp-route-location="@Model.SelectedLocation" asp-route-week="@weekValue">Clear date</a>
             }
         </form>
     </div>
@@ -41,8 +79,26 @@
     @if (!Model.Sessions.Any())
     {
         <div class="thrive-empty-state">
-            <p class="thrive-h3-serif-italic">No sessions found</p>
-            <p>Try a different location or date, or check back soon for new classes.</p>
+            @if (Model.SelectedDate.HasValue)
+            {
+                <p class="thrive-h3-serif-italic">No classes on this day</p>
+                <p>Try another day or location, or clear the date to see the whole week.</p>
+            }
+            else
+            {
+                <p class="thrive-h3-serif-italic">No classes this week</p>
+                <p>
+                    Nothing is scheduled here for @Model.Week.RangeLabel() yet.
+                    @if (Model.Week.NextStart is DateTime nextWeek)
+                    {
+                        <a asp-action="Schedule" asp-route-location="@Model.SelectedLocation" asp-route-week="@nextWeek.ToString("yyyy-MM-dd")">Have a look at next week</a><text>, try another location, or check back soon for new classes.</text>
+                    }
+                    else
+                    {
+                        <text>Try another location, or check back soon for new classes.</text>
+                    }
+                </p>
+            }
         </div>
     }
     else
