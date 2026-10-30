@@ -58,6 +58,14 @@
                         </a>
                     </li>
                     <li>
+                        <a class="thrive-admin-nav__link @(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "thrive-admin-nav__link--active" : "")"
+                           aria-current="@(IsActive("Admin") && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "page" : null)"
+                           asp-controller="Admin" asp-action="Revenue">
+                            <partial name="_Icon" model="@("tag")" />
+                            Revenue
+                        </a>
+                    </li>
+                    <li>
                         <a class="thrive-admin-nav__link @(IsActive("Session") ? "thrive-admin-nav__link--active" : "")"
                            aria-current="@(IsActive("Session") ? "page" : null)"
                            asp-controller="Session" asp-action="Index">

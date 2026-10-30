@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThriveWellness.Authorization;
 using ThriveWellness.Models;
+using ThriveWellness.Services;
 using ThriveWellness.Services.Interfaces;
 
 namespace ThriveWellness.Controllers;
@@ -18,15 +19,39 @@ public class AdminController : Controller
     private readonly IAdminDashboardService _dashboardService;
     private readonly IWaitlistService _waitlistService;
     private readonly IScheduledNotificationService _scheduledNotificationService;
+    private readonly IRevenueService _revenueService;
 
     public AdminController(
         IAdminDashboardService dashboardService,
         IWaitlistService waitlistService,
-        IScheduledNotificationService scheduledNotificationService)
+        IScheduledNotificationService scheduledNotificationService,
+        IRevenueService revenueService)
     {
         _dashboardService = dashboardService;
         _waitlistService = waitlistService;
         _scheduledNotificationService = scheduledNotificationService;
+        _revenueService = revenueService;
+    }
+
+    // Money received, for a preset range (preset = month, 30days, year or
+    // all) or custom from/to dates; All time by default.
+    [HttpGet]
+    public async Task<IActionResult> Revenue(string? preset, DateTime? from, DateTime? to)
+    {
+        var range = _revenueService.ResolveRange(preset, from, to);
+        return View(await _revenueService.GetReportAsync(range));
+    }
+
+    // The spend-per-client table for the same range, as a CSV download.
+    [HttpGet]
+    public async Task<IActionResult> RevenueCsv(string? preset, DateTime? from, DateTime? to)
+    {
+        var range = _revenueService.ResolveRange(preset, from, to);
+        var report = await _revenueService.GetReportAsync(range);
+        var bytes = System.Text.Encoding.UTF8.GetPreamble()
+            .Concat(System.Text.Encoding.UTF8.GetBytes(ClientSpendCsv.Build(report.Clients)))
+            .ToArray();
+        return File(bytes, "text/csv", $"client-spend-{DateTime.Today:yyyy-MM-dd}.csv");
     }
 
     // Also where [Authorize] sends an admin after a successful login - see

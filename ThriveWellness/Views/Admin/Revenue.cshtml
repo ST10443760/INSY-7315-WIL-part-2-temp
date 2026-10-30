@@ -1,0 +1,219 @@
+@using System.Globalization
+@model ThriveWellness.Models.RevenueReport
+
+@{
+    ViewData["Title"] = "Revenue";
+    Layout = "_AdminLayout";
+    var range = Model.Range;
+    var fromValue = range.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    var toValue = range.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    var rangeLabel = range.Preset switch
+    {
+        RevenuePreset.ThisMonth => "This month",
+        RevenuePreset.Last30Days => "Last 30 days",
+        RevenuePreset.ThisYear => "This year",
+        RevenuePreset.Custom => $"{range.From?.ToString("d MMM yyyy") ?? "The start"} to {range.To?.ToString("d MMM yyyy") ?? "today"}",
+        _ => "All time"
+    };
+    var maxMonth = Model.ByMonth.Count == 0 ? 0m : Model.ByMonth.Max(m => m.Amount);
+
+    string Share(decimal share) => $"{Math.Round(share * 100, 1).ToString("0.#", CultureInfo.InvariantCulture)}%";
+
+    // The same range on the CSV link as on the page.
+    var csvRoute = new Dictionary<string, string?>
+    {
+        ["preset"] = range.Preset switch { RevenuePreset.ThisMonth => "month", RevenuePreset.Last30Days => "30days", RevenuePreset.ThisYear => "year", _ => null },
+        ["from"] = range.Preset == RevenuePreset.Custom ? fromValue : null,
+        ["to"] = range.Preset == RevenuePreset.Custom ? toValue : null
+    };
+}
+
+<div class="thrive-admin-page-header">
+    <h1>Revenue</h1>
+    <span class="thrive-admin-page-header__subtitle">Money received from clients: @rangeLabel.</span>
+</div>
+
+<div class="thrive-admin-filter-tabs">
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.ThisMonth ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="month">This month</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.Last30Days ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="30days">Last 30 days</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.ThisYear ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="year">This year</a>
+    <a class="thrive-admin-filter-tab @(range.Preset == RevenuePreset.AllTime ? "thrive-admin-filter-tab--active" : "")" asp-action="Revenue" asp-route-preset="all">All time</a>
+</div>
+
+<form method="get" asp-action="Revenue" class="thrive-revenue-range">
+    <div class="thrive-field">
+        <label class="thrive-label" for="revenueFrom">From</label>
+        <input type="date" id="revenueFrom" name="from" class="thrive-input" value="@(range.Preset == RevenuePreset.Custom ? fromValue : null)" />
+    </div>
+    <div class="thrive-field">
+        <label class="thrive-label" for="revenueTo">To</label>
+        <input type="date" id="revenueTo" name="to" class="thrive-input" value="@(range.Preset == RevenuePreset.Custom ? toValue : null)" />
+    </div>
+    <button type="submit" class="thrive-btn thrive-btn--mauve">Apply dates</button>
+</form>
+
+<div class="thrive-admin-stats">
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("tag")" /></div>
+        <p class="thrive-admin-stat-card__number">@Money.Format(Model.NetRevenue)</p>
+        <p class="thrive-admin-stat-card__label">Net revenue</p>
+    </div>
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("check-circle")" /></div>
+        <p class="thrive-admin-stat-card__number">@Model.PaidCount</p>
+        <p class="thrive-admin-stat-card__label">Paid payments</p>
+    </div>
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("activity")" /></div>
+        <p class="thrive-admin-stat-card__number">@Money.Format(Model.AveragePerPayment)</p>
+        <p class="thrive-admin-stat-card__label">Average per payment</p>
+    </div>
+    <div class="thrive-admin-stat-card">
+        <div class="thrive-admin-stat-card__icon"><partial name="_Icon" model="@("card")" /></div>
+        <p class="thrive-admin-stat-card__number">@Money.Format(Model.TotalRefunded)</p>
+        <p class="thrive-admin-stat-card__label">Refunded (@Model.RefundedCount)</p>
+    </div>
+</div>
+
+<p class="thrive-revenue-note">
+    Net revenue counts paid payments only. Refunded payments are shown separately and are not included;
+    payments that are awaiting payment or due a refund are left out. Dates are class dates.
+</p>
+
+<h2 class="thrive-admin-section-heading">By month</h2>
+<div class="thrive-admin-card">
+    @if (!Model.ByMonth.Any())
+    {
+        <p class="thrive-admin-empty">No paid payments in this range.</p>
+    }
+    else
+    {
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table thrive-revenue-table">
+                <thead>
+                    <tr><th>Month</th><th>Amount</th><th>Payments</th><th>Share</th><th><span class="thrive-visually-hidden">Chart</span></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var month in Model.ByMonth)
+                    {
+                        var width = maxMonth == 0 ? 0 : Math.Round(month.Amount / maxMonth * 100, 1);
+                        <tr>
+                            <td>@month.Label</td>
+                            <td class="thrive-admin-table__amount">@Money.Format(month.Amount)</td>
+                            <td>@month.Count</td>
+                            <td>@Share(month.Share)</td>
+                            <td class="thrive-revenue-bar-cell">
+                                @* Bar length relative to the best month. Decorative: the
+                                   amount is in the row as text. *@
+                                <svg class="thrive-revenue-bar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                    <rect x="0" y="0" width="100" height="10" class="thrive-revenue-bar__track" />
+                                    <rect x="0" y="0" width="@width.ToString(CultureInfo.InvariantCulture)" height="10" class="thrive-revenue-bar__fill" />
+                                </svg>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="thrive-revenue-breakdowns">
+    @foreach (var (title, rows) in new[] { ("By payment method", Model.ByMethod), ("By payment type", Model.ByPaymentType), ("By venue", Model.ByVenue) })
+    {
+        <section class="thrive-admin-card">
+            <h2 class="thrive-revenue-card-heading">@title</h2>
+            @if (!rows.Any())
+            {
+                <p class="thrive-admin-empty">Nothing paid in this range.</p>
+            }
+            else
+            {
+                <table class="thrive-admin-table thrive-revenue-table">
+                    <thead><tr><th></th><th>Amount</th><th>Count</th><th>Share</th></tr></thead>
+                    <tbody>
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td>@row.Label</td>
+                                <td class="thrive-admin-table__amount">@Money.Format(row.Amount)</td>
+                                <td>@row.Count</td>
+                                <td>@Share(row.Share)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
+</div>
+
+<h2 class="thrive-admin-section-heading">Spend per client</h2>
+
+@if (Model.TopClients.Any())
+{
+    <div class="thrive-admin-card thrive-top-clients">
+        <h3 class="thrive-revenue-card-heading">Top clients</h3>
+        <ol class="thrive-top-clients__list">
+            @foreach (var client in Model.TopClients)
+            {
+                <li>
+                    <span class="thrive-top-clients__name">@client.Name</span>
+                    <span class="thrive-top-clients__amount">@Money.Format(client.TotalSpent)</span>
+                    <span class="thrive-admin-table__muted">@client.PaymentsCount payment@(client.PaymentsCount == 1 ? "" : "s")</span>
+                </li>
+            }
+        </ol>
+    </div>
+}
+
+<div class="thrive-admin-card">
+    @if (!Model.Clients.Any())
+    {
+        <p class="thrive-admin-empty">No client has paid for anything in this range.</p>
+    }
+    else
+    {
+        <div class="thrive-revenue-toolbar">
+            <div class="thrive-input-icon-wrap thrive-admin-search">
+                <label class="thrive-visually-hidden" for="clientSpendSearch">Search clients</label>
+                <partial name="_Icon" model="@("search")" />
+                <input type="search" id="clientSpendSearch" class="thrive-input" placeholder="Search clients..." data-table-search="clientSpendTable" />
+            </div>
+            <a class="thrive-btn thrive-btn--outline" asp-action="RevenueCsv" asp-all-route-data="csvRoute">Download CSV</a>
+        </div>
+
+        <div class="thrive-admin-table-wrap">
+            <table class="thrive-admin-table" id="clientSpendTable" data-sortable-table>
+                <thead>
+                    <tr>
+                        <th aria-sort="none"><button type="button" class="thrive-sort-button" data-sort-type="text">Client</button></th>
+                        <th aria-sort="none"><button type="button" class="thrive-sort-button" data-sort-type="number">Payments</button></th>
+                        <th aria-sort="descending"><button type="button" class="thrive-sort-button" data-sort-type="number">Total spent</button></th>
+                        <th aria-sort="none"><button type="button" class="thrive-sort-button" data-sort-type="text">Last payment</button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var client in Model.Clients)
+                    {
+                        <tr data-search-text="@($"{client.Name} {client.Email}".ToLowerInvariant())">
+                            <td data-sort-value="@client.Name.ToLowerInvariant()">
+                                @client.Name
+                                <br />
+                                <span class="thrive-admin-table__muted">@client.Email</span>
+                            </td>
+                            <td data-sort-value="@client.PaymentsCount">@client.PaymentsCount</td>
+                            <td class="thrive-admin-table__amount" data-sort-value="@client.TotalSpent.ToString(CultureInfo.InvariantCulture)">@Money.Format(client.TotalSpent)</td>
+                            <td data-sort-value="@client.LastPaymentDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@client.LastPaymentDate.ToString("d MMM yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="thrive-admin-empty" id="clientSpendNoMatch" hidden>No clients match that search.</p>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/revenue.js" asp-append-version="true"></script>
+}
