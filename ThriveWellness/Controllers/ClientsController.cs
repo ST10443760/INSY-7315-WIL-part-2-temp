@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Repositories.Interfaces;
 
 namespace ThriveWellness.Controllers;
@@ -7,7 +8,7 @@ namespace ThriveWellness.Controllers;
 // MVC controller: the admin client list, read-only - there's no separate
 // client-management service, since this is a single query with no business
 // rules attached, so the controller talks to the repository directly.
-[Authorize]
+[Authorize(Policy = AuthPolicies.AdminOnly)]
 public class ClientsController : Controller
 {
     private readonly IClientRepository _clientRepository;
