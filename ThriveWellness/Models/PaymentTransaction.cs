@@ -28,5 +28,9 @@ namespace ThriveWellness.Models
     {
         public const string Succeeded = "Succeeded";
         public const string Declined = "Declined";
+
+        // A charge that succeeded and was later refunded because the
+        // booking was cancelled.
+        public const string Refunded = "Refunded";
     }
 }
