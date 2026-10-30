@@ -536,6 +536,27 @@ body.thrive-admin-body {
   color: var(--color-error-text);
 }
 
+/* Payments of cancelled bookings: Refund due still needs the studio to act,
+   so it stands out; Refunded is done and stays quiet. */
+.thrive-pill--refund-due {
+  background: var(--color-maroon);
+  color: var(--color-white);
+}
+
+.thrive-pill--refunded {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* A payment's status pill with "Booking cancelled" stacked under it. */
+.thrive-admin-table td .thrive-pill {
+  white-space: nowrap;
+}
+
+.thrive-admin-table td br + .thrive-pill {
+  margin-top: var(--space-1);
+}
+
 /* ==========================================================================
    Calendar
    ========================================================================== */

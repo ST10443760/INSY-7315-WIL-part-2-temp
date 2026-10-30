@@ -16,6 +16,10 @@ namespace ThriveWellness.Models
         public string PaymentType { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
 
+        // The booking's own status, so a cancelled booking's payment is
+        // labelled as such.
+        public string BookingStatus { get; set; } = string.Empty;
+
         // The card charge's gateway reference, for card payments that went
         // through; null for EFT, cash and unpaid card bookings.
         public string? GatewayReference { get; set; }

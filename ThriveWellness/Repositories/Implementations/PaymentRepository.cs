@@ -66,6 +66,7 @@ namespace ThriveWellness.Repositories.Implementations
                 Method = x.payment.Method,
                 PaymentType = x.payment.PaymentType,
                 Status = x.payment.Status,
+                BookingStatus = x.booking.Status,
                 GatewayReference = _context.PaymentTransactions
                     .Where(t => t.PaymentId == x.payment.PaymentId && t.Status != PaymentTransactionStatus.Declined)
                     .OrderByDescending(t => t.CreatedAt)

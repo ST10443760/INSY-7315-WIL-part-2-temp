@@ -11,7 +11,8 @@ namespace ThriveWellness.Repositories.Interfaces
         Task<Payment?> GetByBookingIdAsync(int bookingId);
 
         // status: null/empty for every payment, or an exact Payment.Status
-        // value ("Pending"/"Confirmed") to filter to just one.
+        // value ("Pending"/"Confirmed"/"Refund due"/"Refunded") to filter to
+        // just one.
         Task<IEnumerable<PaymentOverviewViewModel>> GetAllPaymentsAsync(string? status);
         Task UpdateStatusAsync(int paymentId, string status);
     }
