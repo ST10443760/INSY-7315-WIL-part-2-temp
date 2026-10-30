@@ -1,0 +1,64 @@
+@model ThriveWellness.Models.ClientDashboardViewModel
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<section class="thrive-container">
+    <h1 class="thrive-h2-serif-italic">Hi @User.FirstName()</h1>
+    <p class="thrive-text-muted">Your Thrive Pilates bookings.</p>
+
+    <h2 class="thrive-h3-serif-italic">Upcoming</h2>
+
+    @if (!Model.Upcoming.Any())
+    {
+        <div class="thrive-empty-state">
+            <p>You have no upcoming classes.</p>
+            <a class="thrive-btn thrive-btn--maroon" asp-controller="Booking" asp-action="Schedule">Browse the schedule</a>
+        </div>
+    }
+    else
+    {
+        <div class="thrive-schedule-grid">
+            @foreach (var booking in Model.Upcoming)
+            {
+                <div class="thrive-session-card">
+                    <div class="thrive-session-card__header">
+                        <span class="thrive-pill thrive-pill--outline">@booking.SessionType.ToUpperInvariant()</span>
+                        <span class="thrive-pill">@booking.LocationAddress</span>
+                    </div>
+
+                    <h3 class="thrive-session-card__date">@booking.SessionDate.ToString("dddd • d MMMM yyyy")</h3>
+                    <p class="thrive-session-card__time">at @booking.SessionTime.ToString(@"hh\:mm")</p>
+
+                    <p>
+                        <span class="thrive-pill @(booking.Status switch { "Confirmed" => "thrive-pill--confirmed", "Cancelled" => "thrive-pill--cancelled", _ => "thrive-pill--pending" })">@booking.Status</span>
+                        @if (booking.Amount.HasValue && booking.PaymentStatus == "Pending" && booking.Status != "Cancelled")
+                        {
+                            <span class="thrive-text-muted">R@(booking.Amount.Value) to pay</span>
+                        }
+                    </p>
+
+                    @if (booking.Status != "Cancelled")
+                    {
+                        <a class="thrive-btn thrive-btn--outline thrive-btn--block" asp-controller="Booking" asp-action="Cancel" asp-route-token="@booking.CancellationToken" onclick="return confirm('Cancel this booking?');">Cancel this booking</a>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (Model.Past.Any())
+    {
+        <h2 class="thrive-h3-serif-italic">Past classes</h2>
+        <ul class="thrive-past-bookings">
+            @foreach (var booking in Model.Past)
+            {
+                <li>
+                    @booking.SessionDate.ToString("d MMM yyyy") - @booking.SessionType.ToDisplayLabel(), @booking.LocationAddress
+                    <span class="thrive-text-muted">(@booking.Status)</span>
+                </li>
+            }
+        </ul>
+    }
+</section>
