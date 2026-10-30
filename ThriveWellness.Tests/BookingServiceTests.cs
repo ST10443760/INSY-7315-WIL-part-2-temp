@@ -17,6 +17,9 @@ public class BookingServiceTests
     private readonly Mock<IWaitlistService> _waitlistService = new();
     private readonly Mock<IPaymentRepository> _paymentRepository = new();
     private readonly Mock<INotificationService> _notificationService = new();
+    private readonly Mock<ILocationRepository> _locationRepository = new();
+    private readonly Mock<IPaymentTransactionRepository> _transactionRepository = new();
+    private readonly Mock<IPaymentGateway> _gateway = new();
 
     // BookingService writes IntakeForm rows straight through
     // ApplicationDbContext rather than a repository interface (see its own
@@ -40,6 +43,11 @@ public class BookingServiceTests
             _waitlistService.Object,
             _paymentRepository.Object,
             _notificationService.Object,
+            // The real RefundService over the mocked repositories and
+            // gateway, so the cancellation tests see the refund it records.
+            new RefundService(_paymentRepository.Object, _transactionRepository.Object, _gateway.Object, NullLogger<RefundService>.Instance),
+            _locationRepository.Object,
+            TimeProvider.System,
             context ?? NewInMemoryContext(),
             NullLogger<BookingService>.Instance);
     }
@@ -341,5 +349,217 @@ public class BookingServiceTests
         Assert.Contains("already", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
         _bookingRepository.Verify(r => r.UpdateAsync(It.IsAny<Booking>()), Times.Never);
         _waitlistService.Verify(w => w.PromoteNextInLineAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    // Client cancellation from the dashboard.
+
+    private Booking ClientBooking(string status = "Confirmed", DateTime? sessionStart = null)
+    {
+        var start = sessionStart ?? DateTime.Today.AddDays(1).AddHours(9);
+        var booking = new Booking { BookingId = 30, ClientId = SignedInClientId, SessionId = 4, Status = status, CancellationToken = "tok" };
+        _bookingRepository.Setup(r => r.GetByIdAsync(30)).ReturnsAsync(booking);
+        _sessionRepository.Setup(r => r.GetByIdAsync(4)).ReturnsAsync(new Session
+        {
+            SessionId = 4,
+            LocationId = 1,
+            SessionType = "group",
+            Date = start.Date,
+            Time = start.TimeOfDay,
+            Capacity = 10,
+            IsOpen = true
+        });
+        return booking;
+    }
+
+    private Payment PaidWith(string method, decimal amount = 120m)
+    {
+        var payment = new Payment { PaymentId = 60, BookingId = 30, Method = method, Amount = amount, Status = PaymentStatuses.Confirmed, PaymentType = "per-class" };
+        _paymentRepository.Setup(r => r.GetByBookingIdAsync(30)).ReturnsAsync(payment);
+        _paymentRepository
+            .Setup(r => r.UpdateStatusAsync(60, It.IsAny<string>()))
+            .Callback<int, string>((_, status) => payment.Status = status)
+            .Returns(Task.CompletedTask);
+        return payment;
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_OwnUpcomingBooking_CancelsAndPromotesTheWaitlist()
+    {
+        var booking = ClientBooking();
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(result.Success);
+        Assert.Equal("Cancelled", booking.Status);
+        _waitlistService.Verify(w => w.PromoteNextInLineAsync(4), Times.Once);
+        Assert.Equal(RefundOutcome.None, result.Refund.Outcome);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_ClientCancelling_SendsNoCancellationEmail()
+    {
+        ClientBooking();
+
+        await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        _notificationService.Verify(n => n.SendCancellationEmailAsync(It.IsAny<Booking>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_SomeoneElsesBooking_IsRefusedAndNothingChanges()
+    {
+        var booking = ClientBooking();
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId + 1);
+
+        Assert.False(result.Success);
+        Assert.True(result.NotOwner);
+        Assert.Equal("Confirmed", booking.Status);
+        _bookingRepository.Verify(r => r.UpdateAsync(It.IsAny<Booking>()), Times.Never);
+        _waitlistService.Verify(w => w.PromoteNextInLineAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_ClassAlreadyStarted_IsRefused()
+    {
+        var booking = ClientBooking(sessionStart: DateTime.Now.AddMinutes(-5));
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.False(result.Success);
+        Assert.Contains("started", result.ErrorMessage);
+        Assert.Equal("Confirmed", booking.Status);
+        _bookingRepository.Verify(r => r.UpdateAsync(It.IsAny<Booking>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_ClassLaterToday_CanStillBeCancelled()
+    {
+        ClientBooking(sessionStart: DateTime.Now.AddMinutes(30));
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_Twice_SecondTimeIsRefused()
+    {
+        ClientBooking();
+        var service = CreateService();
+
+        var first = await service.CancelByClientAsync(30, SignedInClientId);
+        var second = await service.CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(first.Success);
+        Assert.False(second.Success);
+        Assert.Contains("already", second.ErrorMessage);
+        _waitlistService.Verify(w => w.PromoteNextInLineAsync(4), Times.Once);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_PaidByCard_RefundsTheChargeAndMarksThePaymentRefunded()
+    {
+        ClientBooking();
+        var payment = PaidWith(PaymentMethods.Card, 450m);
+        var charge = new PaymentTransaction { PaymentTransactionId = 1, PaymentId = 60, Amount = 450m, Status = PaymentTransactionStatus.Succeeded, GatewayReference = "TW-PAID000001" };
+        _transactionRepository.Setup(r => r.GetChargeForPaymentAsync(60)).ReturnsAsync(charge);
+        _gateway
+            .Setup(g => g.RefundAsync("TW-PAID000001", 450m, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayRefundResult { Success = true, RefundReference = "TW-RFTEST0001" });
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(result.Success);
+        Assert.Equal(RefundOutcome.CardRefunded, result.Refund.Outcome);
+        Assert.Equal(450m, result.Refund.Amount);
+        Assert.Equal(PaymentStatuses.Refunded, payment.Status);
+        Assert.Equal(PaymentTransactionStatus.Refunded, charge.Status);
+        _transactionRepository.Verify(r => r.UpdateAsync(charge), Times.Once);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_CardRefundRejected_FallsBackToRefundDue()
+    {
+        ClientBooking();
+        var payment = PaidWith(PaymentMethods.Card);
+        _transactionRepository.Setup(r => r.GetChargeForPaymentAsync(60)).ReturnsAsync(
+            new PaymentTransaction { PaymentId = 60, Amount = 120m, Status = PaymentTransactionStatus.Succeeded, GatewayReference = "TW-PAID000002" });
+        _gateway
+            .Setup(g => g.RefundAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayRefundResult { Success = false });
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(result.Success);
+        Assert.Equal(RefundOutcome.RefundDue, result.Refund.Outcome);
+        Assert.Equal(PaymentStatuses.RefundDue, payment.Status);
+    }
+
+    [Theory]
+    [InlineData(PaymentMethods.Eft)]
+    [InlineData(PaymentMethods.Cash)]
+    public async Task CancelByClientAsync_PaidByEftOrCash_MarksRefundDue(string method)
+    {
+        ClientBooking();
+        var payment = PaidWith(method);
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(result.Success);
+        Assert.Equal(RefundOutcome.RefundDue, result.Refund.Outcome);
+        Assert.Equal(PaymentStatuses.RefundDue, payment.Status);
+        _gateway.Verify(g => g.RefundAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancelByClientAsync_NothingPaid_LeavesThePaymentAlone()
+    {
+        ClientBooking(status: "Awaiting Payment");
+        var payment = new Payment { PaymentId = 60, BookingId = 30, Method = PaymentMethods.Card, Amount = 120m, Status = PaymentStatuses.Pending };
+        _paymentRepository.Setup(r => r.GetByBookingIdAsync(30)).ReturnsAsync(payment);
+
+        var result = await CreateService().CancelByClientAsync(30, SignedInClientId);
+
+        Assert.True(result.Success);
+        Assert.Equal(RefundOutcome.None, result.Refund.Outcome);
+        Assert.Equal(PaymentStatuses.Pending, payment.Status);
+        _paymentRepository.Verify(r => r.UpdateStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetClientCancellationAsync_PreviewsTheRefundWithoutChangingAnything()
+    {
+        var booking = ClientBooking();
+        var payment = PaidWith(PaymentMethods.Card);
+
+        var preview = await CreateService().GetClientCancellationAsync(30, SignedInClientId);
+
+        Assert.Equal(CancelPreviewStatus.Ready, preview.Status);
+        Assert.Equal(RefundOutcome.CardRefunded, preview.Refund.Outcome);
+        Assert.Equal("Confirmed", booking.Status);
+        Assert.Equal(PaymentStatuses.Confirmed, payment.Status);
+    }
+
+    [Fact]
+    public async Task GetClientCancellationAsync_SomeoneElsesBooking_IsNotOwner()
+    {
+        ClientBooking();
+
+        var preview = await CreateService().GetClientCancellationAsync(30, SignedInClientId + 1);
+
+        Assert.Equal(CancelPreviewStatus.NotOwner, preview.Status);
+    }
+
+    [Fact]
+    public async Task CancelByAdminAsync_PaidByEft_AlsoMarksRefundDue()
+    {
+        ClientBooking();
+        var payment = PaidWith(PaymentMethods.Eft);
+
+        var result = await CreateService().CancelByAdminAsync(30);
+
+        Assert.True(result.Success);
+        Assert.Equal(PaymentStatuses.RefundDue, payment.Status);
     }
 }

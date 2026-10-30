@@ -77,6 +77,9 @@ public class EmailFailureTests
             new Mock<IWaitlistService>().Object,
             paymentRepository,
             notificationService,
+            new Mock<IRefundService>().Object,
+            new LocationRepository(_context),
+            TimeProvider.System,
             _context,
             NullLogger<BookingService>.Instance);
     }

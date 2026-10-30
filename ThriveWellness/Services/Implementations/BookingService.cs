@@ -23,6 +23,9 @@ namespace ThriveWellness.Services.Implementations
         private readonly IWaitlistService _waitlistService;
         private readonly IPaymentRepository _paymentRepository;
         private readonly INotificationService _notificationService;
+        private readonly IRefundService _refundService;
+        private readonly ILocationRepository _locationRepository;
+        private readonly TimeProvider _timeProvider;
         private readonly ApplicationDbContext _context;
         private readonly ILogger<BookingService> _logger;
 
@@ -33,6 +36,9 @@ namespace ThriveWellness.Services.Implementations
             IWaitlistService waitlistService,
             IPaymentRepository paymentRepository,
             INotificationService notificationService,
+            IRefundService refundService,
+            ILocationRepository locationRepository,
+            TimeProvider timeProvider,
             ApplicationDbContext context,
             ILogger<BookingService> logger)
         {
@@ -42,6 +48,9 @@ namespace ThriveWellness.Services.Implementations
             _waitlistService = waitlistService;
             _paymentRepository = paymentRepository;
             _notificationService = notificationService;
+            _refundService = refundService;
+            _locationRepository = locationRepository;
+            _timeProvider = timeProvider;
             _context = context;
             _logger = logger;
         }
@@ -235,10 +244,91 @@ namespace ThriveWellness.Services.Implementations
             return await CancelAsync(booking, notifyClient: true);
         }
 
-        // Shared cancellation logic for both entry points above: flips the
-        // booking to Cancelled, frees its slot for the waitlist, and only
-        // emails the client when an admin did the cancelling - a client who
-        // clicked their own cancellation link already knows.
+        // What the signed-in client's "cancel this booking?" page shows:
+        // the class, and what will happen to their payment. Applies the same
+        // rules as CancelByClientAsync, so a booking that can't be cancelled
+        // says why before the client presses anything.
+        public async Task<CancelBookingPreview> GetClientCancellationAsync(int bookingId, int clientId)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return new CancelBookingPreview { Status = CancelPreviewStatus.NotFound };
+            }
+
+            if (booking.ClientId != clientId)
+            {
+                return new CancelBookingPreview { Status = CancelPreviewStatus.NotOwner };
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var location = session != null ? await _locationRepository.GetByIdAsync(session.LocationId) : null;
+            var payment = await _paymentRepository.GetByBookingIdAsync(bookingId);
+            var reason = ClientCannotCancelReason(booking, session);
+
+            return new CancelBookingPreview
+            {
+                Status = reason == null ? CancelPreviewStatus.Ready : CancelPreviewStatus.NotAllowed,
+                Message = reason,
+                BookingId = booking.BookingId,
+                SessionType = session?.SessionType ?? string.Empty,
+                SessionDate = session?.Date ?? default,
+                SessionTime = session?.Time ?? default,
+                LocationName = location?.Name ?? string.Empty,
+                LocationAddress = location?.Address ?? string.Empty,
+                Refund = _refundService.Preview(payment)
+            };
+        }
+
+        // Client-facing cancellation from their dashboard: only their own
+        // booking, only before the class starts, and only once. Goes through
+        // the same CancelAsync as the other two entry points, so waitlist
+        // promotion and refunds work exactly the same way. Like the emailed
+        // link, the client did this themselves, so no cancellation email.
+        public async Task<CancelBookingResult> CancelByClientAsync(int bookingId, int clientId)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return new CancelBookingResult { Success = false, ErrorMessage = "Booking not found." };
+            }
+
+            if (booking.ClientId != clientId)
+            {
+                return new CancelBookingResult { Success = false, NotOwner = true, ErrorMessage = "This isn't your booking." };
+            }
+
+            var session = await _sessionRepository.GetByIdAsync(booking.SessionId);
+            var reason = ClientCannotCancelReason(booking, session);
+            if (reason != null)
+            {
+                return new CancelBookingResult { Success = false, ErrorMessage = reason };
+            }
+
+            return await CancelAsync(booking, notifyClient: false);
+        }
+
+        // Clients can cancel any time before their class starts.
+        private string? ClientCannotCancelReason(Booking booking, Session? session)
+        {
+            if (booking.Status == "Cancelled")
+            {
+                return "This booking has already been cancelled.";
+            }
+
+            if (session == null || session.Date.Date + session.Time <= _timeProvider.GetLocalNow().DateTime)
+            {
+                return "This class has already started, so it can no longer be cancelled.";
+            }
+
+            return null;
+        }
+
+        // Shared cancellation logic for every entry point above: flips the
+        // booking to Cancelled, frees its slot for the waitlist, refunds the
+        // payment if there was one (RefundService), and only emails the
+        // client when an admin did the cancelling - a client who cancelled
+        // it themselves already knows.
         private async Task<CancelBookingResult> CancelAsync(Booking booking, bool notifyClient)
         {
             if (booking.Status == "Cancelled")
@@ -250,6 +340,20 @@ namespace ThriveWellness.Services.Implementations
             await _bookingRepository.UpdateAsync(booking);
 
             await _waitlistService.PromoteNextInLineAsync(booking.SessionId);
+
+            // The cancellation already stands; a refund that fails outright
+            // is logged rather than undoing it.
+            var refund = RefundResult.Nothing;
+            try
+            {
+                refund = await _refundService.RefundCancelledBookingAsync(booking.BookingId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    "The refund for cancelled booking {BookingId} could not be recorded ({ExceptionType}: {ExceptionMessage}).",
+                    booking.BookingId, ex.GetType().Name, ex.Message);
+            }
 
             if (notifyClient)
             {
@@ -266,7 +370,7 @@ namespace ThriveWellness.Services.Implementations
                 }
             }
 
-            return new CancelBookingResult { Success = true };
+            return new CancelBookingResult { Success = true, Refund = refund };
         }
 
         // Exception type and message only - SendGrid's error text never
