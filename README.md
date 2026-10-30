@@ -26,6 +26,7 @@ Null Devs
 - EFT and cash payment options, confirmed by an admin (see Known limitations).
 - A waitlist with automatic promotion when a spot opens up.
 - Cancellation through a single-use link sent by email, no login needed.
+- A schedule that can be browsed week by week, from the current week up to the last scheduled class.
 
 ### Admin
 
@@ -35,6 +36,8 @@ Null Devs
 - Location management.
 - A client overview with search.
 - Waitlist management, including manually notifying or removing an entry, or moving a waitlisted client straight into a class.
+- A Send reminders now button that runs the day-before reminder check on demand and reports how many were sent, skipped or failed.
+- An Emails page listing the latest 50 emails sent, filterable by type.
 
 ### Automated emails
 
@@ -229,6 +232,7 @@ Work was built as a series of feature branches, merged into `main`:
 ## Security
 
 - Passwords are hashed with BCrypt, which generates and embeds its own random salt. The plaintext password is never stored.
+- The admin login locks for 15 minutes after 5 failed attempts in a row. Unknown usernames get the same messages and the same timing, so the login page never reveals whether a username exists.
 - Every state-changing form includes an anti-forgery token, and every matching controller action validates it.
 - All database queries go through Entity Framework Core, which parameterises every value. No raw SQL is built from user input.
 - Session cookies and form posts are expected to run over HTTPS in production.
