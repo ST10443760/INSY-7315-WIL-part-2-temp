@@ -548,6 +548,12 @@ body.thrive-admin-body {
   color: var(--color-text-muted);
 }
 
+/* A booking the client didn't turn up for. */
+.thrive-pill--no-show {
+  background: var(--color-text-muted);
+  color: var(--color-white);
+}
+
 /* A payment's status pill with "Booking cancelled" stacked under it. */
 .thrive-admin-table td .thrive-pill {
   white-space: nowrap;
@@ -680,4 +686,33 @@ body.thrive-admin-body {
   .thrive-admin-calendar__weekday-label {
     display: inline;
   }
+}
+
+/* A second, warning line inside a success banner, for example a payment
+   that was confirmed but whose email didn't send. Marked with an icon-like
+   prefix in text so it doesn't rely on colour. */
+.thrive-banner__warning {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-error-text);
+  font-weight: 600;
+}
+
+.thrive-banner__warning::before {
+  content: "Warning: ";
+}
+
+.thrive-admin-table td span + form {
+  margin-top: var(--space-1);
+}
+
+/* A sortable column heading (Clients: Attended). */
+.thrive-admin-sort {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.thrive-admin-sort--active {
+  text-decoration-thickness: 2px;
 }
