@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Models;
 using ThriveWellness.Services.Interfaces;
 
@@ -27,9 +28,9 @@ public class AccountController : Controller
     }
 
     // Verifies the submitted credentials through AuthService and, on
-    // success, signs the admin in with a cookie carrying their username as
-    // the only claim - that's all [Authorize] on the admin controllers
-    // actually checks for. On failure, shows the same view again with a
+    // success, signs the admin in with a cookie carrying their username and
+    // the Admin role - the role is what the AdminOnly policy on every admin
+    // controller checks for. On failure, shows the same view again with a
     // single generic error (not "wrong password" vs "no such user" - see
     // AuthService.Login for why that distinction is never surfaced).
     [HttpPost]
@@ -57,7 +58,8 @@ public class AccountController : Controller
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, model.Username)
+            new(ClaimTypes.Name, model.Username),
+            new(ClaimTypes.Role, AuthPolicies.AdminRole)
         };
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
