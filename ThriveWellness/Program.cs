@@ -78,6 +78,12 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IWaitlistRepository, WaitlistRepository>();
 builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+
+// The card gateway. SimulatedCardGateway stands in for a real provider -
+// moving to PayFast or Stripe means registering their implementation of
+// IPaymentGateway here instead; nothing that charges a card changes.
+builder.Services.AddScoped<IPaymentGateway, SimulatedCardGateway>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // PaymentService is the Observer-pattern subject (Task 1 doc, Section 9.3).
