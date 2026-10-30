@@ -102,7 +102,12 @@ public class AdminController : Controller
     // waitlist entry - see WaitlistService.NotifyAsync.
     public async Task<IActionResult> NotifyWaitlistEntry(int id)
     {
-        await _waitlistService.NotifyAsync(id);
+        var emailSent = await _waitlistService.NotifyAsync(id);
+        if (!emailSent)
+        {
+            TempData["WaitlistBannerType"] = "notice";
+            TempData["WaitlistBannerMessage"] = "The email could not be sent. Please try again later.";
+        }
         return RedirectToAction(nameof(Waitlist));
     }
 
