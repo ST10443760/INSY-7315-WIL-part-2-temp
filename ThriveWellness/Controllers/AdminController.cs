@@ -16,13 +16,16 @@ public class AdminController : Controller
 {
     private readonly IAdminDashboardService _dashboardService;
     private readonly IWaitlistService _waitlistService;
+    private readonly IScheduledNotificationService _scheduledNotificationService;
 
     public AdminController(
         IAdminDashboardService dashboardService,
-        IWaitlistService waitlistService)
+        IWaitlistService waitlistService,
+        IScheduledNotificationService scheduledNotificationService)
     {
         _dashboardService = dashboardService;
         _waitlistService = waitlistService;
+        _scheduledNotificationService = scheduledNotificationService;
     }
 
     // Also where [Authorize] sends an admin after a successful login - see
@@ -31,6 +34,21 @@ public class AdminController : Controller
     {
         var dashboard = await _dashboardService.GetDashboardAsync();
         return View(dashboard);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    // Runs the same day-before reminder sweep the hourly background service
+    // runs, once, right now - safe to press repeatedly, since anyone already
+    // reminded is skipped rather than emailed again.
+    public async Task<IActionResult> SendRemindersNow()
+    {
+        var result = await _scheduledNotificationService.SendDueRemindersAsync();
+
+        TempData["DashboardBannerType"] = result.Failed > 0 ? "notice" : "success";
+        TempData["DashboardBannerMessage"] = result.ToSummary();
+
+        return RedirectToAction(nameof(Index));
     }
 
     // Defaults to the current month if none is given; rejects an
