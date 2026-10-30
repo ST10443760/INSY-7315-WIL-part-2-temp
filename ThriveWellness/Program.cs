@@ -58,6 +58,9 @@ builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection("Pay
 // lockout timing can be tested with a fake clock instead of waiting 15
 // minutes. Singleton: it holds no state.
 builder.Services.AddSingleton(TimeProvider.System);
+// Holds failed-login counts for usernames that don't exist (see
+// AuthService.Login), so they lock out on the same rule as the real one.
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
