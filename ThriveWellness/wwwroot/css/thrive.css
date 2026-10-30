@@ -1483,9 +1483,167 @@ body.thrive-menu-open {
   margin: var(--space-1) 0 0;
 }
 
-/* Kept for the Rewards section: takes no space while it's empty. */
-.thrive-dashboard__rewards:empty {
-  display: none;
+/* Rewards: the streak card and next-badge line, then a grid of every badge.
+   Earned and locked badges differ in text ("Earned ..." / "Locked" with a
+   lock icon) as well as colour. */
+.thrive-rewards {
+  margin-top: var(--space-4);
+}
+
+.thrive-rewards__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.thrive-streak-card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  background: var(--color-pale-rose);
+  border-radius: var(--radius-input);
+  padding: var(--space-3);
+}
+
+.thrive-streak-card .thrive-badge__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  color: var(--color-maroon);
+}
+
+.thrive-streak-card p {
+  margin: 0;
+}
+
+.thrive-streak-card__value {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--color-maroon);
+}
+
+.thrive-streak-card__value span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.thrive-streak-card__sub {
+  color: var(--color-pale-rose-text);
+  font-size: 0.9rem;
+}
+
+.thrive-streak-card__note {
+  margin-top: var(--space-1) !important;
+}
+
+.thrive-rewards__next {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.thrive-rewards__next strong {
+  display: block;
+  color: var(--color-maroon);
+}
+
+.thrive-badge-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.thrive-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-3) var(--space-2);
+}
+
+.thrive-badge .thrive-badge__icon {
+  width: 36px;
+  height: 36px;
+}
+
+.thrive-badge--earned {
+  background: var(--color-beige);
+}
+
+.thrive-badge--earned .thrive-badge__icon {
+  color: var(--color-maroon);
+}
+
+.thrive-badge--locked {
+  background: var(--color-white);
+  border-style: dashed;
+}
+
+.thrive-badge--locked .thrive-badge__icon,
+.thrive-badge--locked .thrive-badge__name {
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
+
+.thrive-badge__name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-badge__desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.thrive-badge__state {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-success-text);
+}
+
+.thrive-badge__state--locked {
+  color: var(--color-text-muted);
+}
+
+.thrive-badge__state .thrive-icon {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.thrive-badge__new {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-white);
+  background: var(--color-rose-accessible);
+  border-radius: var(--radius-pill);
+  padding: 0.1rem 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .thrive-rewards__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .thrive-badge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .thrive-dashboard__tiles {
