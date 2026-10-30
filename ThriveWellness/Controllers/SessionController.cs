@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services.Interfaces;
@@ -9,7 +10,7 @@ namespace ThriveWellness.Controllers;
 // MVC controller: admin CRUD for class sessions, plus the two capacity
 // actions (MarkFull/MarkOpen) and a per-session waitlist view. Follows the
 // same validation-exception-to-form-error pattern as LocationController.
-[Authorize]
+[Authorize(Policy = AuthPolicies.AdminOnly)]
 public class SessionController : Controller
 {
     private readonly ISessionService _sessionService;
