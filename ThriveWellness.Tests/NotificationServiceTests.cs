@@ -237,6 +237,29 @@ public class NotificationServiceTests
     }
 
     [Fact]
+    public async Task SendConfirmationEmailAsync_CardBooking_LinksToCheckoutInsteadOfBankDetails()
+    {
+        var booking = FakeBooking();
+        var payment = FakePayment("per-class", PaymentPricing.PerClassPrice);
+        payment.Method = PaymentMethods.Card;
+        SetUpLookupsFor(booking, payment);
+
+        string? sentHtml = null;
+        _emailSender
+            .Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string, string>((_, _, html) => sentHtml = html)
+            .Returns(Task.CompletedTask);
+
+        await CreateService().SendConfirmationEmailAsync(booking);
+
+        Assert.NotNull(sentHtml);
+        Assert.Contains("https://test.local/Checkout/Pay/42", sentHtml);
+        Assert.Contains($"R{PaymentPricing.PerClassPrice}", sentHtml);
+        Assert.DoesNotContain("Account number", sentHtml);
+        Assert.DoesNotContain("confirmed", sentHtml, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task SendWelcomeEmailAsync_SentAfterPayment_SaysConfirmedAndBookedIn()
     {
         var booking = FakeBooking();

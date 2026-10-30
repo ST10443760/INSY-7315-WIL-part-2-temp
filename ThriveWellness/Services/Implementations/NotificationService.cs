@@ -181,6 +181,17 @@ namespace ThriveWellness.Services.Implementations
         {
             var amountLine = payment != null ? $"Amount due: R{payment.Amount}<br>" : string.Empty;
 
+            // A card booking is paid online, so it gets the checkout link
+            // instead of banking details.
+            if (PaymentMethods.IsCard(payment?.Method))
+            {
+                var payUrl = $"{_appBaseUrl}/Checkout/Pay/{booking.BookingId}";
+                return $"""
+                    <p><strong>Payment</strong><br>
+                    {amountLine}Pay securely by card online: <a href="{payUrl}">Pay now</a></p>
+                    """;
+            }
+
             string bankDetailsLines;
             if (HasCompletePaymentDetails())
             {
