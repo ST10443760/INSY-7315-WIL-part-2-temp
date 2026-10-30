@@ -33,8 +33,8 @@ namespace ThriveWellness.Services.Implementations
         // run repeatedly (every hour, or from the admin's "Send reminders
         // now" button) without double-emailing anyone. Bookings that were
         // already reminded count as skipped. One failed send is logged and
-        // counted rather than stopping the rest of the run; it has no
-        // Reminder row, so the next run picks it up again.
+        // counted rather than stopping the rest of the run; its Reminder row
+        // is logged as Failed, not Sent, so the next run picks it up again.
         public async Task<ReminderRunResult> SendDueRemindersAsync()
         {
             var tomorrow = DateTime.UtcNow.Date.AddDays(1);
@@ -46,7 +46,7 @@ namespace ThriveWellness.Services.Implementations
                 select new
                 {
                     Booking = booking,
-                    AlreadyReminded = _context.Notifications.Any(n => n.BookingId == booking.BookingId && n.Type == "Reminder")
+                    AlreadyReminded = _context.Notifications.Any(n => n.BookingId == booking.BookingId && n.Type == "Reminder" && n.Status == NotificationStatus.Sent)
                 }
             ).ToListAsync();
 
@@ -85,7 +85,7 @@ namespace ThriveWellness.Services.Implementations
                 join session in _context.Sessions on booking.SessionId equals session.SessionId
                 join client in _context.Clients on booking.ClientId equals client.ClientId
                 where booking.Status == "Confirmed" && session.Date.Date == today && client.IsNew
-                where !_context.Notifications.Any(n => n.BookingId == booking.BookingId && n.Type == "Location")
+                where !_context.Notifications.Any(n => n.BookingId == booking.BookingId && n.Type == "Location" && n.Status == NotificationStatus.Sent)
                 select booking
             ).ToListAsync();
 
