@@ -15,6 +15,13 @@
 
         <p class="thrive-receipt__amount">R@(Model.Amount.ToString("N2")) <span>@Model.Currency</span></p>
 
+        @if (Model.PaymentStatus == PaymentStatuses.Refunded)
+        {
+            <div class="thrive-banner thrive-banner--notice" role="status">
+                This booking was cancelled and this payment has been refunded to your @Model.Brand ending in @Model.Last4.
+            </div>
+        }
+
         <div class="thrive-detail-card">
             <div class="thrive-detail-row">
                 <span class="thrive-detail-row__label"><partial name="_Icon" model="@("calendar")" />Paid on</span>
