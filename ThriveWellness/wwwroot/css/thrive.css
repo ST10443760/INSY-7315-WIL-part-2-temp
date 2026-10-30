@@ -1543,3 +1543,313 @@ body.thrive-menu-open {
   display: flex;
   min-height: 0;
 }
+
+/* ==========================================================================
+   Card checkout: order summary and card form side by side, stacked on
+   narrow screens.
+   ========================================================================== */
+
+.thrive-checkout-page {
+  padding: var(--space-6) 0;
+}
+
+.thrive-checkout-page__header {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.thrive-checkout-page__header .thrive-subtitle-italic {
+  display: block;
+  margin-top: var(--space-2);
+}
+
+.thrive-checkout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  max-width: 960px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.thrive-checkout__panel {
+  background: var(--color-white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  min-width: 0;
+}
+
+.thrive-checkout__heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-maroon);
+  margin: 0 0 var(--space-3);
+}
+
+.thrive-checkout__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-maroon);
+}
+
+.thrive-checkout__amount {
+  font-size: 1.6rem;
+}
+
+.thrive-checkout__note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: var(--space-2) 0 0;
+}
+
+.thrive-checkout__pay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.thrive-checkout__pay-header .thrive-checkout__heading {
+  margin: 0;
+}
+
+/* Small and quiet on purpose - a label, not a warning. */
+.thrive-test-mode {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-text-muted);
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.thrive-card-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.thrive-card-number {
+  position: relative;
+}
+
+.thrive-card-number .thrive-input {
+  padding-right: 7.5rem;
+  letter-spacing: 0.04em;
+}
+
+.thrive-card-number__brand {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--color-maroon);
+  pointer-events: none;
+}
+
+.thrive-pay-btn {
+  margin-top: var(--space-2);
+}
+
+.thrive-pay-btn .thrive-icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* Processing state: a small spinner in place of the lock icon. */
+.thrive-pay-btn[data-processing] .thrive-icon {
+  display: none;
+}
+
+.thrive-pay-btn[data-processing]::before {
+  content: "";
+  width: 1em;
+  height: 1em;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: var(--color-white);
+  border-radius: 50%;
+  animation: thrive-spin 0.8s linear infinite;
+}
+
+@keyframes thrive-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thrive-pay-btn[data-processing]::before {
+    animation-duration: 2.4s;
+  }
+}
+
+.thrive-secure-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.thrive-secure-row__text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.thrive-secure-row__text .thrive-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.thrive-card-logos {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.thrive-card-logos svg {
+  width: 38px;
+  height: 24px;
+}
+
+.thrive-test-cards {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.thrive-test-cards summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-maroon);
+  min-height: var(--touch-target);
+  display: flex;
+  align-items: center;
+}
+
+.thrive-test-cards p {
+  margin: 0 0 var(--space-2);
+}
+
+.thrive-test-cards ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.thrive-test-cards li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.thrive-test-cards button {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+.thrive-test-cards button:hover {
+  border-color: var(--color-dusty-rose);
+}
+
+@media (max-width: 768px) {
+  .thrive-checkout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .thrive-checkout-page {
+    padding: var(--space-4) 0;
+  }
+
+  .thrive-checkout__panel {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .thrive-card-form__row {
+    gap: var(--space-2);
+  }
+}
+
+/* Receipt */
+.thrive-receipt__amount {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2.2rem;
+  color: var(--color-maroon);
+  margin: 0 0 var(--space-4);
+}
+
+.thrive-receipt__amount span {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.thrive-receipt__reference {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  word-break: break-all;
+}
+
+.thrive-receipt__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.thrive-receipt__actions .thrive-btn {
+  flex: 1 1 200px;
+}
+
+/* Printing a receipt: just the receipt, no navigation, no shadows. */
+@media print {
+  .thrive-header,
+  .thrive-footer,
+  .thrive-skip-link,
+  .thrive-menu-backdrop,
+  .thrive-no-print {
+    display: none !important;
+  }
+
+  body.thrive-body,
+  body.thrive-body.thrive-body--beige {
+    background: #ffffff;
+  }
+
+  .thrive-booking-page {
+    padding: 0;
+  }
+
+  .thrive-booking-card {
+    box-shadow: none;
+    max-width: none;
+  }
+}
