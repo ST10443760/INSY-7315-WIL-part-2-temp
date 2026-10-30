@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThriveWellness.Authorization;
 using ThriveWellness.Models;
 using ThriveWellness.Repositories.Interfaces;
 using ThriveWellness.Services;
@@ -363,7 +364,7 @@ public class BookingController : Controller
     // trigger SendCancellationEmailAsync. There's no admin bookings list to
     // link this from yet - that's a separate feature - so for now this is
     // reached directly with a known booking id.
-    [Authorize]
+    [Authorize(Policy = AuthPolicies.AdminOnly)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AdminCancel(int bookingId)
