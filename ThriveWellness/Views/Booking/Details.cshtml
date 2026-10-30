@@ -76,8 +76,9 @@
                 <label class="thrive-label" asp-for="Method">Payment Method</label>
                 <select asp-for="Method" class="thrive-select">
                     <option value="">-- Select Payment Method --</option>
-                    <option value="EFT">EFT</option>
-                    <option value="cash">Cash</option>
+                    <option value="@PaymentMethods.Card">Card (online)</option>
+                    <option value="@PaymentMethods.Eft">EFT</option>
+                    <option value="@PaymentMethods.Cash">Cash</option>
                 </select>
                 <span asp-validation-for="Method" class="thrive-field-error"></span>
             </div>

@@ -17,6 +17,11 @@ namespace ThriveWellness.Models
         // Null when the booking somehow has no Payment row - the page then
         // just leaves the amount out of its next-step text.
         public decimal? AmountDue { get; set; }
+
+        // Lets a card booking offer "Pay now" while it's unpaid, and its
+        // receipt once it's paid.
+        public int? PaymentId { get; set; }
+        public string? PaymentStatus { get; set; }
         public string CancellationToken { get; set; } = string.Empty;
     }
 }

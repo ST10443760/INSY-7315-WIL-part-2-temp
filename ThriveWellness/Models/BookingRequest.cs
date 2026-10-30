@@ -14,7 +14,8 @@ namespace ThriveWellness.Models
         // Billing plan for this booking's payment: "per-class" or "monthly".
         public string PaymentType { get; set; } = string.Empty;
 
-        // Payment method for this booking's payment: "EFT" or "cash".
+        // Payment method for this booking's payment: one of PaymentMethods
+        // ("Card", "EFT" or "cash").
         public string Method { get; set; } = string.Empty;
         public int SessionId { get; set; }
         public string? MedicalNotes { get; set; }

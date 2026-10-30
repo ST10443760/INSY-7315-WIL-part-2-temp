@@ -102,7 +102,8 @@ public class BookingController : Controller
         {
             SessionId = session.SessionId,
             FullName = client.FullName,
-            PhoneNumber = client.PhoneNumber
+            PhoneNumber = client.PhoneNumber,
+            Method = PaymentMethods.Card
         };
         await FillDetailsDisplayAsync(model, session, client);
 
@@ -153,6 +154,10 @@ public class BookingController : Controller
         {
             ModelState.AddModelError(nameof(model.Method), "Payment method is required.");
         }
+        else if (!PaymentMethods.All.Contains(model.Method))
+        {
+            ModelState.AddModelError(nameof(model.Method), "Please choose card, EFT or cash.");
+        }
 
         if (!ModelState.IsValid)
         {
@@ -197,6 +202,15 @@ public class BookingController : Controller
             return View("Details", model);
         }
 
+        // A card booking is saved exactly like an EFT or cash one (awaiting
+        // payment, booking received email sent), then goes straight on to
+        // pay. A client who leaves checkout can come back from the booking
+        // received page or their dashboard.
+        if (PaymentMethods.IsCard(model.Method))
+        {
+            return RedirectToAction("Pay", "Checkout", new { bookingId = result.BookingId });
+        }
+
         return RedirectToAction(nameof(Confirmation), new { bookingId = result.BookingId });
     }
 
@@ -233,6 +247,8 @@ public class BookingController : Controller
             Status = booking.Status,
             Method = payment?.Method ?? string.Empty,
             AmountDue = payment?.Amount,
+            PaymentId = payment?.PaymentId,
+            PaymentStatus = payment?.Status,
             CancellationToken = booking.CancellationToken
         };
 

@@ -30,7 +30,8 @@ namespace ThriveWellness.Models
         // usable for both the new-client and returning-client form states).
         public string PaymentType { get; set; } = string.Empty;
 
-        // Payment method for this booking's payment: "EFT" or "cash".
+        // Payment method for this booking's payment: one of PaymentMethods
+        // ("Card", "EFT" or "cash"). Card is pre-selected on a new form.
         public string Method { get; set; } = string.Empty;
 
         public bool IsNewClient { get; set; }
