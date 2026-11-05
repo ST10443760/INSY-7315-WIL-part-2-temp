@@ -611,14 +611,23 @@ login for clients, so email is the only identifier available, and it
 doubles as the contact address emails get sent to.
 
 **What would you improve next?**
-Honestly, in rough priority order: move the SendGrid send off the request's
-critical path (a queue/background worker, per the existing TODO in
-`PaymentService`); add controller- and repository-level tests (today's 30
-tests cover five service classes only - `AdminSeeder`, `BookingService`,
-`PaymentService`, `SessionService`, `WaitlistService` - not the controllers
-or the EF Core query shapes in the repositories); and reconsider whether a
-SendGrid failure should really fail the whole booking request rather than
-just logging it and letting the booking go through without its email.
+Honestly, in rough priority order: replace `SimulatedCardGateway` with a
+real provider (PayFast or Stripe) behind the same `IPaymentGateway`; move
+the SendGrid send off the request's critical path (a queue or background
+worker), which would also let failed booking received and payment
+confirmed emails be retried; work out "today" in South African time for
+the scheduled emails instead of UTC; add an admin Cancel button for the
+existing `CancelByAdminAsync`; and widen the tests. There are more than
+400 tests today, covering the services (`AdminSeeder`, `AuthService`,
+`BookingService`, `CheckoutService`, `ClientAccountService`,
+`ClientDashboardService`, `NotificationService`, `PaymentService`,
+`RefundService`, `RevenueService`, `RewardsService`,
+`ScheduledNotificationService`, `SessionService`, `SimulatedCardGateway`,
+`WaitlistService`), the pure rule helpers, the authorization of every
+controller action and the card-data rules. Not covered yet: the
+controllers' action logic, the views, `AdminDashboardService`,
+`LocationService`, and the repositories' queries against a real PostgreSQL
+database rather than the in-memory provider.
 
 **Why does a client cancel via a link instead of logging in?**
 There's no client account system at all - a client only ever interacts
