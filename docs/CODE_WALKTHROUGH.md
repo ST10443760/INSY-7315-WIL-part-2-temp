@@ -90,37 +90,51 @@ and pays by card, in the order the files are actually touched.
 
 ## Feature maps
 
-### Booking (a new or returning client books a session)
+### Booking (a signed-in client books a session)
 
-**Files:** `Controllers/BookingController.cs` (`Book`, `CheckEmail`, `Submit`,
+**Files:** `Controllers/BookingController.cs` (`Book`, `Submit`,
 `Confirmation`) → `Services/Implementations/BookingService.cs`
-(`CheckClientStatusAsync`, `CreateBookingAsync`) →
+(`IsFirstBookingAsync`, `CreateBookingAsync`) →
 `Repositories/Implementations/{Client,Session,Booking,Payment}Repository.cs` →
 `Data/ApplicationDbContext.cs` → `Services/Implementations/NotificationService.cs`
 → `Services/Implementations/EmailSender.cs`.
 
-**Steps:** email first, to decide new vs. returning → full or short form
-depending on that → server re-validates capacity and consent → booking +
-payment (+ intake form) created → confirmation email sent → confirmation page
-shown.
+**Steps:** sign in with Google → form pre-filled from the client record,
+with intake and consent fields on a first booking only → server re-checks
+capacity and consent → booking, payment (and intake form) created →
+booking received email sent → checkout page for card, booking received page
+for EFT or cash.
 
-**Why built this way:** splitting email-check from the rest of the form
-avoids making a returning client re-type their name and phone number every
-time, and means the intake/consent fields only ever render for someone who
-actually needs to see them.
+**Why built this way:** the client is identified by their sign-in, not by
+anything typed into the form, so a returning client never re-types their
+details and nobody can book as someone else by typing their email. "First
+booking" is worked out from the client's bookings on the server each time,
+so the consent rule can't be skipped by editing the form.
 
-### Returning-client detection
+### Client sign-in with Google
 
-**Files:** `BookingController.CheckEmail` →
-`BookingService.CheckClientStatusAsync` → `ClientRepository.GetByEmailAsync`.
+**Files:** `Controllers/AccountController.cs` (`ClientLogin`,
+`GoogleSignIn`, `GoogleCallback`, `ClientSignOut`) →
+`Services/Implementations/ClientAccountService.cs`
+(`SignInWithGoogleAsync`) → `Repositories/Implementations/ClientRepository.cs`
+→ `Authorization/ClientClaims.cs`, with the Google and cookie schemes set up
+in `Program.cs`.
 
-**Steps:** the submitted email is looked up in `Clients.Email`; a match
-returns their stored name/phone and `IsNew = false` to pre-fill the form,
-no match returns `IsNew = true`.
+**Steps:** `GoogleSignIn` (a POST with an anti-forgery token) starts the
+Google round trip → Google returns to `/signin-google`, which stores the
+result in a short-lived External cookie → `GoogleCallback` reads the
+profile and calls `SignInWithGoogleAsync`, which refuses an unverified
+email, signs in a client already linked by `GoogleSubject`, otherwise links
+an existing client with the same email (ignoring case), otherwise creates a
+new client → the External cookie is swapped for the normal sign-in cookie
+carrying the Client role, the client id, name and email → the client lands
+on the `returnUrl` (local URLs only) or their dashboard.
 
-**Why built this way:** email is the only identifier a client has, since
-there's no account/login system for clients - it has to double as both
-"who is this" and "how do I reach them".
+**Why built this way:** Google handles passwords and email verification, so
+the app stores no client passwords. Linking by verified email keeps the
+history of clients who booked before sign-in existed. If the Google
+settings are missing, the Google scheme is never registered and the sign-in
+page says sign-in isn't available, instead of the app failing to start.
 
 ### Payment confirmation
 
