@@ -262,15 +262,22 @@ the in-memory provider, which does not behave exactly like PostgreSQL).
 
 ## CI/CD and deployment
 
-Two GitHub Actions workflows:
+Three GitHub Actions workflows in `.github/workflows/`:
 
 - **`ci.yml`** runs on every push to any branch, and on pull requests
-  targeting `develop` or `main`. It restores, builds, and runs
-  `dotnet test`. It also declares `workflow_call`, so `deploy.yml` can reuse
-  this exact job instead of duplicating it.
-- **`deploy.yml`** runs on every push to `main`. It first calls `ci.yml` as
-  a gate; if that passes, it POSTs to a Render deploy hook URL, stored as
-  the `RENDER_DEPLOY_HOOK_URL` repository secret.
+  targeting `develop` or `main`. One job, `build-and-test`, on
+  `ubuntu-latest`: checkout, set up the .NET 8 SDK (`8.0.x`),
+  `dotnet restore`, `dotnet build --no-restore` and
+  `dotnet test --no-build`. It also declares `workflow_call`, so
+  `deploy.yml` can reuse this exact job instead of duplicating it.
+- **`deploy.yml`** runs on every push to `main`. Its `test` job calls
+  `ci.yml`; its `deploy` job needs that to pass, then POSTs to the Render
+  deploy hook URL stored in the `RENDER_DEPLOY_HOOK_URL` repository secret
+  (`curl --fail`, so a failed hook fails the job). If the secret is not
+  set, the job logs that and exits successfully without deploying.
+- **`autograde.yaml`** runs on pushes to `main` and on `submit/*` tags. It
+  calls the course's shared autograding workflow
+  (`EMKNDW/classroom50/.github/workflows/autograde-runner.yaml@main`).
 
 Render builds and runs the app from `ThriveWellness/Dockerfile` (a two-stage
 build: the SDK image builds and publishes the app, then the ASP.NET runtime
@@ -290,6 +297,17 @@ not in the repository):
 - `SendGridApiKey`
 - `SendGridFromEmail`
 - `AppBaseUrl`
+- `Authentication__Google__ClientId`
+- `Authentication__Google__ClientSecret`
+
+Render's proxy ends HTTPS and forwards plain HTTP, so `Program.cs` trusts
+the `X-Forwarded-For` and `X-Forwarded-Proto` headers. That keeps
+`Request.Scheme` as `https`, which the Google redirect URI depends on.
+
+Two health endpoints are available for the host: `/health` answers `OK`
+whenever the process is up, with no database call, and `/health/db` checks
+the database connection with a 3 second limit, answering `OK` or
+`Database unavailable` (503).
 
 ## Branching
 
