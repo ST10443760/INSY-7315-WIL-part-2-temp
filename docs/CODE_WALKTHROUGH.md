@@ -605,10 +605,13 @@ than needing a real or in-memory database; and it's the layer that would
 need to change if the data access technology ever did, without touching any
 business rule.
 
-**How does returning-client detection work?**
-By email lookup alone (`ClientRepository.GetByEmailAsync`) - there's no
-login for clients, so email is the only identifier available, and it
-doubles as the contact address emails get sent to.
+**How does the app know who a client is?**
+Through Google sign-in. `ClientAccountService.SignInWithGoogleAsync` signs
+in the client already linked to that Google account (`GoogleSubject`), or
+links an existing client with the same verified email, or creates a new
+one. The client id then travels in the sign-in cookie, and every client
+action uses it rather than anything typed into a form. An unverified
+Google email is refused, so nobody can claim another person's history.
 
 **What would you improve next?**
 Honestly, in rough priority order: replace `SimulatedCardGateway` with a
@@ -629,11 +632,21 @@ controllers' action logic, the views, `AdminDashboardService`,
 `LocationService`, and the repositories' queries against a real PostgreSQL
 database rather than the in-memory provider.
 
-**Why does a client cancel via a link instead of logging in?**
-There's no client account system at all - a client only ever interacts
-with the site anonymously, identified by email. Building a full login flow
-just for cancellation would be a lot of extra surface area for one action,
-so a single-purpose, unguessable token does the same job more simply.
+**Why can a client cancel via a link as well as from the dashboard?**
+The link in the booking emails works from any device without signing in,
+which is the quickest way out for someone reading the email on their
+phone. Signed-in clients can also cancel from their dashboard. Both go
+through the same `CancelAsync`, so refunds and waitlist promotion behave
+the same either way, and the link's single-purpose, unguessable token only
+lets someone cancel that one booking.
+
+**How is card data kept safe?**
+The card number, expiry and CVC only pass through `CheckoutService` on
+their way to `IPaymentGateway`; they are never saved or logged. A
+`PaymentTransaction` keeps only the brand, the last four digits, the
+gateway reference and the outcome. `PaymentTransactionSecurityTests` fails
+if any table in the database model gains a column that could hold card
+data.
 
 **Is the cancellation token really single-use?**
 Not by invalidating the token itself - by what it points at. Once used, the
