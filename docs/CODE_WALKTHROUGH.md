@@ -226,12 +226,34 @@ removal leaves" without needing a linked list or a separate ordering table.
 → `CancellationTokenGenerator` (where the token was originally generated).
 
 **Steps:** the email's cancel link is `/Booking/Cancel/{token}`; the booking
-is looked up by that token (not an id), flipped to `"Cancelled"`, and the
-freed slot triggers `WaitlistService.PromoteNextInLineAsync`.
+is looked up by that token (not an id) and passed to the shared
+`CancelAsync`, which flips it to `"Cancelled"`, refunds or marks the
+payment Refund due (see Refunds), and lets the freed slot trigger
+`WaitlistService.PromoteNextInLineAsync`.
 
-**Why built this way:** a client never logs in, so there's no session or
-cookie to authorize this action with - the cryptographically random token
-*is* the credential. See Design Decisions for the full reasoning.
+**Why built this way:** the link has to work from an email on any device,
+without the client signing in first, so there's no cookie to authorize the
+action with - the cryptographically random token *is* the credential. See
+Design Decisions for the full reasoning.
+
+### Cancelling from the dashboard
+
+**Files:** `BookingController.CancelBooking` (GET, the "Cancel this
+booking?" page) and `CancelBookingConfirmed` (POST), both `ClientOnly` →
+`BookingService.GetClientCancellationAsync` and `CancelByClientAsync` →
+the same `CancelAsync`.
+
+**Steps:** the dashboard's Cancel button opens a confirmation page that
+shows the class and what will happen to the payment. Confirming checks the
+booking belongs to the signed-in client, is not already cancelled and that
+its class hasn't started, then cancels it exactly like the emailed link.
+No cancellation email is sent, since the client did it themselves.
+
+**Why built this way:** all three entry points (emailed link, dashboard,
+and the admin's `CancelByAdminAsync`) go through one `CancelAsync`, so
+refunds and waitlist promotion can't behave differently depending on who
+cancelled. Only the admin path emails the client, and it has no button in
+the admin pages yet.
 
 ### Scheduled reminder and location emails
 
