@@ -10,64 +10,83 @@ Everything in here was confirmed against the actual code while writing it,
 not written from memory of what the code "should" do. Where something is a
 judgment call rather than a verified fact, it's flagged as such.
 
-## One request, end to end: a new client booking
+## One request, end to end: a client's first booking, paid by card
 
-This traces what happens when someone fills in the booking form for the
-first time and submits it, in the order the files are actually touched.
+This traces what happens when a signed-in client books their first class
+and pays by card, in the order the files are actually touched.
 
 1. **[`Views/Booking/Schedule.cshtml`](../ThriveWellness/Views/Booking/Schedule.cshtml)**
-   - the public schedule page. Clicking "Book" on an open session is a link
-   to `/Booking/Book/{sessionId}`.
+   is the public schedule. "Book Now" on an open session is a link to
+   `/Booking/Book/{sessionId}`. That action has
+   `[Authorize(Policy = AuthPolicies.ClientOnly)]`, so a visitor who is not
+   signed in is sent to `/Account/ClientLogin` with a `returnUrl` (see
+   `OnRedirectToLogin` in `Program.cs`) and comes back here after Google
+   sign-in.
 2. **[`Controllers/BookingController.cs`](../ThriveWellness/Controllers/BookingController.cs)**
-   `Book(int sessionId)` - loads the session, re-checks server-side that it
-   still has room (never trusts that the page the client is looking at is
-   still accurate), and shows the email-step form.
-3. **[`Views/Booking/Book.cshtml`](../ThriveWellness/Views/Booking/Book.cshtml)**
-   - the client types their email and submits, posting to `CheckEmail`.
-4. **`BookingController.CheckEmail`** calls
-   **[`Services/Implementations/BookingService.cs`](../ThriveWellness/Services/Implementations/BookingService.cs)**
-   `CheckClientStatusAsync(email)`, which calls
-   **[`Repositories/Implementations/ClientRepository.cs`](../ThriveWellness/Repositories/Implementations/ClientRepository.cs)**
-   `GetByEmailAsync` against
-   **[`Data/ApplicationDbContext.cs`](../ThriveWellness/Data/ApplicationDbContext.cs)**'s
-   `Clients` table. No match, so `IsNew = true` comes back and the full
-   intake form (medical notes, consent) is shown.
-5. **[`Views/Booking/Details.cshtml`](../ThriveWellness/Views/Booking/Details.cshtml)**
-   - the client fills in name, phone, payment type/method, medical notes and
-   ticks consent, and submits to `Submit`.
-6. **`BookingController.Submit`** runs the cross-field checks data
-   annotations can't express (consent required for a new client, payment
-   type/method always required), builds a plain `BookingRequest`, and calls
+   `Book(int sessionId)` loads the session and re-checks server-side that it
+   is open and still has room (a full session redirects to `JoinWaitlist`).
+   It loads the client from the `ClientId` claim in the sign-in cookie and
+   shows the form pre-filled with their name and phone.
+3. **[`Views/Booking/Details.cshtml`](../ThriveWellness/Views/Booking/Details.cshtml)**
+   shows the medical notes and consent fields only when
+   `BookingService.IsFirstBookingAsync` says the client has never booked.
+   The client picks a payment plan and method (Card) and submits to `Submit`.
+4. **`BookingController.Submit`** works out "first booking" again on the
+   server (never trusting a hidden field), runs the cross-field checks data
+   annotations can't express (consent on a first booking, payment plan and
+   method required, method must be card, EFT or cash), builds a plain
+   `BookingRequest` with the client id from the cookie, and calls
    `BookingService.CreateBookingAsync(request)`.
-7. **`BookingService.CreateBookingAsync`**, in order:
-   - creates the `Client` row (since none existed) via `ClientRepository.AddAsync`.
-   - loads the `Session` via `SessionRepository.GetByIdAsync` and re-checks
-     capacity (`BookingRepository.GetBookingsBySessionAsync`) one more time.
+5. **[`Services/Implementations/BookingService.cs`](../ThriveWellness/Services/Implementations/BookingService.cs)**
+   `CreateBookingAsync`, in order:
+   - loads the `Client` via `ClientRepository.GetByIdAsync` and saves any
+     edit to their name or phone (and, on a first booking, their payment
+     plan).
+   - loads the `Session` and re-checks capacity
+     (`BookingRepository.GetBookingsBySessionAsync`). If it filled up in the
+     meantime, it returns `RequiresWaitlist` and `Submit` adds the client to
+     the waitlist instead.
    - generates a cancellation token
      ([`Services/CancellationTokenGenerator.cs`](../ThriveWellness/Services/CancellationTokenGenerator.cs))
-     and creates the `Booking` row, status `"Awaiting Payment"`, via
-     `BookingRepository.CreateBookingAsync`.
-   - creates the matching `Payment` row (status `"Pending"`) via
-     `PaymentRepository.CreateAsync`.
-   - creates the `IntakeForm` row directly against `ApplicationDbContext`
-     (new client only).
+     and creates the `Booking` row, status `"Awaiting Payment"`.
+   - creates the matching `Payment` row (status `"Pending"`, amount from
+     `PaymentPricing`: R120 per class or R450 monthly).
+   - on a first booking, creates the `IntakeForm` row directly against
+     `ApplicationDbContext`.
    - calls
      **[`Services/Implementations/NotificationService.cs`](../ThriveWellness/Services/Implementations/NotificationService.cs)**
-     `SendConfirmationEmailAsync(booking)`.
-8. **`NotificationService.SendConfirmationEmailAsync`** gathers the client,
-   session, location and payment, builds the HTML inline, and calls
+     `SendConfirmationEmailAsync(booking)` inside a `try`, so a failed email
+     is logged but never undoes the booking.
+6. **`NotificationService.SendConfirmationEmailAsync`** builds the booking
+   received email (for a card booking it has a Pay now link instead of
+   banking details) and sends it through
    **[`Services/Implementations/EmailSender.cs`](../ThriveWellness/Services/Implementations/EmailSender.cs)**
-   `SendEmailAsync`, which is the one place that actually talks to SendGrid.
-   A `Notification` row is logged afterwards.
-9. Control returns up through `CreateBookingAsync` to `Submit`, which
-   redirects to `Confirmation(bookingId)`.
-10. **`BookingController.Confirmation`** re-reads the booking, client,
-    session, location and payment to build a `BookingConfirmationViewModel`,
-    rendered by
-    **[`Views/Booking/Confirmation.cshtml`](../ThriveWellness/Views/Booking/Confirmation.cshtml)**.
-
-The booking is still only "Awaiting Payment" at this point - payment
-confirmation is a separate, admin-triggered flow (see the feature map below).
+   `SendEmailAsync`, the one place that talks to SendGrid. A `Notification`
+   row is logged as Sent or Failed.
+7. Back in `Submit`, a card booking redirects to
+   **[`Controllers/CheckoutController.cs`](../ThriveWellness/Controllers/CheckoutController.cs)**
+   `Pay(bookingId)`, which shows
+   **[`Views/Checkout/Pay.cshtml`](../ThriveWellness/Views/Checkout/Pay.cshtml)**.
+   (An EFT or cash booking goes to `Confirmation(bookingId)` instead and
+   waits for an admin.)
+8. The client enters a card and posts it. **`CheckoutController.Pay`** hands
+   it to
+   **[`Services/Implementations/CheckoutService.cs`](../ThriveWellness/Services/Implementations/CheckoutService.cs)**
+   `PayAsync`, which:
+   - checks the booking belongs to this client and is still unpaid.
+   - refuses a second attempt on the same payment while one is in flight.
+   - if an earlier charge already succeeded but its confirmation did not
+     finish, confirms it without charging again.
+   - otherwise calls `IPaymentGateway.ChargeAsync`, here
+     **[`Services/Implementations/SimulatedCardGateway.cs`](../ThriveWellness/Services/Implementations/SimulatedCardGateway.cs)**,
+     and records the attempt as a `PaymentTransaction` (Succeeded or
+     Declined, with brand, last four digits and gateway reference only).
+   - on success calls `PaymentService.ConfirmPaymentAsync`, which marks the
+     payment and booking Confirmed and raises `PaymentConfirmed`, so
+     `NotificationService` sends the payment confirmed email.
+9. The controller redirects to `Receipt(paymentId)`, rendered by
+   **[`Views/Checkout/Receipt.cshtml`](../ThriveWellness/Views/Checkout/Receipt.cshtml)**,
+   which has a Print receipt button.
 
 ## Feature maps
 
