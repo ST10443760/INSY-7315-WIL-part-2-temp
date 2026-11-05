@@ -32,6 +32,14 @@ Null Devs
 - Cancellation through a single-use link in the booking emails, which works without signing in.
 - A printable receipt for every card payment (`/Checkout/Receipt/{id}`), also linked from the dashboard.
 
+### Payments
+
+- Prices: R120 per class, or R450 for a monthly pass.
+- **Card.** The booking goes straight to a checkout page (`/Checkout/Pay/{bookingId}`). `CheckoutService` charges the card through the `IPaymentGateway` interface, records every attempt as a `PaymentTransaction`, and on success confirms the payment and shows the receipt. The registered gateway is `SimulatedCardGateway`: it checks the card the way a real provider would (Luhn check, expiry, CVC) and answers the standard test cards (4242 4242 4242 4242 and 5555 5555 5555 4444 succeed, 4000 0000 0000 0002 is declined, 4000 0000 0000 9995 has insufficient funds), but no bank is contacted and no money moves. The card number, expiry and CVC are never stored or logged; only the brand, the last four digits and the gateway reference are kept. Moving to a real provider such as PayFast or Stripe means registering its own `IPaymentGateway` in `Program.cs`.
+- **EFT and cash.** The booking is held as Awaiting Payment, the booking received email gives the studio's EFT details, and an admin presses Confirm on the Payments page once the money arrives.
+- **Refunds.** When a paid booking is cancelled, `RefundService` refunds a card payment through the gateway and marks it Refunded. An EFT or cash payment is marked Refund due, and the admin presses Mark refunded once it has been paid back by hand.
+- The admin Payments page has tabs for All, Pending, Confirmed, Refund due and Refunded.
+
 ### Admin
 
 - A dashboard with booking counts, upcoming sessions, pending payments and recent bookings.
