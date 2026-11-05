@@ -343,13 +343,20 @@ all of which are merged into `main`:
 
 ## Security
 
-- Passwords are hashed with BCrypt, which generates and embeds its own random salt. The plaintext password is never stored.
-- The admin login locks for 15 minutes after 5 failed attempts in a row. Unknown usernames get the same messages and the same timing, so the login page never reveals whether a username exists.
-- Every state-changing form includes an anti-forgery token, and every matching controller action validates it.
-- All database queries go through Entity Framework Core, which parameterises every value. No raw SQL is built from user input.
-- Session cookies and form posts are expected to run over HTTPS in production.
-- Cancellation uses a cryptographically random, single-use token rather than a login, since clients never create an account.
-- Real credentials and connection strings are kept out of the repository, in `appsettings.Development.json` (gitignored) locally and in environment variables on Render.
+- **Client sign-in is Google OAuth only**, so the app never handles client passwords. `ClientAccountService` refuses a Google account whose email is not verified, so nobody can take over another person's booking history by creating a Google account with their address. Starting the Google sign-in is a POST with an anti-forgery token, and the `returnUrl` is only followed when it is a local URL, so a crafted link cannot bounce someone to another site.
+- **Roles.** The admin and clients share one sign-in cookie, told apart by a Role claim. The `AdminOnly` policy needs the Admin role; the `ClientOnly` policy needs the Client role and a client id. A signed-in client who opens an admin page gets an Access denied page. A test checks every controller action against these policies.
+- **Clients only see their own data.** Checkout, receipts, the cancel page and the dashboard all check that the booking or payment belongs to the signed-in client.
+- **Cookies** are HttpOnly and sent over HTTPS only, with a 30 minute sliding expiry.
+- **Admin password** is hashed with BCrypt, which generates and embeds its own random salt. The plaintext password is never stored.
+- **Admin lockout.** The admin login locks for 15 minutes after 5 failed attempts in a row. Unknown usernames get the same messages and the same timing, so the login page never reveals whether a username exists.
+- **CSRF.** Every state-changing form includes an anti-forgery token, and every POST action validates it.
+- **SQL injection.** All database queries go through Entity Framework Core, which parameterises every value. There is no raw SQL in the app.
+- **Card data** is never stored or logged: only the brand, last four digits and gateway reference are saved, and tests fail if a card number, expiry or CVC column is ever added.
+- **CSV export.** The spend-per-client CSV quotes every field and prefixes any field starting with `=`, `+`, `-` or `@`, so a client's name can never run as a spreadsheet formula.
+- **Cancellation links** use a token of 32 bytes from a cryptographically secure random generator, and stop working once the booking is cancelled.
+- **HTTPS.** Requests are redirected to HTTPS, and HSTS is turned on outside Development.
+- **Health checks** never reveal the database host, error or connection details.
+- **Secrets** are kept out of the repository, in `appsettings.Development.json` (gitignored) locally and in environment variables on Render.
 
 ## Known limitations
 
