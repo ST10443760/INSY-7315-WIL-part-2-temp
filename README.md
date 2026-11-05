@@ -186,10 +186,26 @@ settings use a double underscore in place of the colon, for example
 | `Payment:AccountNumber` | Shown to clients paying by EFT | `0000000000` |
 | `SendGridApiKey` | Authenticates with SendGrid to send email | `your-sendgrid-api-key` |
 | `SendGridFromEmail` | The address emails are sent from | `no-reply@example.com` |
-| `AppBaseUrl` | Used to build absolute links in emails, such as the cancellation link | `https://localhost:7291` |
+| `AppBaseUrl` | Used to build absolute links in emails, such as the cancellation and Pay now links | `https://localhost:7291` |
+| `Authentication:Google:ClientId` | Google OAuth client id for client sign-in | `your-google-client-id.apps.googleusercontent.com` |
+| `Authentication:Google:ClientSecret` | Google OAuth client secret | `your-google-client-secret` |
 
 No default admin account exists. `Admin:Password` must be set, or the app
 starts without creating or updating an admin account and nobody can log in.
+
+Google sign-in is optional configuration. If either Google setting is
+missing, the app still starts, but the client sign-in page says sign-in is
+not available and clients cannot book. The Google OAuth client must list
+`https://<your-host>/signin-google` as an authorised redirect URI (locally,
+`https://localhost:7291/signin-google`).
+
+`SendGridApiKey` and `SendGridFromEmail` must be present or the app fails
+when it first tries to build the email sender. The `Payment` settings are
+optional: without them the booking received email leaves out the banking
+details and says the studio will send them separately.
+
+`PORT` is read from the environment only. Render sets it; locally the ports
+come from `Properties/launchSettings.json`.
 
 ### Local development
 
