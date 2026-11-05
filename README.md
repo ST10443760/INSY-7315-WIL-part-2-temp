@@ -56,11 +56,14 @@ The admin sidebar has Dashboard, Bookings Calendar, Payments, Revenue, Sessions,
 
 ### Automated emails
 
-- A booking received email when a booking is created, with payment details. It holds the spot pending payment and never says the booking is confirmed.
-- A payment confirmed email when an admin confirms a payment.
+- A booking received email when a booking is created. It holds the spot pending payment and never says the booking is confirmed. For a card booking it links to the checkout page; for EFT or cash it gives the studio's banking details and a payment reference.
+- A payment confirmed email when a payment is confirmed, either by an admin (EFT or cash) or automatically after a successful card payment.
 - A scheduled reminder email, sent the day before a session.
-- A scheduled location email, sent on the day of a session to new clients.
-- A cancellation link that frees the slot and promotes the next person on the waitlist.
+- A scheduled location email, sent on the day of a session to clients still marked as new.
+- An off the waitlist email when a waitlisted client is moved into a class, and a courtesy email when an admin presses Notify on a waitlist entry.
+- A cancellation link in the booking emails that frees the slot and promotes the next person on the waitlist.
+
+The scheduled emails run from a background service once at startup and then every hour. Every send is logged in the `Notifications` table as Sent or Failed, which stops the hourly run from sending the same email twice and lets a failed reminder or location email be retried on the next run. The admin Emails page shows the failures. A failed email never undoes a booking, a cancellation or a payment confirmation.
 
 ## Tech stack
 
