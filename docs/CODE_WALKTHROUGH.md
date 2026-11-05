@@ -301,6 +301,90 @@ from before roles existed are given the Admin role on their next request
 (`OnValidatePrincipal` in `Program.cs`), so a signed-in admin wasn't logged
 out by the change.
 
+### Client dashboard
+
+**Files:** `AccountController.Dashboard` (`ClientOnly`) →
+`Services/Implementations/ClientDashboardService.cs` (`GetDashboardAsync`,
+static `Build`) and `RewardsService` → `Views/Account/Dashboard.cshtml`.
+
+**Steps:** `RewardsService.EvaluateAsync` runs first, so a class that just
+finished counts straight away. `GetDashboardAsync` loads the client's
+bookings, payments and waitlist entries, and `Build` sorts them into stat
+tiles (upcoming classes, classes attended, total spent, current streak),
+upcoming bookings (with Pay now for an unpaid card booking and Cancel),
+payments and receipts, past bookings and waitlist entries.
+
+**Why built this way:** `Build` is static and touches no database, so the
+rules for what counts as upcoming, attended or spent are unit tested
+directly. "Attended" comes from one shared rule, `Services/Attendance.cs`
+(not cancelled, class started, paid, not a no-show), which the dashboard,
+rewards and the admin Clients page all use, so they can never disagree.
+
+### Rewards: streaks and badges
+
+**Files:** `Services/Implementations/RewardsService.cs` (`EvaluateAsync`,
+`GetRewardsAsync`) → `Services/Attendance.cs`, `Services/Streaks.cs`,
+`Services/BadgeRules.cs` → the `Badges` and `ClientBadges` tables (badges
+seeded by the `AddRewardsAndNoShow` migration).
+
+**Steps:** attended classes give a weekly streak (Monday to Sunday weeks,
+the same as the schedule; a week still in progress gets grace, so the
+streak only resets after a whole week with no class) and a longest streak.
+`BadgeRules` turns those into badges: First Class (1 class), Getting Going
+(5), Committed (10), Dedicated (25), Three Week Streak, Eight Week Streak,
+Both Studios and Early Bird (a class starting before 09:00). Newly earned
+badges are saved to `ClientBadges`. It runs when the dashboard loads, when
+an admin confirms a payment, and when an admin changes a no-show.
+
+**Why built this way:** `Streaks` and `BadgeRules` are pure, so every rule
+is tested without a database. Badges are only ever added, never removed,
+even if a booking is later cancelled or marked a no-show, because taking a
+reward back would feel like a punishment.
+
+### Revenue
+
+**Files:** `AdminController.Revenue` and `RevenueCsv` →
+`Services/Implementations/RevenueService.cs` (`ResolveRange`,
+`GetReportAsync`, static `Build`) → `Services/RevenueChart.cs`,
+`Services/ChartScale.cs`, `Services/ClientSpendCsv.cs` →
+`Views/Admin/Revenue.cshtml`.
+
+**Steps:** the date range is a preset (all time, this month, last 30 days,
+this year) or custom From/To dates. One query loads the payments in range,
+and `Build` adds up net revenue, paid count, average per payment and total
+refunded, a weekly or monthly series for the line graph, breakdowns by
+month, payment method, payment type and venue, and spend per client.
+`RevenueCsv` downloads the spend-per-client table as CSV.
+
+**Why built this way:** revenue is money actually kept, so only Confirmed
+payments count. Refunded payments are shown on their own and never
+counted, and Refund due and Pending aren't revenue at all. Amounts stay
+`decimal` throughout. `ClientSpendCsv` quotes every field and defuses any
+field starting with `=`, `+`, `-` or `@`, so a client's name can't run as a
+spreadsheet formula.
+
+### Other admin pages
+
+**Files:** `AdminController` (`Index`, `Calendar`, `Waitlist`, `Emails`,
+`NotifyWaitlistEntry`, `RemoveWaitlistEntry`, `AddToClass`) and
+`SessionController` (`Attendees`, `SetNoShow`, `Waitlist`) →
+`Services/Implementations/AdminDashboardService.cs`, `WaitlistService` and
+`BookingService.SetNoShowAsync`; `ClientsController.Index`.
+
+**Steps:** the Bookings Calendar shows a month of sessions with their
+booking counts (each opens the session's edit page). A session's Attendees
+page lists who is booked and lets the admin mark a no-show once the class
+has started, which stops it counting as attended. The Waitlist page lists
+every entry with Notify (a courtesy email), Add to class and Remove. The
+Emails page lists the latest 50 entries in `Notifications`, with Sent or
+Failed status, filterable by type. The Clients page lists every client with
+classes attended, streak and badges, searchable and sortable by attendance.
+
+**Why built this way:** these are read-mostly views, so they live in
+`AdminDashboardService` as separate, simply shaped queries, and every
+change (a no-show, a waitlist move) goes through the same services the rest
+of the app uses.
+
 ## Design decisions with justification
 
 - **MVC.** ASP.NET Core's built-in pattern; controllers stay thin
