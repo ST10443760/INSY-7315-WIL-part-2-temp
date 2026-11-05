@@ -594,8 +594,12 @@ resent automatically.
 A push to `main` triggers `.github/workflows/deploy.yml`, which first reuses
 `ci.yml`'s build-and-test job (`workflow_call`) as a gate, and only if that
 passes, POSTs to a Render deploy hook URL stored as the
-`RENDER_DEPLOY_HOOK_URL` repository secret. Render then builds the
-`Dockerfile` and redeploys the container.
+`RENDER_DEPLOY_HOOK_URL` repository secret (if the secret isn't set, the
+job logs that and exits successfully without deploying). Render then
+builds the `Dockerfile` and redeploys the container. The app does not run
+migrations at startup, so schema changes are applied separately with
+`dotnet ef database update`. A push to `main` (or a `submit/*` tag) also
+runs `autograde.yaml`, the course's shared autograding workflow.
 
 **Why Repository instead of using the DbContext directly?**
 Three reasons that showed up in practice: it keeps every query for a table
