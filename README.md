@@ -311,7 +311,9 @@ the database connection with a 3 second limit, answering `OK` or
 
 ## Branching
 
-Work was built as a series of feature branches, merged into `main`:
+`main` is the deployable branch. `develop` was the integration branch for
+the early CI and README work. Features were built on their own branches,
+all of which are merged into `main`:
 
 - `feature/project-scaffold`
 - `feature/session-management`
@@ -330,6 +332,13 @@ Work was built as a series of feature branches, merged into `main`:
 - `feature/eft-details`
 - `feature/comments`
 - `feature/cleanup`
+- `feature/dev-db-and-resilience`
+- `feature/quick-wins`
+- `feature/google-accounts`
+- `feature/payments-dashboard`
+- `feature/nav-dashboard-polish`
+- `feature/rewards-revenue`
+- `feature/docs-refresh`
 - `fix/desktop-menu-close-button`
 
 ## Security
