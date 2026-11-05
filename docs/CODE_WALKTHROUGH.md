@@ -143,16 +143,65 @@ page says sign-in isn't available, instead of the app failing to start.
 `PaymentConfirmed` event) → wired in `Program.cs` → `NotificationService.OnPaymentConfirmed`
 → `NotificationService.SendWelcomeEmailAsync` → `EmailSender.SendEmailAsync`.
 
-**Steps:** an admin clicks "Confirm" on the Payments page → payment status
-becomes `"Confirmed"`, booking status becomes `"Confirmed"` → `PaymentConfirmed`
-fires → `NotificationService` (subscribed from `Program.cs`, not from its own
-constructor) sends the welcome email.
+**Steps:** an admin clicks "Confirm" on the Payments page for an EFT or
+cash payment (or `CheckoutService` calls the same method after a successful
+card charge) → payment status becomes `"Confirmed"`, booking status becomes
+`"Confirmed"` → `PaymentConfirmed` fires → `NotificationService`
+(subscribed from `Program.cs`, not from its own constructor) sends the
+payment confirmed email (logged with type `Welcome`). `PaymentService`
+catches a failed send, so the payment stays confirmed and the failure shows
+on the admin Emails page. `PaymentController` then asks `RewardsService` to
+check for newly earned badges.
 
 **Why built this way:** this is the Observer pattern - `PaymentService`
 doesn't know or care that an email gets sent; it just reports "a payment was
-confirmed" and whatever is listening (today, just the welcome email) reacts.
-See the Design Decisions section for why the subscription itself had to move
-out of `NotificationService`'s constructor.
+confirmed" and whatever is listening (today, just the payment confirmed
+email) reacts. Card payments reuse it unchanged. See the Design Decisions
+section for why the subscription itself had to move out of
+`NotificationService`'s constructor.
+
+### Card checkout
+
+**Files:** `Controllers/CheckoutController.cs` (`Pay`, `Receipt`) →
+`Services/Implementations/CheckoutService.cs` (`GetCheckoutAsync`,
+`PayAsync`, `GetReceiptAsync`) → `Services/Interfaces/IPaymentGateway.cs`,
+implemented by `Services/Implementations/SimulatedCardGateway.cs` →
+`Repositories/Implementations/PaymentTransactionRepository.cs` →
+`PaymentService.ConfirmPaymentAsync`.
+
+**Steps:** see steps 7 to 9 of the end to end trace above.
+`SimulatedCardGateway` validates the number (Luhn), expiry and CVC, works
+out the brand, and answers the test cards: 4242 4242 4242 4242 and
+5555 5555 5555 4444 succeed, 4000 0000 0000 0002 is declined and
+4000 0000 0000 9995 has insufficient funds. No bank is contacted and no
+money moves.
+
+**Why built this way:** everything that charges a card depends on
+`IPaymentGateway`, not on the simulator, so moving to PayFast or Stripe
+means registering their implementation in `Program.cs` and nothing else.
+Every attempt is kept as a `PaymentTransaction` for an audit trail, but the
+card number, expiry and CVC only pass through on their way to the gateway
+and are never stored or logged (`PaymentTransactionSecurityTests` checks
+the database model for this).
+
+### Refunds
+
+**Files:** `Services/Implementations/RefundService.cs` (`Preview`,
+`RefundCancelledBookingAsync`) → `IPaymentGateway.RefundAsync` →
+`Controllers/PaymentController.cs` (`MarkRefunded`) →
+`PaymentService.MarkRefundedAsync`.
+
+**Steps:** when a paid booking is cancelled, `BookingService.CancelAsync`
+calls `RefundCancelledBookingAsync`. A card payment is refunded through the
+gateway and marked `Refunded`. An EFT or cash payment is marked
+`Refund due`; once the studio has paid it back by hand, the admin presses
+Mark refunded on the Payments page. An unpaid booking has nothing to
+refund. The cancel page shows the client which of these will happen before
+they confirm (`Preview`).
+
+**Why built this way:** the app can only send money back automatically when
+it took the money itself (card). For EFT and cash it records what is owed,
+so the Payments page's Refund due tab is the studio's to-do list.
 
 ### Waitlist promotion
 
