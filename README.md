@@ -42,14 +42,17 @@ Null Devs
 
 ### Admin
 
-- A dashboard with booking counts, upcoming sessions, pending payments and recent bookings.
-- Session management: create, edit, delete, and mark a session full or open.
-- Payment confirmation for EFT and cash payments.
-- Location management.
-- A client overview with search.
-- Waitlist management, including manually notifying or removing an entry, or moving a waitlisted client straight into a class.
-- A Send reminders now button that runs the day-before reminder check on demand and reports how many were sent, skipped or failed.
-- An Emails page listing the latest 50 emails sent, filterable by type.
+The admin sidebar has Dashboard, Bookings Calendar, Payments, Revenue, Sessions, Locations, Clients, Waitlist and Emails.
+
+- **Dashboard:** booking and client counts, pending payments with a Confirm button, upcoming sessions and recent bookings. A Send reminders now button runs the day-before reminder check on demand and reports how many were sent, skipped or failed.
+- **Bookings Calendar:** a month view of every session with its booking count, moved month by month. Clicking a session opens its edit page.
+- **Payments:** the tabs described above, Confirm for EFT and cash, and Mark refunded for Refund due payments.
+- **Revenue** (`RevenueService`): net revenue (Confirmed payments only, refunds shown separately and never counted), paid count, average per payment and total refunded. The date range can be all time, this month, the last 30 days, this year or custom dates. It shows a weekly or monthly line graph and breakdowns by month, payment method, payment type and venue, plus a searchable spend-per-client table that downloads as CSV.
+- **Sessions:** create, edit, delete, mark full or open, and per session an Attendees list (where a booking can be marked as a no-show once the class has started) and a Waitlist list.
+- **Locations:** create, edit and delete studios.
+- **Clients:** every client with their classes attended, streak and badges, with search and sorting by classes attended.
+- **Waitlist:** every waitlist entry across sessions, with Notify (a courtesy email), Add to class and Remove.
+- **Emails:** the latest 50 emails to clients, with their Sent or Failed status, filterable by type (booking received, payment confirmed, reminder, location, off the waitlist, cancellation).
 
 ### Automated emails
 
