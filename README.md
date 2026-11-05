@@ -382,5 +382,7 @@ The Task 1 documentation was submitted separately.
 
 ## Admin access
 
-Username: `admin`. The password is set through the `Admin__Password`
-setting and is provided in class or on request.
+The admin logs in at `/Account/Login` (also linked as Staff login in the
+footer). The username is set through `Admin__Username` and the password
+through the `Admin__Password` setting; neither is stored in this
+repository. The password is given on request.
