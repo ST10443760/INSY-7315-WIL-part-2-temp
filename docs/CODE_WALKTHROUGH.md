@@ -265,7 +265,12 @@ the admin pages yet.
 **Steps:** a `BackgroundService` runs once on startup and then every hour;
 each run queries for Confirmed bookings meeting the day-before (reminder) or
 same-day-and-new-client (location) condition, and skips any booking that
-already has a matching `Notification` row logged.
+already has a matching `Notification` row logged as Sent. A failed send is
+logged as Failed and counted, without stopping the rest of the run, and is
+picked up again next hour. The admin dashboard's Send reminders now button
+(`AdminController.SendRemindersNow`) runs the same reminder sweep on demand
+and reports how many were sent, skipped or failed. "Today" and "tomorrow"
+come from the UTC date (see Known limitations).
 
 **Why built this way:** checking `Notifications` for an existing row (rather
 than, say, a boolean flag on `Booking`) means the hourly re-run is naturally
@@ -279,14 +284,22 @@ catching up an hour late, can't double-send.
 authentication, configured in `Program.cs`.
 
 **Steps:** username/password posted → `AuthService.Login` looks the admin up
-by username and checks the password with `BCrypt.Net.BCrypt.Verify` →
-success issues a cookie carrying the username as its one claim → every
-`[Authorize]`-attributed controller checks only for that cookie's presence,
-nothing more granular.
+by username and checks the password with `BCrypt.Net.BCrypt.Verify`, locking
+the account for 15 minutes after 5 failures in a row (unknown usernames are
+counted the same way, in memory) → success issues the sign-in cookie with
+the username and the Admin role → admin controllers carry
+`[Authorize(Policy = AuthPolicies.AdminOnly)]`, which needs that role, so a
+signed-in client is sent to the Access denied page.
 
-**Why built this way:** there's exactly one admin account by design (no
-sign-up, no roles), so a single cookie claim is all authorization ever needs
-to check.
+**Why built this way:** there's exactly one admin account (no sign-up), but
+clients now sign in too, so "is someone signed in" is no longer enough. One
+cookie scheme with a Role claim, checked by two named policies
+(`AdminOnly`, `ClientOnly` in `Authorization/AuthPolicies.cs`), keeps the
+rule in one place. `AdminAuthorizationTests` finds every controller action
+by reflection and checks it against those policies. Older admin cookies
+from before roles existed are given the Admin role on their next request
+(`OnValidatePrincipal` in `Program.cs`), so a signed-in admin wasn't logged
+out by the change.
 
 ## Design decisions with justification
 
