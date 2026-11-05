@@ -210,7 +210,7 @@ to check.
   `Scoped` (see `Program.cs`), matching `ApplicationDbContext`'s own
   lifetime - one instance of each per HTTP request, so everything touched
   by a single request shares one database connection/transaction context.
-- **PostgreSQL.** Chosen as the relational database, hosted on Railway,
+- **PostgreSQL.** Chosen as the relational database, hosted on Neon,
   accessed via Npgsql/EF Core. A relational database fits this domain well
   - clients, sessions, bookings, payments and waitlist entries are all
   related rows with real foreign keys between them, not documents.
@@ -237,14 +237,16 @@ to check.
   `RandomNumberGenerator` (a CSPRNG), base64url-encoded. With no client
   login, this token is the entire security boundary for that action: it has
   to be unguessable, not just unique.
-- **Docker, with Render, Railway and SendGrid.** The app is containerized
+- **Docker, with Render, Neon and SendGrid.** The app is containerized
   (see `ThriveWellness/Dockerfile`) and deployed to Render, which builds and
   runs that container and assigns the listening port via the `PORT`
   environment variable at container start (`Program.cs` reads it and only
   overrides the default URL binding when it's set, so local development is
-  unaffected). The database is a separate managed PostgreSQL instance on
-  Railway, connected to over the network via the `DefaultConnection`
-  string. Outbound email goes through SendGrid's API rather than SMTP
+  unaffected). Render's proxy ends HTTPS, so `Program.cs` trusts the
+  forwarded headers to keep `Request.Scheme` as `https` (the Google
+  redirect URI depends on it). The database is a separate managed
+  PostgreSQL instance on Neon, connected to over the network via the
+  `DefaultConnection` string. Outbound email goes through SendGrid's API rather than SMTP
   directly, since Render (like most PaaS hosts) blocks outbound SMTP ports.
 
 ## Bugs found and fixed
