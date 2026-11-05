@@ -170,10 +170,31 @@ dotnet run --project ThriveWellness
 dotnet test
 ```
 
-This runs 103 tests, covering six service classes: `AdminSeeder`,
-`BookingService`, `NotificationService`, `PaymentService`, `SessionService`
-and `WaitlistService`. Controllers and the repositories' query shapes are
-not covered yet (see Known limitations).
+This runs more than 400 xUnit tests (with Moq and the EF Core in-memory
+provider). They cover:
+
+- Services: `AdminSeeder`, `AuthService`, `BookingService`,
+  `CheckoutService`, `ClientAccountService`, `ClientDashboardService`,
+  `NotificationService`, `PaymentService`, `RefundService`,
+  `RevenueService`, `RewardsService`, `ScheduledNotificationService`,
+  `SessionService`, `SimulatedCardGateway` and `WaitlistService`.
+- Rule helpers: `Attendance`, `BadgeRules`, `Streaks`, `ScheduleWeek`,
+  `Money`, `ChartScale`, `RevenueChart`, `ClientSpendCsv`, `HeaderNav` and
+  `StartupSeeding`.
+- Authorization: every controller action is found by reflection and checked
+  against the real policies, so a new admin page that forgets its
+  protection fails a test.
+- Email failures: a failed send never loses a booking, a cancellation or a
+  payment confirmation, and is logged as Failed.
+- Card data: tests fail if the card number, expiry or CVC is ever stored on
+  any table.
+- Phone number validation on the booking form.
+
+Not covered: `AdminDashboardService`, `LocationService`, `EmailSender` (the
+real SendGrid call) and `ScheduledNotificationHostedService`; the
+controllers' action logic (only their authorization is tested); the views;
+and the repositories' queries against a real PostgreSQL database (tests use
+the in-memory provider, which does not behave exactly like PostgreSQL).
 
 ## CI/CD and deployment
 
