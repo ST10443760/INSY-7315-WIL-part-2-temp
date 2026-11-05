@@ -579,14 +579,16 @@ Npgsql, so user input is never concatenated into a SQL string.
 
 **What happens if SendGrid fails?**
 `EmailSender.SendEmailAsync` throws an `InvalidOperationException` on any
-non-success response rather than swallowing it. Because
-`NotificationService`'s send is currently synchronous and awaited inline
-(see the Design Decisions entry on synchronous sending), that exception
-propagates up through whatever triggered the email - for a booking, that
-means `CreateBookingAsync` itself would fail, and the client would see an
-error instead of a silent missing email. This is arguably too strict for a
-non-critical failure like an email, and is one of the things worth
-revisiting (see Known Limitations).
+non-success response rather than swallowing it. `NotificationService`
+catches that just long enough to log a `Notification` row with status
+`Failed`, then rethrows, and each caller decides what a failure means. For
+a booking, a cancellation or a payment confirmation it is never fatal:
+`BookingService` and `PaymentService` catch it, log a warning, and carry on,
+so the booking, cancellation or confirmed payment is kept
+(`EmailFailureTests` checks all of these). The failure shows on the admin
+Emails page. Failed reminder and location emails are retried on the next
+hourly run; a failed booking received or payment confirmed email is not
+resent automatically.
 
 **How does a deploy happen?**
 A push to `main` triggers `.github/workflows/deploy.yml`, which first reuses
