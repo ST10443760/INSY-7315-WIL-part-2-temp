@@ -72,7 +72,11 @@ The scheduled emails run from a background service once at startup and then ever
 | Framework | ASP.NET Core MVC, .NET 8 |
 | Data access | Entity Framework Core 8, Npgsql |
 | Database | PostgreSQL, hosted on Neon |
+| Client sign-in | Google OAuth (`Microsoft.AspNetCore.Authentication.Google`) |
+| Admin sign-in | Cookie authentication, passwords hashed with BCrypt.Net-Next |
+| Card payments | `SimulatedCardGateway` behind `IPaymentGateway` (no real provider yet) |
 | Email | SendGrid |
+| Tests | xUnit, Moq, EF Core in-memory provider |
 | Containers | Docker |
 | Hosting | Render |
 | CI/CD | GitHub Actions |
