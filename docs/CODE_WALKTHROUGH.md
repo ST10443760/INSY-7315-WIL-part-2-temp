@@ -704,19 +704,30 @@ Stated plainly, as they actually are today:
   than the inbox - a known deliverability consideration with transactional
   email from a newer sending domain, not something the application code
   controls.
-- **A single admin account.** There's no multi-admin support, no roles, and
-  no permission granularity - `AdminSeeder` manages exactly one account, and
-  `[Authorize]` only ever checks "is someone signed in", never "is this
-  admin allowed to do this specific thing".
-- **No online payments.** `BookingService` records a payment as "Pending"
-  immediately and an admin manually marks it "Confirmed" after an EFT or
-  cash payment arrives by some other channel - there's no payment gateway
-  integration.
+- **A single admin account.** `AdminSeeder` manages exactly one admin
+  account. The `AdminOnly` policy separates the admin from clients, but
+  there are no permission levels between admins.
+- **Card payments are simulated.** `SimulatedCardGateway` only accepts test
+  card numbers and no money moves. Taking real payments needs a provider
+  such as PayFast or Stripe registered as the `IPaymentGateway`.
+- **EFT and cash are manual.** An admin confirms each EFT or cash payment,
+  and pays back any Refund due by hand before pressing Mark refunded.
+- **Clients need a Google account.** Google is the only client sign-in. If
+  the Google settings are missing, the app runs but no client can sign in
+  or book.
 - **Synchronous email send.** As covered in Design Decisions, confirming a
   payment (and creating a booking) currently waits on the full SendGrid
   round-trip before returning a response to the admin or client, rather than
-  queuing the send in the background.
-- **Returning-client identification.** Returning clients are identified by
-  email only, so anyone who knows a client's email can see and change their
-  name and phone. A verification step, such as an emailed code, is the next
-  improvement.
+  queuing the send in the background. A failed send never undoes the
+  action, but only reminder and location emails are retried.
+- **Scheduled emails use the UTC date.** `ScheduledNotificationService`
+  works out "today" and "tomorrow" with `DateTime.UtcNow`, while class dates
+  are South African local time (UTC+2), so for the first two hours after
+  midnight the reminder and location runs look at the previous day.
+- **No admin cancel button.** `BookingController.AdminCancel` and
+  `BookingService.CancelByAdminAsync` exist, but no admin page links to
+  them yet.
+- **Test gaps.** Controllers are only tested for their authorization, and
+  the views, `AdminDashboardService`, `LocationService` and the
+  repositories' queries against a real PostgreSQL database are not tested.
+- **No custom domain.** The site runs on its Render address.
