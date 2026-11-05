@@ -218,8 +218,9 @@ docker compose -f docker-compose.dev.yml up -d
 
 It listens on port 5433, so point `DefaultConnection` at
 `Host=localhost;Port=5433;Database=thrive_dev;Username=postgres;Password=devpass`,
-then migrate and run the app as below. The live database is only touched by
-the demo reset script and by deploys.
+then migrate and run the app as below. The app never runs migrations at
+startup, so a schema change only reaches a database when
+`dotnet ef database update` is run against it.
 
 ### Migrate and run
 
