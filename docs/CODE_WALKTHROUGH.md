@@ -411,6 +411,19 @@ of the app uses.
   `Scoped` (see `Program.cs`), matching `ApplicationDbContext`'s own
   lifetime - one instance of each per HTTP request, so everything touched
   by a single request shares one database connection/transaction context.
+  The exceptions hold no per-request state: `TimeProvider.System` is a
+  singleton (so lockout timing and "today" can be tested with a fake
+  clock), the memory cache holds failed-login counts for unknown usernames,
+  and `ScheduledNotificationHostedService` creates its own scope for each
+  hourly run.
+- **Pure rule helpers.** Rules that don't need the database (`Attendance`,
+  `Streaks`, `BadgeRules`, `ScheduleWeek`, `PaymentPricing`, `RevenueChart`,
+  and the static `Build` methods on `ClientDashboardService` and
+  `RevenueService`) take plain values and return plain values, so they are
+  unit tested directly without mocks.
+- **A payment gateway interface.** `IPaymentGateway` is what checkout and
+  refunds depend on; `SimulatedCardGateway` is today's implementation.
+  Swapping in a real provider is one registration in `Program.cs`.
 - **PostgreSQL.** Chosen as the relational database, hosted on Neon,
   accessed via Npgsql/EF Core. A relational database fits this domain well
   - clients, sessions, bookings, payments and waitlist entries are all
@@ -435,9 +448,9 @@ of the app uses.
 - **Token-based cancellation.** A client cancels via a link
   (`/Booking/Cancel/{token}`) carrying a token from
   `CancellationTokenGenerator.Generate()` - 32 bytes from
-  `RandomNumberGenerator` (a CSPRNG), base64url-encoded. With no client
-  login, this token is the entire security boundary for that action: it has
-  to be unguessable, not just unique.
+  `RandomNumberGenerator` (a CSPRNG), base64url-encoded. The link works
+  without signing in, so this token is the entire security boundary for
+  that action: it has to be unguessable, not just unique.
 - **Docker, with Render, Neon and SendGrid.** The app is containerized
   (see `ThriveWellness/Dockerfile`) and deployed to Render, which builds and
   runs that container and assigns the listening port via the `PORT`
