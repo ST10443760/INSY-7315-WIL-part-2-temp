@@ -90,38 +90,64 @@ so the same rule cannot drift between two places that both need it, and it
 can be unit tested without starting the web app. Data access goes through
 the Repository pattern: every table has a thin repository behind an
 interface, and services depend on the interface, never on the database
-context directly. Payment confirmation uses the Observer pattern: the
-payment service raises an event when a payment is confirmed, and the
-notification service reacts to it without the payment service knowing an
-email will be sent.
+context directly. Payment confirmation uses the Observer pattern:
+`PaymentService` raises a `PaymentConfirmed` event when a payment is
+confirmed, and `NotificationService` reacts to it by sending the payment
+confirmed email, without `PaymentService` knowing an email will be sent.
+The subscription is wired in `Program.cs`. The same event fires whether an
+admin confirms an EFT or cash payment or `CheckoutService` confirms a card
+payment. Card charging goes through the `IPaymentGateway` interface, so the
+simulated gateway can be swapped for a real one by changing one
+registration in `Program.cs`.
 
-Project structure (`ThriveWellness/`):
+Project structure:
 
 ```
 ThriveWellness/
-  Controllers/              MVC controllers
-  Data/                     ApplicationDbContext
+  Authorization/             AuthPolicies (AdminOnly, ClientOnly) and client claims
+  Controllers/               Account, Admin, Booking, Checkout, Clients, Home,
+                             Location, Payment, Session
+  Data/                      ApplicationDbContext
   Migrations/                EF Core migrations
-  Models/                    Entities and view models
+  Models/                    Entities, view models and result types
   Repositories/
-    Interfaces/
-    Implementations/
+    Interfaces/              One per repository below
+    Implementations/         Booking, Client, Location, Payment,
+                             PaymentTransaction, Session, Waitlist
   Services/
     Interfaces/
-    Implementations/
-  Views/                     Razor views, one folder per controller
+    Implementations/         One class per service (BookingService,
+                             CheckoutService, RewardsService, ...)
+    *.cs                     Pure rule helpers with no database: Attendance,
+                             BadgeRules, Streaks, ScheduleWeek, PaymentPricing,
+                             Money, RevenueChart, ChartScale, ClientSpendCsv,
+                             HeaderNav, StartupSeeding, CancellationTokenGenerator
+  Views/                     Razor views, one folder per controller, plus Shared
   wwwroot/                   Static files (css, js, images)
   Dockerfile
   Program.cs                 Composition root and HTTP pipeline
+ThriveWellness.Tests/        xUnit test project
+docker-compose.dev.yml       Throwaway local PostgreSQL
 ```
 
-A new booking request flows like this: the client submits the schedule
-page's booking form, `BookingController` validates it and calls
-`BookingService`, which checks capacity, creates the client (if new), the
-booking, the payment, and the intake form through their repositories, then
-calls `NotificationService` to send the confirmation email through
-`EmailSender`. Control returns to the controller, which redirects to a
-confirmation page.
+A new booking flows like this: a signed-in client presses Book Now on the
+schedule, and `BookingController.Book` re-checks that the session still has
+room and shows the booking form, pre-filled from their client record (with
+the intake fields on a first booking). On submit, `BookingController.Submit`
+checks the cross-field rules (consent on a first booking, a payment plan and
+method) and calls `BookingService.CreateBookingAsync`. That saves any edit
+to the client's name or phone, re-checks capacity (sending the client to the
+waitlist if the session filled up), and creates the `Booking` (Awaiting
+Payment, with a cancellation token), its `Payment` (Pending) and, on a
+first booking, the `IntakeForm`. It then asks `NotificationService` to send
+the booking received email through `EmailSender`. A card booking is
+redirected to `CheckoutController.Pay`; an EFT or cash booking goes to the
+booking received page.
+
+The database has 12 tables (plus EF Core's `__EFMigrationsHistory`):
+`Clients`, `Locations`, `Sessions`, `Bookings`, `Payments`,
+`PaymentTransactions`, `Waitlists`, `Notifications`, `IntakeForms`,
+`Admins`, `Badges` and `ClientBadges`.
 
 See [docs/CODE_WALKTHROUGH.md](docs/CODE_WALKTHROUGH.md) for a full,
 file-by-file trace of this and every other feature, plus the design
