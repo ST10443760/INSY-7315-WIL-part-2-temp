@@ -362,11 +362,15 @@ all of which are merged into `main`:
 
 - **Free-tier cold start.** The hosting tier spins the container down after a period of inactivity, so the first request after a while is slower.
 - **Gmail spam placement.** Emails sometimes land in Gmail's spam folder rather than the inbox, because the sending domain is not authenticated.
-- **A single admin account.** There is no multi-admin support and no roles.
-- **No online payments.** EFT and cash payments are confirmed manually by the admin; there is no payment gateway integration.
-- **Emails are sent synchronously.** A booking or payment confirmation waits on the full email send before returning a response. A background queue is the planned next step.
+- **A single admin account.** There is one admin login, with no multi-admin support and no permission levels beyond the Admin role.
+- **Card payments are simulated.** `SimulatedCardGateway` only accepts test card numbers and no money moves. Taking real payments needs a provider such as PayFast or Stripe registered as the `IPaymentGateway`.
+- **EFT and cash are manual.** An admin has to confirm each EFT or cash payment, and pay back any Refund due by hand before marking it refunded.
+- **Clients need a Google account.** Google is the only client sign-in. If the Google settings are missing, the app runs but no client can sign in or book.
+- **Emails are sent synchronously.** A booking or payment confirmation waits on the full email send before returning a response. A failed send is logged and never blocks the booking, but only reminder and location emails are retried automatically. A background queue is the planned next step.
+- **Scheduled emails use the UTC date.** The reminder and location runs work out "today" and "tomorrow" from UTC, while class dates are South African local time (UTC+2), so for the first two hours after midnight they look at the previous day.
+- **No admin cancel button.** `BookingController.AdminCancel` (with its cancellation email) exists but no admin page links to it yet.
+- **Test gaps.** Controllers are only tested for their authorization, and views, `AdminDashboardService`, `LocationService` and the repositories' queries against a real PostgreSQL database are not tested.
 - **No custom domain.** A custom domain was recommended in Task 1 but is not set up.
-- **Returning-client identification.** Returning clients are identified by email only, so anyone who knows a client's email can see and change their name and phone. A verification step, such as an emailed code, is the next improvement.
 
 ## Documentation and design
 
