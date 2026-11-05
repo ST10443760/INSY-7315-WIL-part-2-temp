@@ -21,12 +21,16 @@ Null Devs
 
 ### Client
 
-- New versus returning client detection by email, so a returning client does not have to re-type their details.
-- An intake form with consent, shown only to new clients.
-- EFT and cash payment options, confirmed by an admin (see Known limitations).
+- Google sign-in at `/Account/ClientLogin`. Booking, the waitlist and the dashboard need a signed-in client. A first sign-in links to an existing client with the same verified email, so clients who booked before sign-in existed keep their history; otherwise a new client is created.
+- A schedule that can be browsed week by week, from the current week up to the last scheduled class, filtered by location or date.
+- A booking form pre-filled from the client's account. An intake form with medical notes and consent is shown only on a client's first booking.
+- Payment by card online, or by EFT or cash confirmed by an admin (see Payments below).
 - A waitlist with automatic promotion when a spot opens up.
-- Cancellation through a single-use link sent by email, no login needed.
-- A schedule that can be browsed week by week, from the current week up to the last scheduled class.
+- A client dashboard (`/Account/Dashboard`) with stat tiles (upcoming classes, classes attended, total spent, current streak), upcoming bookings with Pay now and Cancel buttons, payments and receipts, past bookings and waitlist entries.
+- Rewards: a weekly streak (current and longest) and eight badges, worked out by `RewardsService` from attended classes. The badges are First Class (1 class), Getting Going (5), Committed (10), Dedicated (25), Three Week Streak, Eight Week Streak, Both Studios and Early Bird (a class before 09:00). Badges are never taken away once earned.
+- Cancelling from the dashboard, for the client's own booking and only before the class starts. A card payment is refunded automatically; an EFT or cash payment is marked Refund due for the studio to pay back.
+- Cancellation through a single-use link in the booking emails, which works without signing in.
+- A printable receipt for every card payment (`/Checkout/Receipt/{id}`), also linked from the dashboard.
 
 ### Admin
 
